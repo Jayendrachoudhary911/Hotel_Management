@@ -3,24 +3,22 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { formatMoney } from '@/lib/utils/money';
-import { INITIAL_HALL } from '@/lib/data/initial-data';
-import { Sparkles, Users, Calendar, CheckCircle2, Music, Wine, Award, ArrowRight, ShieldCheck, MapPin, Phone } from 'lucide-react';
+import {
+  IconGuests300,
+  IconCustomDecor,
+  IconAudioVisual,
+  IconCateringSupport,
+} from '@/components/ui/heritage-art';
+import { Calendar, Users, CheckCircle2, ArrowRight } from 'lucide-react';
 
 export default function HallPage() {
-  const hall = INITIAL_HALL;
-
   const [contactName, setContactName] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [eventType, setEventType] = useState('Royal Wedding / Reception');
   const [expectedGuests, setExpectedGuests] = useState('150');
   const [eventDate, setEventDate] = useState('');
-  const [seatingLayout, setSeatingLayout] = useState('Round Banquet Tables (Cluster)');
+  const [seatingLayout, setSeatingLayout] = useState('Traditional Rajasthani Baithak');
   const [setupNeeds, setSetupNeeds] = useState('');
   const [notes, setNotes] = useState('');
 
@@ -37,6 +35,13 @@ export default function HallPage() {
     seatingLayout: string;
   } | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
+
+  const features = [
+    { label: 'Up to 300 Guests', icon: IconGuests300 },
+    { label: 'Custom Decor', icon: IconCustomDecor },
+    { label: 'Audio Visual', icon: IconAudioVisual },
+    { label: 'Catering Support', icon: IconCateringSupport },
+  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,246 +90,232 @@ export default function HallPage() {
   };
 
   return (
-    <div className="bg-[#F5F1E8] min-h-screen py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Hero banner */}
-        <div className="relative h-[440px] rounded-3xl overflow-hidden mb-16 border-2 border-[#B08D57]/40 shadow-xl">
+    <div className="bg-[#FAF7F2] min-h-screen py-10 sm:py-16 text-[#1E1A17]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-14">
+        {/* ── HERO BANNER (Matching Mobile - Party Hall mockup) ── */}
+        <div className="relative h-[380px] sm:h-[480px] rounded-2xl overflow-hidden shadow-xl border border-[#D4CBBB]">
           <Image
             src="/images/hall/crystal-ballroom.jpg"
-            alt="The Grand Crystal Ballroom & Starlit Lawn"
+            alt="Party Hall at Rajmahal Heritage Hotel"
             fill
             priority
             className="object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#241F1A] via-[#241F1A]/50 to-transparent flex items-end p-8 sm:p-14">
-            <div className="max-w-3xl">
-              <Badge variant="gold" className="mb-3">
-                Majestic Banquets & Celebrations
-              </Badge>
-              <h1 className="font-heritage text-3xl sm:text-5xl font-bold text-[#FAF8F3] mb-3 leading-tight drop-shadow-md">
-                {hall.name}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#111A15]/95 via-[#111A15]/60 to-transparent flex items-center justify-center p-6 sm:p-12 text-center">
+            <div className="max-w-2xl">
+              <h1 className="font-heritage text-3xl sm:text-5xl font-bold text-[#FAF8F3] mb-3 leading-tight">
+                Party Hall
               </h1>
-              <p className="text-[#EBE5D6] text-sm sm:text-base font-normal leading-relaxed">
-                Pillarless Rajputana ballroom for up to {hall.capacity} guests with Bohemian crystal chandeliers, adjoining illuminated starlit lawn, gourmet banquet catering, and dedicated royal event khansamas.
+              <p className="text-base sm:text-xl font-medium text-[#C9A96E] mb-3">
+                For Celebrations That Matter
               </p>
+              <p className="text-xs sm:text-sm text-[#E0DCD3] max-w-xl mx-auto font-light leading-relaxed mb-8">
+                A spacious and elegant venue for weddings, corporate events, birthdays and special occasions.
+              </p>
+
+              <div>
+                <a
+                  href="#enquire"
+                  className="px-6 py-3 rounded-md bg-[#13251E] border border-[#B08D57]/60 hover:bg-[#1C382D] text-[#FAF8F3] font-medium text-sm tracking-wide transition-all shadow"
+                >
+                  Enquire Now
+                </a>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Curated Packages */}
-        <div className="mb-20">
-          <div className="text-center max-w-2xl mx-auto mb-12">
-            <Badge variant="maroon" className="mb-2">Bespoke Curation</Badge>
-            <h2 className="font-heritage text-3xl sm:text-4xl font-bold text-[#241F1A]">
-              Palace Event Packages & Guidance
+        {/* ── 4 FEATURE ICONS (Matching image) ── */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-4xl mx-auto text-center">
+          {features.map((feat, idx) => {
+            const Icon = feat.icon;
+            return (
+              <div
+                key={idx}
+                className="flex flex-col items-center p-5 rounded-xl bg-white border border-[#E5DFD5] shadow-2xs hover:shadow-md transition-all"
+              >
+                <div className="w-14 h-14 rounded-full bg-[#FAF8F3] border border-[#B08D57]/50 flex items-center justify-center mb-3">
+                  <Icon className="w-7 h-7 text-[#B08D57]" />
+                </div>
+                <h4 className="text-xs sm:text-sm font-semibold text-[#13251E]">
+                  {feat.label}
+                </h4>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* ── ENQUIRY SECTION (WEB-05) ── */}
+        <div id="enquire" className="max-w-3xl mx-auto bg-white rounded-2xl border border-[#E5DFD5] p-6 sm:p-10 shadow-lg text-left">
+          <div className="text-center mb-8">
+            <h2 className="font-heritage text-2xl sm:text-3xl font-bold text-[#13251E] mb-2">
+              Plan Your Celebration
             </h2>
-            <div className="w-16 h-0.5 bg-[#B08D57] mx-auto mt-3 mb-2" />
-            <p className="text-[#6B6155] text-sm mt-2">
-              Tailored event curations featuring grand royal entry, live shehnai & acoustics, and multi-course Awadhi feasts.
+            <p className="text-xs sm:text-sm text-[#6E6356]">
+              Share your event dates, guest count, and seating preference. Our royal banquet concierge will generate a personalized proposal.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {hall.packages.map((pkg, idx) => (
-              <div
-                key={idx}
-                className="heritage-card bg-white p-6 sm:p-8 rounded-2xl border border-[#D4CBBB] flex flex-col justify-between hover:border-[#670E10] shadow-md transition-all"
+          {confirmedEnquiry ? (
+            <div className="p-6 rounded-xl bg-[#FAF8F3] border border-[#B08D57]/40 text-center space-y-4">
+              <CheckCircle2 className="w-12 h-12 text-[#2D6A4F] mx-auto" />
+              <h3 className="font-heritage text-2xl font-bold text-[#13251E]">
+                Enquiry Successfully Registered!
+              </h3>
+              <p className="text-xs text-[#6E6356]">
+                Reference Code: <strong className="text-[#13251E] font-mono">{confirmedEnquiry.referenceCode}</strong>
+              </p>
+              <div className="p-4 rounded-lg bg-white border border-[#E5DFD5] text-xs space-y-1.5 text-left max-w-md mx-auto">
+                <p><strong>Occasion:</strong> {confirmedEnquiry.eventType}</p>
+                <p><strong>Estimated Guests:</strong> {confirmedEnquiry.guests} attendees</p>
+                <p><strong>Preferred Date:</strong> {confirmedEnquiry.date}</p>
+                <p><strong>Seating Layout:</strong> {confirmedEnquiry.seatingLayout}</p>
+              </div>
+              <button
+                onClick={() => setConfirmedEnquiry(null)}
+                className="mt-4 px-5 py-2 rounded-md bg-[#13251E] text-[#FAF8F3] text-xs font-medium"
               >
+                Submit Another Enquiry
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {errorMsg && (
+                <div className="p-3 rounded-lg bg-red-50 text-red-700 text-xs border border-red-200">
+                  {errorMsg}
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <div className="w-12 h-12 rounded-xl bg-[#670E10]/10 border border-[#670E10]/30 flex items-center justify-center mb-5 text-[#670E10]">
-                    <Sparkles className="w-6 h-6 text-[#670E10]" />
-                  </div>
-                  <h3 className="font-heritage text-xl font-bold text-[#241F1A] mb-2">{pkg.name}</h3>
-                  <p className="text-xs text-[#6B6155] mb-6 leading-relaxed">{pkg.description}</p>
+                  <label className="block text-xs font-semibold text-[#13251E] mb-1">
+                    Your Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={contactName}
+                    onChange={(e) => setContactName(e.target.value)}
+                    placeholder="e.g. Maharaja Vikram Singh"
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-[#E5DFD5] bg-[#FAF8F3]/50 text-xs text-[#13251E] focus:outline-none focus:border-[#B08D57]"
+                  />
                 </div>
 
-                <div className="pt-5 border-t border-[#D4CBBB]">
-                  <span className="text-[10px] uppercase tracking-wider text-[#8F7245] font-bold block mb-1">
-                    Guidance Tariff Starting From
-                  </span>
-                  <span className="text-2xl font-heritage font-bold text-[#670E10]">
-                    {formatMoney(pkg.price_guidance_minor)}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Enquiry Form (WEB-05) */}
-        <div className="max-w-4xl mx-auto">
-          <div className="heritage-card bg-white p-8 sm:p-12 rounded-2xl border-2 border-[#B08D57]/40 shadow-lg">
-            {confirmedEnquiry ? (
-              <div className="text-center space-y-6">
-                <div className="w-16 h-16 rounded-full bg-[#670E10]/10 border-2 border-[#670E10] flex items-center justify-center mx-auto">
-                  <CheckCircle2 className="w-8 h-8 text-[#670E10]" />
-                </div>
-                <Badge variant="emerald">Lead Registered for Staff Follow-up</Badge>
-                <h2 className="font-heritage text-3xl font-bold text-[#241F1A]">
-                  Enquiry Successfully Registered
-                </h2>
-                <p className="text-[#6B6155] text-sm max-w-md mx-auto">
-                  Thank you for choosing Aura Grand. Our banquet director will contact you within 24 hours with an itemized royal proposal.
-                </p>
-
-                <div className="p-6 rounded-2xl bg-[#FAF8F3] border border-[#D4CBBB] max-w-md mx-auto text-left space-y-2.5">
-                  <div className="flex justify-between items-center text-xs pb-3 border-b border-[#D4CBBB]">
-                    <span className="text-[#8F7245] font-bold uppercase tracking-wider">Reference Code</span>
-                    <span className="font-mono font-bold text-base text-[#670E10]">{confirmedEnquiry.referenceCode}</span>
-                  </div>
-                  <div className="text-xs text-[#3D352C] flex justify-between">
-                    <span className="text-[#6B6155]">Event Type</span>
-                    <span className="font-semibold">{confirmedEnquiry.eventType}</span>
-                  </div>
-                  <div className="text-xs text-[#3D352C] flex justify-between">
-                    <span className="text-[#6B6155]">Preferred Date</span>
-                    <span className="font-semibold">{confirmedEnquiry.date}</span>
-                  </div>
-                  <div className="text-xs text-[#3D352C] flex justify-between">
-                    <span className="text-[#6B6155]">Expected Guests</span>
-                    <span className="font-semibold">{confirmedEnquiry.guests} Attendees</span>
-                  </div>
-                  <div className="text-xs text-[#3D352C] flex justify-between">
-                    <span className="text-[#6B6155]">Seating Layout</span>
-                    <span className="font-semibold">{confirmedEnquiry.seatingLayout}</span>
-                  </div>
-                </div>
-
-                <div className="pt-4 flex justify-center gap-4">
-                  <Button onClick={() => setConfirmedEnquiry(null)} variant="outline">
-                    Submit Another Enquiry
-                  </Button>
-                  <Link href="/dashboard">
-                    <Button variant="secondary">View in Staff Console &rarr;</Button>
-                  </Link>
+                <div>
+                  <label className="block text-xs font-semibold text-[#13251E] mb-1">
+                    Phone Number *
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    value={contactPhone}
+                    onChange={(e) => setContactPhone(e.target.value)}
+                    placeholder="+91 98765 43210"
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-[#E5DFD5] bg-[#FAF8F3]/50 text-xs text-[#13251E] focus:outline-none focus:border-[#B08D57]"
+                  />
                 </div>
               </div>
-            ) : (
-              <div>
-                <div className="text-center mb-8">
-                  <Badge variant="maroon" className="mb-2">Event Concierge Enquiry</Badge>
-                  <h2 className="font-heritage text-3xl font-bold text-[#241F1A]">
-                    Request a Bespoke Proposal & Quote
-                  </h2>
-                  <div className="w-16 h-0.5 bg-[#B08D57] mx-auto mt-3 mb-2" />
-                  <p className="text-[#6B6155] text-sm">
-                    Fill in your event preferences and seating layout to receive a customized banquet quote.
-                  </p>
-                </div>
 
-                {errorMsg && (
-                  <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold mb-6">
-                    {errorMsg}
-                  </div>
-                )}
-
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <Input
-                      label="Your Name / Organization"
-                      placeholder="e.g. Thakur Ranvijay Singh"
-                      value={contactName}
-                      onChange={(e) => setContactName(e.target.value)}
-                      required
-                    />
-
-                    <Input
-                      label="Mobile Contact"
-                      placeholder="+91 98765 43210"
-                      value={contactPhone}
-                      onChange={(e) => setContactPhone(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                    <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-[#3D352C] mb-2">
-                        Event Type
-                      </label>
-                      <select
-                        value={eventType}
-                        onChange={(e) => setEventType(e.target.value)}
-                        className="w-full bg-white border border-[#D4CBBB] rounded-xl px-4 py-3 text-sm text-[#241F1A] font-medium focus:outline-none focus:border-[#670E10]"
-                      >
-                        <option value="Royal Wedding / Reception">Royal Wedding / Reception</option>
-                        <option value="Sangeet & Mehendi Night">Sangeet & Mehendi Night</option>
-                        <option value="Corporate Leadership Summit">Corporate Leadership Summit</option>
-                        <option value="Cocktail Gala Dinner">Cocktail Gala Dinner</option>
-                        <option value="Royal Anniversary Celebration">Royal Anniversary Celebration</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="flex items-center text-xs font-bold uppercase tracking-wider text-[#8F7245] mb-2">
-                        <Calendar className="w-3.5 h-3.5 mr-1 text-[#670E10]" /> Preferred Date
-                      </label>
-                      <input
-                        type="date"
-                        value={eventDate}
-                        onChange={(e) => setEventDate(e.target.value)}
-                        className="w-full bg-white border border-[#D4CBBB] rounded-xl px-4 py-2.5 text-sm text-[#241F1A] font-medium focus:outline-none focus:border-[#670E10]"
-                      />
-                    </div>
-
-                    <Input
-                      label="Expected Guests"
-                      type="number"
-                      min="10"
-                      max="400"
-                      value={expectedGuests}
-                      onChange={(e) => setExpectedGuests(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  {/* Seating Layout Choice (WEB-05 Acceptance criteria) */}
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-[#3D352C] mb-2">
-                      Seating Layout Preference (WEB-05)
-                    </label>
-                    <select
-                      value={seatingLayout}
-                      onChange={(e) => setSeatingLayout(e.target.value)}
-                      className="w-full bg-white border border-[#D4CBBB] rounded-xl px-4 py-3 text-sm text-[#241F1A] font-medium focus:outline-none focus:border-[#670E10]"
-                    >
-                      <option value="Round Banquet Tables (Cluster)">Round Banquet Tables (Cluster) — Best for Weddings & Galas</option>
-                      <option value="Theater / Auditorium Style">Theater / Auditorium Style — Max capacity, Keynotes</option>
-                      <option value="Traditional Rajasthani Baithak (Diwans)">Traditional Rajasthani Baithak (Diwans & Floor Bolsters)</option>
-                      <option value="Cocktail Standing & High-Top Lounge">Cocktail Standing & High-Top Lounge</option>
-                      <option value="Classroom / Workshop Style">Classroom / Workshop Style with Note Tables</option>
-                      <option value="U-Shape Executive Boardroom">U-Shape Executive Boardroom</option>
-                    </select>
-                  </div>
-
-                  <Input
-                    label="Email (For Proposal PDF Delivery)"
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-[#13251E] mb-1">
+                    Email Address
+                  </label>
+                  <input
                     type="email"
-                    placeholder="ranvijay@example.com"
                     value={contactEmail}
                     onChange={(e) => setContactEmail(e.target.value)}
+                    placeholder="name@example.com"
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-[#E5DFD5] bg-[#FAF8F3]/50 text-xs text-[#13251E] focus:outline-none focus:border-[#B08D57]"
                   />
+                </div>
 
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-[#3D352C] mb-1.5">
-                      Stage, AV, Decor & Royal Catering Specifics
-                    </label>
-                    <textarea
-                      rows={3}
-                      placeholder="e.g. Need DJ sound stage with live Dhol, pure vegetarian Awadhi buffet, bridal greenroom access, floral mandap setup"
-                      value={setupNeeds}
-                      onChange={(e) => setSetupNeeds(e.target.value)}
-                      className="w-full bg-white border border-[#D4CBBB] rounded-xl px-4 py-2.5 text-sm text-[#241F1A] placeholder-[#9A8E7F] focus:outline-none focus:border-[#670E10]"
-                    />
-                  </div>
-
-                  <Button type="submit" size="lg" isLoading={isSubmitting} className="w-full shadow-md">
-                    Submit Enquiry & Request Royal Quote &rarr;
-                  </Button>
-                </form>
+                <div>
+                  <label className="block text-xs font-semibold text-[#13251E] mb-1">
+                    Occasion / Event Type
+                  </label>
+                  <select
+                    value={eventType}
+                    onChange={(e) => setEventType(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-[#E5DFD5] bg-[#FAF8F3]/50 text-xs text-[#13251E] focus:outline-none focus:border-[#B08D57]"
+                  >
+                    <option value="Royal Wedding / Reception">Royal Wedding / Reception</option>
+                    <option value="Sangeet / Mehendi Ceremony">Sangeet / Mehendi Ceremony</option>
+                    <option value="Corporate Gala / Executive Retreat">Corporate Gala / Executive Retreat</option>
+                    <option value="Milestone Birthday Celebration">Milestone Birthday Celebration</option>
+                    <option value="Private Darbar Banquet">Private Darbar Banquet</option>
+                  </select>
+                </div>
               </div>
-            )}
-          </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-[#13251E] mb-1">
+                    Estimated Guests
+                  </label>
+                  <input
+                    type="number"
+                    min="20"
+                    max="350"
+                    value={expectedGuests}
+                    onChange={(e) => setExpectedGuests(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-[#E5DFD5] bg-[#FAF8F3]/50 text-xs text-[#13251E] focus:outline-none focus:border-[#B08D57]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#13251E] mb-1">
+                    Event Date
+                  </label>
+                  <input
+                    type="date"
+                    value={eventDate}
+                    onChange={(e) => setEventDate(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-[#E5DFD5] bg-[#FAF8F3]/50 text-xs text-[#13251E] focus:outline-none focus:border-[#B08D57]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#13251E] mb-1">
+                    Seating Layout (WEB-05)
+                  </label>
+                  <select
+                    value={seatingLayout}
+                    onChange={(e) => setSeatingLayout(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-[#E5DFD5] bg-[#FAF8F3]/50 text-xs text-[#13251E] focus:outline-none focus:border-[#B08D57]"
+                  >
+                    <option value="Traditional Rajasthani Baithak">Traditional Rajasthani Baithak</option>
+                    <option value="Round Banquet Tables (Cluster)">Round Banquet Tables (Cluster)</option>
+                    <option value="Auditorium / Theatre Style">Auditorium / Theatre Style</option>
+                    <option value="U-Shape Executive Conference">U-Shape Executive Conference</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#13251E] mb-1">
+                  Decor, Acoustic & Floral Preferences
+                </label>
+                <textarea
+                  rows={3}
+                  value={setupNeeds}
+                  onChange={(e) => setSetupNeeds(e.target.value)}
+                  placeholder="e.g. Marigold floral mandap, live folk musicians stage, projector screens..."
+                  className="w-full px-3.5 py-2 rounded-lg border border-[#E5DFD5] bg-[#FAF8F3]/50 text-xs text-[#13251E] focus:outline-none focus:border-[#B08D57]"
+                />
+              </div>
+
+              <div>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full py-3.5 rounded-lg bg-[#13251E] hover:bg-[#1C382D] text-[#FAF8F3] font-medium text-sm tracking-wide transition-all shadow-md cursor-pointer disabled:opacity-50"
+                >
+                  {isSubmitting ? 'Submitting Enquiry...' : 'Submit Banquet Enquiry'}
+                </button>
+              </div>
+            </form>
+          )}
         </div>
       </div>
     </div>

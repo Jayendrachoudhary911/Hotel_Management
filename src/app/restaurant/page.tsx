@@ -2,160 +2,221 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { dataRepository } from '@/lib/data/repository';
 import { formatMoney } from '@/lib/utils/money';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Utensils, Clock, MapPin, Sparkles, Phone, ArrowRight, QrCode } from 'lucide-react';
+import {
+  IconTraditionalCuisine,
+  IconIndoorOutdoor,
+  IconLiveFolkMusic,
+  IconSpecialThali,
+  DineLikeRoyaltyBanner,
+} from '@/components/ui/heritage-art';
+import { ArrowRight, QrCode } from 'lucide-react';
 
 export const metadata = {
-  title: 'Saffron & Spice Fine Dining | Aura Grand Palace Udaipur',
+  title: 'Rajasthani Restaurant | Authentic Flavors, Royal Ambience | Rajmahal Heritage Hotel',
   description:
-    'Royal Awadhi dum gastronomy, clay tandoor kebabs, and traditional Rajasthani royal feasts served in candlelit lakeside pavilions.',
+    'Experience the true taste of Rajasthan with traditional recipes, fresh local ingredients and a heritage dining atmosphere. Dal Baati Churma, Laal Maas, Gatte ki Sabzi, Ker Sangri.',
 };
 
 export default function RestaurantPage() {
   const outlet = dataRepository.getOutletByType('restaurant')!;
   const categories = dataRepository.getMenuCategories(outlet.id);
 
+  const signatureDishes = [
+    {
+      name: 'Dal Baati Churma',
+      image: '/images/food/dal-baati.jpg',
+      desc: 'Golden crisp baati rolls drenched in desi ghee with spiced dal and sweet churma.',
+    },
+    {
+      name: 'Laal Maas',
+      image: '/images/food/laal-maas.jpg',
+      desc: 'Royal Rajputana mutton simmered in Mathania red chillies and fragrant spices.',
+    },
+    {
+      name: 'Gatte ki Sabzi',
+      image: '/images/food/gatte-ki-sabzi.jpg',
+      desc: 'Gram flour dumplings poached in an aromatic spiced curd gravy.',
+    },
+    {
+      name: 'Ker Sangri',
+      image: '/images/food/ker-sangri.jpg',
+      desc: 'Authentic wild desert berries and dried beans cooked with dry mango and cumin.',
+    },
+  ];
+
+  const features = [
+    { label: 'Traditional Rajasthani Cuisine', icon: IconTraditionalCuisine },
+    { label: 'Indoor & Outdoor Seating', icon: IconIndoorOutdoor },
+    { label: 'Live Folk Music (Weekends)', icon: IconLiveFolkMusic },
+    { label: 'Special Thali Experiences', icon: IconSpecialThali },
+  ];
+
   return (
-    <div className="bg-[#F5F1E8] min-h-screen py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Hero Banner */}
-        <div className="relative h-[440px] rounded-3xl overflow-hidden mb-12 border-2 border-[#B08D57]/40 shadow-xl">
+    <div className="bg-[#FAF7F2] min-h-screen py-10 sm:py-16 text-[#1E1A17]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+        {/* ── 1. HERO BANNER (Matching image) ── */}
+        <div className="relative h-[380px] sm:h-[480px] rounded-2xl overflow-hidden shadow-xl border border-[#D4CBBB]">
           <Image
             src="/images/food/restaurant.jpg"
-            alt="Saffron & Spice Fine Dining"
+            alt="Rajasthani Restaurant at Rajmahal Heritage Hotel"
             fill
             priority
             className="object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#241F1A] via-[#241F1A]/50 to-transparent flex items-end p-8 sm:p-14">
+          <div className="absolute inset-0 bg-gradient-to-t from-[#111A15]/95 via-[#111A15]/65 to-transparent flex items-center justify-center p-6 sm:p-12 text-center">
             <div className="max-w-3xl">
-              <Badge variant="gold" className="mb-3">
-                Royal Rajputana Gastronomy
-              </Badge>
-              <h1 className="font-heritage text-3xl sm:text-5xl font-bold text-[#FAF8F3] mb-3 leading-tight drop-shadow-md">
-                {outlet.name}
+              <h1 className="font-heritage text-3xl sm:text-5xl lg:text-6xl font-bold text-[#FAF8F3] mb-3 leading-tight">
+                Rajasthani Restaurant
               </h1>
-              <p className="text-[#EBE5D6] text-sm sm:text-base font-normal leading-relaxed">
-                Awadhi dum culinary secrets, 36-hour slow-cooked signature dal, charcoal-fired clay tandoor kebabs, and fragrant subz biryanis served on handcrafted bell-metal tableware.
+              <p className="text-base sm:text-xl font-medium text-[#C9A96E] mb-4">
+                Authentic Flavors, Royal Ambience
               </p>
-            </div>
-          </div>
-        </div>
+              <p className="text-xs sm:text-base text-[#E0DCD3] max-w-2xl mx-auto font-light leading-relaxed mb-8">
+                Experience the true taste of Rajasthan with traditional recipes, fresh local ingredients and a heritage dining atmosphere.
+              </p>
 
-        {/* Info & Fast Action Row (WEB-01, WEB-02) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-          <div className="heritage-card bg-white p-5 rounded-2xl flex items-center space-x-4 border border-[#D4CBBB] shadow-sm">
-            <div className="w-12 h-12 rounded-xl bg-[#670E10]/10 border border-[#670E10]/30 flex items-center justify-center shrink-0 text-[#670E10]">
-              <Clock className="w-6 h-6" />
-            </div>
-            <div>
-              <span className="text-[11px] uppercase text-[#8F7245] font-bold block">Operating Hours</span>
-              <span className="text-sm font-bold text-[#241F1A]">Daily: 11:00 AM – 11:00 PM</span>
-            </div>
-          </div>
-
-          <div className="heritage-card bg-white p-5 rounded-2xl flex items-center space-x-4 border border-[#D4CBBB] shadow-sm">
-            <div className="w-12 h-12 rounded-xl bg-[#670E10]/10 border border-[#670E10]/30 flex items-center justify-center shrink-0 text-[#670E10]">
-              <MapPin className="w-6 h-6" />
-            </div>
-            <div>
-              <span className="text-[11px] uppercase text-[#8F7245] font-bold block">Sanctuary Location</span>
-              <span className="text-sm font-bold text-[#241F1A]">Lakeside Pavilion, Ground Floor</span>
-            </div>
-          </div>
-
-          <div className="heritage-card bg-white p-5 rounded-2xl flex items-center justify-between border border-[#D4CBBB] shadow-sm">
-            <div>
-              <span className="text-[11px] uppercase text-[#8F7245] font-bold block">Takeaway & In-Room</span>
-              <span className="text-sm font-bold text-[#670E10]">Doorstep Delivery Available</span>
-            </div>
-            <Link href="/order/pickup">
-              <Button size="sm">Order Online</Button>
-            </Link>
-          </div>
-        </div>
-
-        {/* Categorized Menu */}
-        <div className="space-y-16">
-          {categories.map((category) => (
-            <div key={category.id} className="space-y-6">
-              <div className="flex items-center space-x-4 pb-3 border-b-2 border-[#D4CBBB]">
-                <h2 className="font-heritage text-2xl sm:text-3xl font-bold text-[#241F1A]">{category.name}</h2>
-                <span className="text-xs text-[#8F7245] font-bold px-2.5 py-1 rounded-full bg-[#FAF8F3] border border-[#D4CBBB]">
-                  {category.items?.length || 0} Specialt{category.items?.length === 1 ? 'y' : 'ies'}
-                </span>
+              {/* Action Buttons matching image */}
+              <div className="flex flex-wrap items-center justify-center gap-4">
+                <a
+                  href="#menu"
+                  className="px-6 py-3 rounded-md bg-[#C59B63] hover:bg-[#B88E55] text-[#13251E] font-medium text-sm tracking-wide transition-all shadow"
+                >
+                  View Menu
+                </a>
+                <Link
+                  href="/#contact"
+                  className="px-6 py-3 rounded-md bg-[#13251E] border border-[#B08D57]/60 hover:bg-[#1C382D] text-[#FAF8F3] font-medium text-sm tracking-wide transition-all shadow"
+                >
+                  Reserve a Table
+                </Link>
+                <Link
+                  href="/qr/table-t01"
+                  className="px-4 py-3 rounded-md bg-white/10 hover:bg-white/20 text-[#FAF8F3] text-sm font-medium backdrop-blur-xs flex items-center space-x-1.5 transition-all"
+                >
+                  <QrCode className="w-4 h-4 text-[#C9A96E]" />
+                  <span>Dine-In QR</span>
+                </Link>
               </div>
+            </div>
+          </div>
+        </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* ── 2. FOUR FEATURES ROW WITH ICONS (Matching image) ── */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 text-center py-4">
+          {features.map((feat, idx) => {
+            const Icon = feat.icon;
+            return (
+              <div
+                key={idx}
+                className="flex flex-col items-center p-4 rounded-xl bg-white border border-[#E5DFD5] shadow-2xs hover:shadow-md transition-all"
+              >
+                <div className="w-14 h-14 rounded-full bg-[#FAF8F3] border border-[#B08D57]/50 flex items-center justify-center mb-3">
+                  <Icon className="w-7 h-7 text-[#B08D57]" />
+                </div>
+                <h4 className="text-xs sm:text-sm font-semibold text-[#13251E] max-w-[160px] leading-snug">
+                  {feat.label}
+                </h4>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* ── 3. OUR SIGNATURE DISHES (Matching image with circular food photos) ── */}
+        <div className="space-y-8 text-center">
+          <div>
+            <h2 className="font-heritage text-3xl sm:text-4xl font-bold text-[#13251E] mb-2">
+              Our Signature Dishes
+            </h2>
+            <p className="text-sm text-[#6E6356] font-light">
+              Centuries-old royal recipes crafted by our khansama masters
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+            {signatureDishes.map((dish, idx) => (
+              <div
+                key={idx}
+                className="bg-white rounded-2xl p-5 border border-[#E5DFD5] shadow-xs hover:shadow-lg transition-all flex flex-col items-center text-center group"
+              >
+                {/* Circular image matching image */}
+                <div className="relative w-40 h-40 sm:w-44 sm:h-44 rounded-full overflow-hidden border-2 border-[#B08D57]/40 shadow-md mb-4 group-hover:scale-105 transition-transform duration-300">
+                  <Image
+                    src={dish.image}
+                    alt={dish.name}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <h3 className="font-heritage text-lg font-bold text-[#13251E] mb-1.5 group-hover:text-[#B08D57] transition-colors">
+                  {dish.name}
+                </h3>
+                <p className="text-xs text-[#7A6F62] leading-relaxed font-light">
+                  {dish.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div>
+            <a
+              href="#menu"
+              className="inline-flex items-center space-x-2 px-6 py-3 rounded-md bg-[#13251E] hover:bg-[#1C382D] text-[#FAF8F3] font-medium text-sm tracking-wide transition-all shadow"
+            >
+              <span>View Full Menu</span>
+              <ArrowRight className="w-4 h-4 text-[#C9A96E]" />
+            </a>
+          </div>
+        </div>
+
+        {/* ── 4. DINE LIKE ROYALTY ELEPHANTS BANNER (Matching image) ── */}
+        <DineLikeRoyaltyBanner />
+
+        {/* ── 5. FULL CATEGORIZED ROYAL MENU ── */}
+        <div id="menu" className="pt-8 space-y-12">
+          <div className="text-center max-w-xl mx-auto">
+            <h2 className="font-heritage text-2xl sm:text-3xl font-bold text-[#13251E] mb-2">
+              Royal Dining Selection
+            </h2>
+            <p className="text-xs sm:text-sm text-[#7A6F62]">
+              Select any delicacy for dine-in, table reservation, or direct delivery
+            </p>
+          </div>
+
+          {categories.map((category) => (
+            <div key={category.id} className="space-y-4">
+              <h3 className="font-heritage text-xl font-bold text-[#13251E] pb-2 border-b border-[#D4CBBB]">
+                {category.name}
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {category.items?.map((item) => (
                   <div
                     key={item.id}
-                    className="heritage-card bg-white p-6 rounded-2xl border border-[#D4CBBB] flex flex-col justify-between hover:border-[#670E10] shadow-sm transition-all"
+                    className="bg-white p-4 sm:p-5 rounded-xl border border-[#E5DFD5] shadow-2xs hover:border-[#B08D57] transition-all flex justify-between items-start"
                   >
-                    <div>
-                      <div className="flex justify-between items-start gap-4 mb-2">
-                        <div className="flex items-center space-x-2">
-                          <span className="w-3.5 h-3.5 rounded-sm border border-emerald-600 flex items-center justify-center p-0.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
-                          </span>
-                          <h3 className="text-base font-bold text-[#241F1A] tracking-tight">
-                            {item.name}
-                          </h3>
-                        </div>
-                        <span className="text-base font-heritage font-bold text-[#670E10] whitespace-nowrap">
-                          {formatMoney(item.price_minor)}
-                        </span>
+                    <div className="pr-4">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <span className={`w-3 h-3 rounded-full ${(item.dietary_labels || []).includes('veg') ? 'bg-emerald-600' : 'bg-red-700'}`} />
+                        <h4 className="font-semibold text-sm text-[#13251E]">{item.name}</h4>
                       </div>
-
-                      <p className="text-xs text-[#6B6155] mb-4 leading-relaxed pl-5">
+                      <p className="text-xs text-[#7A6F62] leading-relaxed mb-2 font-light">
                         {item.description}
                       </p>
-
-                      <div className="flex flex-wrap gap-1.5 pl-5 mb-4">
-                        {item.dietary_labels?.map((label, idx) => (
-                          <span
-                            key={idx}
-                            className="text-[10px] px-2 py-0.5 rounded uppercase font-bold tracking-wider bg-[#FAF8F3] border border-[#D4CBBB] text-[#8F7245]"
-                          >
-                            {label}
-                          </span>
-                        ))}
-                      </div>
+                      <span className="font-heritage font-bold text-sm text-[#13251E]">
+                        {formatMoney(item.price_minor)}
+                      </span>
                     </div>
 
-                    <div className="pt-4 border-t border-[#D4CBBB] flex items-center justify-between pl-5">
-                      <span className="text-[11px] text-[#6B6155]">Freshly prepared per order</span>
-                      <Link href="/order/pickup">
-                        <Button size="sm" variant="outline">
-                          Order This Item
-                        </Button>
-                      </Link>
-                    </div>
+                    <Link
+                      href="/order/pickup"
+                      className="px-3 py-1.5 rounded bg-[#FAF8F3] hover:bg-[#13251E] hover:text-[#FAF8F3] border border-[#D4CBBB] text-xs font-medium text-[#13251E] transition-all shrink-0"
+                    >
+                      Order
+                    </Link>
                   </div>
                 ))}
               </div>
             </div>
           ))}
-        </div>
-
-        {/* QR Dine-in Callout Box */}
-        <div className="mt-20 heritage-card bg-[#241F1A] text-[#FAF8F3] p-8 sm:p-12 rounded-3xl border-2 border-[#B08D57]/40 shadow-xl flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="space-y-3 max-w-2xl">
-            <Badge variant="gold">Table Dine-In Experience</Badge>
-            <h3 className="font-heritage text-2xl sm:text-3xl font-bold text-[#FAF8F3]">
-              Dining with Us Tonight?
-            </h3>
-            <p className="text-[#D4CBBB] text-sm leading-relaxed">
-              Scan the carved brass QR token placed at your table to order drinks and courses directly to our Royal Khansama without waiting for waitstaff.
-            </p>
-          </div>
-          <Link href="/qr/table-01-token">
-            <Button size="lg" variant="gold" className="whitespace-nowrap flex items-center space-x-2">
-              <QrCode className="w-5 h-5 mr-1" />
-              <span>Simulate Table QR Order &rarr;</span>
-            </Button>
-          </Link>
         </div>
       </div>
     </div>

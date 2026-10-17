@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
+import { MobileNav } from '@/components/layout/mobile-nav';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -26,11 +27,14 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col" style={{ backgroundColor: '#F5F1E8', color: '#241F1A' }}>
-        <Suspense fallback={<div className="h-20" style={{ backgroundColor: '#670E10' }} />}>
+        <Suspense fallback={<div className="h-20" style={{ backgroundColor: '#13251E' }} />}>
           <Navbar />
         </Suspense>
         <main className="flex-1 flex flex-col">{children}</main>
         <Footer />
+        <Suspense fallback={null}>
+          <MobileNav />
+        </Suspense>
       </body>
     </html>
   );
