@@ -1,0 +1,418 @@
+'use client';
+
+import React, { useState, useEffect, Suspense } from 'react';
+import Link from 'next/link';
+import { useParams, useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { formatMoney } from '@/lib/utils/money';
+import { dataRepository } from '@/lib/data/repository';
+import type { MenuItem, Table, Outlet, MenuCategory } from '@/lib/types';
+import {
+  Utensils,
+  Plus,
+  Minus,
+  ShoppingBag,
+  Sparkles,
+  CheckCircle2,
+  AlertCircle,
+  X,
+  ArrowRight,
+  Clock,
+  MapPin,
+} from 'lucide-react';
+
+interface CartItemState {
+  item: MenuItem;
+  quantity: number;
+  notes: string;
+}
+
+function QRTableOrderContent() {
+  const params = useParams();
+  const token = params.token as string;
+  const router = useRouter();
+
+  const [table, setTable] = useState<Table | null>(null);
+  const [outlet, setOutlet] = useState<Outlet | null>(null);
+  const [categories, setCategories] = useState<MenuCategory[]>([]);
+  const [cart, setCart] = useState<{ [itemId: string]: CartItemState }>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [isCartOpen, setIsCartOpen] = useState(false);
+
+  useEffect(() => {
+    // Resolve token
+    const resolved = dataRepository.resolveQRToken(token);
+    if (resolved) {
+      setTable(resolved.table);
+      setOutlet(resolved.outlet);
+      const cats = dataRepository.getMenuCategories(resolved.outlet.id);
+      setCategories(cats);
+    } else {
+      setErrorMsg('Invalid or expired QR code table session. Please consult staff.');
+    }
+  }, [token]);
+
+  const addToCart = (item: MenuItem) => {
+    setCart((prev) => {
+      const existing = prev[item.id];
+      if (existing) {
+        return {
+          ...prev,
+          [item.id]: { ...existing, quantity: existing.quantity + 1 },
+        };
+      }
+      return {
+        ...prev,
+        [item.id]: { item, quantity: 1, notes: '' },
+      };
+    });
+  };
+
+  const removeFromCart = (itemId: string) => {
+    setCart((prev) => {
+      const existing = prev[itemId];
+      if (!existing) return prev;
+      if (existing.quantity <= 1) {
+        const next = { ...prev };
+        delete next[itemId];
+        return next;
+      }
+      return {
+        ...prev,
+        [itemId]: { ...existing, quantity: existing.quantity - 1 },
+      };
+    });
+  };
+
+  const updateNotes = (itemId: string, notes: string) => {
+    setCart((prev) => {
+      if (!prev[itemId]) return prev;
+      return {
+        ...prev,
+        [itemId]: { ...prev[itemId], notes },
+      };
+    });
+  };
+
+  // Calculations
+  const cartItems = Object.values(cart);
+  const totalItemCount = cartItems.reduce((sum, ci) => sum + ci.quantity, 0);
+  const subtotalMinor = cartItems.reduce((sum, ci) => sum + ci.item.price_minor * ci.quantity, 0);
+  const taxRateBps = outlet?.tax_rate_bps || 500; // 5%
+  const taxMinor = Math.round((subtotalMinor * taxRateBps) / 10000);
+  const serviceChargeBps = outlet?.service_charge_bps || 0;
+  const serviceChargeMinor = Math.round((subtotalMinor * serviceChargeBps) / 10000);
+  const totalMinor = subtotalMinor + taxMinor + serviceChargeMinor;
+
+  const handlePlaceOrder = async () => {
+    if (!table || !outlet || cartItems.length === 0) return;
+    setIsSubmitting(true);
+    setErrorMsg('');
+
+    try {
+      const orderLines = cartItems.map((ci) => ({
+        menu_item_id: ci.item.id,
+        item_name_snapshot: ci.item.name,
+        unit_price_snapshot_minor: ci.item.price_minor,
+        quantity: ci.quantity,
+        notes: ci.notes || null,
+        modifiers_snapshot: null,
+        line_total_minor: ci.item.price_minor * ci.quantity,
+      }));
+
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          outlet_id: outlet.id,
+          table_id: table.id,
+          channel: 'qr',
+          fulfilment_mode: 'dine_in',
+          subtotal_minor: subtotalMinor,
+          tax_minor: taxMinor,
+          service_charge_minor: serviceChargeMinor,
+          discount_minor: 0,
+          total_minor: totalMinor,
+          delivery_fee_minor: 0,
+          status: 'new',
+          order_lines: orderLines,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to submit order');
+
+      // Navigate to order status
+      router.push(`/order-status/${data.order.order_number}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Order submission failed';
+      setErrorMsg(message);
+      setIsSubmitting(false);
+    }
+  };
+
+  if (errorMsg && !table) {
+    return (
+      <div className="max-w-xl mx-auto px-4 py-20 text-center">
+        <div className="heritage-card bg-white p-8 rounded-2xl border-2 border-rose-300 shadow-md">
+          <AlertCircle className="w-12 h-12 text-rose-600 mx-auto mb-4" />
+          <h2 className="font-heritage text-2xl font-bold text-[#241F1A] mb-2">QR Token Invalid</h2>
+          <p className="text-xs text-[#6B6155] mb-6">{errorMsg}</p>
+          <Link href="/">
+            <Button>Return to Palace Home</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-[#F5F1E8] min-h-screen py-8 pb-32">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Table & Outlet Top Badge */}
+        <div className="heritage-card bg-white p-5 rounded-2xl border-2 border-[#B08D57]/40 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+          <div className="flex items-center space-x-4">
+            <div className="w-12 h-12 rounded-xl bg-[#670E10] text-white flex items-center justify-center font-heritage font-bold text-lg shadow-md">
+              <Utensils className="w-6 h-6 text-[#B08D57]" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <Badge variant="maroon">{outlet?.name}</Badge>
+                <span className="text-xs font-bold text-[#670E10]">Table {table?.table_number}</span>
+              </div>
+              <h1 className="font-heritage text-xl sm:text-2xl font-bold text-[#241F1A] mt-1">
+                Contactless Table Dining
+              </h1>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setIsCartOpen(true)}
+            className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-[#FAF8F3] border border-[#D4CBBB] hover:border-[#670E10] transition-colors cursor-pointer text-xs font-bold text-[#241F1A]"
+          >
+            <ShoppingBag className="w-4 h-4 text-[#670E10]" />
+            <span>Order Basket ({totalItemCount})</span>
+          </button>
+        </div>
+
+        {/* Menu Items Categories */}
+        <div className="space-y-12">
+          {categories.map((category) => (
+            <div key={category.id} className="space-y-4">
+              <div className="flex items-center justify-between border-b-2 border-[#D4CBBB] pb-2">
+                <h2 className="font-heritage text-2xl font-bold text-[#241F1A]">{category.name}</h2>
+                <span className="text-xs text-[#8F7245] font-semibold">{category.items?.length || 0} Specialties</span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {category.items?.map((item) => {
+                  const cartQty = cart[item.id]?.quantity || 0;
+                  return (
+                    <div
+                      key={item.id}
+                      className="heritage-card bg-white p-5 rounded-xl border border-[#D4CBBB] flex flex-col justify-between shadow-xs hover:border-[#670E10] transition-colors"
+                    >
+                      <div>
+                        <div className="flex justify-between items-start gap-3 mb-1">
+                          <div className="flex items-center space-x-2">
+                            <span className="w-3.5 h-3.5 rounded-sm border border-emerald-600 flex items-center justify-center p-0.5 shrink-0">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+                            </span>
+                            <h3 className="font-bold text-[#241F1A] text-sm">{item.name}</h3>
+                          </div>
+                          <span className="font-heritage font-bold text-[#670E10] whitespace-nowrap">
+                            {formatMoney(item.price_minor)}
+                          </span>
+                        </div>
+
+                        <p className="text-xs text-[#6B6155] mb-3 pl-5 leading-relaxed">{item.description}</p>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-3 border-t border-[#D4CBBB] pl-5">
+                        <div className="flex flex-wrap gap-1">
+                          {item.dietary_labels.map((label, idx) => (
+                            <span key={idx} className="text-[10px] px-2 py-0.5 rounded bg-[#FAF8F3] border border-[#D4CBBB] text-[#8F7245] uppercase font-bold">
+                              {label}
+                            </span>
+                          ))}
+                        </div>
+
+                        {cartQty === 0 ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => addToCart(item)}
+                            className="text-xs px-3 py-1.5"
+                          >
+                            <Plus className="w-3.5 h-3.5 mr-1" /> Add
+                          </Button>
+                        ) : (
+                          <div className="flex items-center space-x-2 bg-[#FAF8F3] px-2 py-1 rounded-xl border border-[#D4CBBB]">
+                            <button
+                              onClick={() => removeFromCart(item.id)}
+                              className="p-1 text-[#670E10] hover:text-[#8A1518] cursor-pointer"
+                            >
+                              <Minus className="w-3.5 h-3.5" />
+                            </button>
+                            <span className="text-xs font-bold text-[#241F1A] px-1">{cartQty}</span>
+                            <button
+                              onClick={() => addToCart(item)}
+                              className="p-1 text-[#670E10] hover:text-[#8A1518] cursor-pointer"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Floating Sticky Cart Bar (Mobile/Dine-In) */}
+        {totalItemCount > 0 && !isCartOpen && (
+          <div className="fixed bottom-6 left-4 right-4 max-w-lg mx-auto z-40 animate-in slide-in-from-bottom-4">
+            <div className="heritage-card bg-[#241F1A] text-[#FAF8F3] p-4 rounded-2xl border-2 border-[#B08D57] shadow-2xl flex items-center justify-between">
+              <div>
+                <span className="text-xs text-[#D4CBBB] block">{totalItemCount} Items selected</span>
+                <span className="text-xl font-heritage font-bold text-[#C9A96E]">{formatMoney(totalMinor)}</span>
+              </div>
+              <Button onClick={() => setIsCartOpen(true)} size="md" variant="gold">
+                Send to Royal Kitchen &rarr;
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Slide-over Cart Modal */}
+        {isCartOpen && (
+          <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="w-full max-w-md h-full bg-[#FAF8F3] border-l-2 border-[#B08D57] p-6 flex flex-col justify-between overflow-y-auto">
+              <div>
+                <div className="flex items-center justify-between pb-4 border-b border-[#D4CBBB] mb-6">
+                  <div>
+                    <h3 className="font-heritage text-xl font-bold text-[#241F1A]">Your Table Order</h3>
+                    <span className="text-xs text-[#6B6155]">
+                      {outlet?.name} &bull; Table {table?.table_number}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setIsCartOpen(false)}
+                    className="p-1.5 rounded-lg text-[#241F1A] hover:bg-[#EBE5D6] cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {cartItems.length === 0 ? (
+                  <p className="text-xs text-[#6B6155] text-center py-10">
+                    Your table order is empty. Please select items from the menu.
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    {cartItems.map(({ item, quantity, notes }) => (
+                      <div key={item.id} className="p-3 bg-white rounded-xl border border-[#D4CBBB] space-y-2">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <span className="text-sm font-bold text-[#241F1A]">{item.name}</span>
+                            <span className="text-xs text-[#8F7245] block font-semibold">
+                              {formatMoney(item.price_minor)} each
+                            </span>
+                          </div>
+                          <span className="font-heritage font-bold text-[#670E10] text-sm">
+                            {formatMoney(item.price_minor * quantity)}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-2">
+                          <input
+                            type="text"
+                            placeholder="Add spice/chef notes..."
+                            value={notes}
+                            onChange={(e) => updateNotes(item.id, e.target.value)}
+                            className="text-xs bg-[#FAF8F3] border border-[#D4CBBB] rounded-lg px-2.5 py-1 text-[#241F1A] w-48 focus:outline-none focus:border-[#670E10]"
+                          />
+
+                          <div className="flex items-center space-x-1.5 bg-[#FAF8F3] px-2 py-0.5 rounded-lg border border-[#D4CBBB]">
+                            <button
+                              onClick={() => removeFromCart(item.id)}
+                              className="text-[#670E10] text-xs font-bold px-1"
+                            >
+                              -
+                            </button>
+                            <span className="text-xs font-bold text-[#241F1A]">{quantity}</span>
+                            <button
+                              onClick={() => addToCart(item)}
+                              className="text-[#670E10] text-xs font-bold px-1"
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {cartItems.length > 0 && (
+                <div className="pt-6 border-t border-[#D4CBBB] space-y-3 mt-6">
+                  {errorMsg && (
+                    <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold">
+                      {errorMsg}
+                    </div>
+                  )}
+
+                  <div className="space-y-1.5 text-xs">
+                    <div className="flex justify-between text-[#6B6155]">
+                      <span>Subtotal</span>
+                      <span className="font-bold text-[#241F1A]">{formatMoney(subtotalMinor)}</span>
+                    </div>
+                    <div className="flex justify-between text-[#6B6155]">
+                      <span>GST ({taxRateBps / 100}%)</span>
+                      <span className="font-bold text-[#241F1A]">{formatMoney(taxMinor)}</span>
+                    </div>
+                    {serviceChargeMinor > 0 && (
+                      <div className="flex justify-between text-[#6B6155]">
+                        <span>Service Charge</span>
+                        <span className="font-bold text-[#241F1A]">{formatMoney(serviceChargeMinor)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-base font-bold text-[#241F1A] pt-2 border-t border-[#D4CBBB]">
+                      <span>Total Payable</span>
+                      <span className="font-heritage text-xl text-[#670E10]">{formatMoney(totalMinor)}</span>
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={handlePlaceOrder}
+                    isLoading={isSubmitting}
+                    size="lg"
+                    className="w-full shadow-md flex items-center justify-center space-x-2"
+                  >
+                    <span>Confirm & Send to Royal Kitchen</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default function QRTableOrderPage() {
+  return (
+    <Suspense fallback={<div className="p-12 text-center text-[#670E10] font-bold">Connecting to Royal Dining Table...</div>}>
+      <QRTableOrderContent />
+    </Suspense>
+  );
+}

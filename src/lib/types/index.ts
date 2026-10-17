@@ -1,0 +1,369 @@
+/**
+ * Application-level TypeScript types.
+ * These complement the auto-generated Supabase types with
+ * app-specific interfaces used across components.
+ */
+
+import type {
+  ReservationStatus,
+  HousekeepingState,
+  HallEnquiryStatus,
+  OrderStatus,
+  FulfilmentMode,
+  OrderChannel,
+  OutletType,
+  TenderType,
+  PaymentStatus,
+  UserRole,
+} from '@/lib/utils/constants';
+
+export type {
+  ReservationStatus,
+  HousekeepingState,
+  HallEnquiryStatus,
+  OrderStatus,
+  FulfilmentMode,
+  OrderChannel,
+  OutletType,
+  TenderType,
+  PaymentStatus,
+  UserRole,
+};
+
+// ── Property ──
+export interface Property {
+  id: string;
+  name: string;
+  address: string;
+  phone: string;
+  email: string;
+  currency_code: string;
+  timezone: string;
+  operating_hours: Record<string, { open: string; close: string }>;
+  booking_policy: string;
+  cancellation_terms: string;
+  deposit_percent: number;
+  is_active: boolean;
+  created_at: string;
+}
+
+// ── Outlet ──
+export interface Outlet {
+  id: string;
+  property_id: string;
+  name: string;
+  type: OutletType;
+  operating_hours: Record<string, { open: string; close: string }>;
+  dine_in_enabled: boolean;
+  pickup_enabled: boolean;
+  delivery_enabled: boolean;
+  pickup_lead_minutes: number;
+  delivery_lead_minutes: number;
+  delivery_fee_minor: number;
+  min_delivery_order_minor: number;
+  delivery_estimate: string;
+  is_paused: boolean;
+  tax_rate_bps: number;
+  service_charge_bps: number;
+  created_at: string;
+}
+
+// ── Room Type ──
+export interface RoomType {
+  id: string;
+  property_id: string;
+  name: string;
+  description: string;
+  capacity: number;
+  total_rooms: number;
+  base_rate_minor: number;
+  amenities: string[];
+  photos: string[];
+  is_active: boolean;
+  created_at: string;
+}
+
+// ── Room ──
+export interface Room {
+  id: string;
+  room_type_id: string;
+  room_number: string;
+  housekeeping_state: HousekeepingState;
+  notes: string | null;
+  room_type?: RoomType;
+}
+
+// ── Guest ──
+export interface Guest {
+  id: string;
+  name: string;
+  phone: string;
+  email: string | null;
+  created_at: string;
+}
+
+// ── Reservation ──
+export interface Reservation {
+  id: string;
+  property_id: string;
+  guest_id: string;
+  room_type_id: string;
+  room_id: string | null;
+  check_in: string;
+  check_out: string;
+  party_size: number;
+  rate_snapshot_minor: number;
+  terms_snapshot: string;
+  status: ReservationStatus;
+  reference_code: string;
+  notes: string | null;
+  created_at: string;
+  guest?: Guest;
+  room_type?: RoomType;
+  room?: Room;
+}
+
+// ── Hall ──
+export interface Hall {
+  id: string;
+  property_id: string;
+  name: string;
+  capacity: number;
+  description: string;
+  photos: string[];
+  packages: HallPackage[];
+}
+
+export interface HallPackage {
+  name: string;
+  description: string;
+  price_guidance_minor: number;
+}
+
+// ── Hall Slot ──
+export interface HallSlot {
+  id: string;
+  hall_id: string;
+  slot_date: string;
+  start_time: string;
+  end_time: string;
+  status: string;
+}
+
+// ── Event Lead ──
+export interface EventLead {
+  id: string;
+  hall_id: string;
+  hall_slot_id: string;
+  contact_name: string;
+  contact_phone: string;
+  contact_email: string | null;
+  event_type: string;
+  expected_guests: number;
+  seating_layout?: string | null;
+  setup_needs: string | null;
+  notes: string | null;
+  quote_amount_minor: number | null;
+  quote_validity: string | null;
+  deposit_amount_minor: number | null;
+  status: HallEnquiryStatus;
+  reference_code: string;
+  created_at: string;
+  hall?: Hall;
+}
+
+// ── Menu Category ──
+export interface MenuCategory {
+  id: string;
+  outlet_id: string;
+  name: string;
+  sort_order: number;
+  is_available: boolean;
+  items?: MenuItem[];
+}
+
+// ── Menu Item ──
+export interface MenuItem {
+  id: string;
+  category_id: string;
+  name: string;
+  description: string | null;
+  price_minor: number;
+  image_url: string | null;
+  is_available: boolean;
+  dietary_labels: string[];
+  sort_order: number;
+  modifiers?: Modifier[];
+}
+
+// ── Modifier ──
+export interface Modifier {
+  id: string;
+  menu_item_id: string;
+  name: string;
+  price_minor: number;
+  is_available: boolean;
+}
+
+// ── Table ──
+export interface Table {
+  id: string;
+  outlet_id: string;
+  table_number: string;
+  capacity: number;
+  is_active: boolean;
+}
+
+// ── QR Token ──
+export interface QRToken {
+  id: string;
+  table_id: string;
+  token: string;
+  is_active: boolean;
+  created_at: string;
+  table?: Table;
+}
+
+// ── Order ──
+export interface Order {
+  id: string;
+  outlet_id: string;
+  table_id: string | null;
+  order_number: string;
+  channel: OrderChannel;
+  fulfilment_mode: FulfilmentMode;
+  pickup_name: string | null;
+  pickup_phone: string | null;
+  delivery_name: string | null;
+  delivery_phone: string | null;
+  delivery_address: string | null;
+  delivery_notes: string | null;
+  delivery_fee_minor: number;
+  subtotal_minor: number;
+  tax_minor: number;
+  service_charge_minor: number;
+  discount_minor: number;
+  total_minor: number;
+  status: OrderStatus;
+  cancel_reason: string | null;
+  created_by: string | null;
+  assigned_delivery_staff: string | null;
+  created_at: string;
+  order_lines?: OrderLine[];
+  outlet?: Outlet;
+  table?: Table;
+  payments?: Payment[];
+  bill?: Bill;
+}
+
+// ── Order Line ──
+export interface OrderLine {
+  id: string;
+  order_id: string;
+  menu_item_id: string;
+  item_name_snapshot: string;
+  unit_price_snapshot_minor: number;
+  quantity: number;
+  notes: string | null;
+  modifiers_snapshot: ModifierSnapshot[] | null;
+  line_total_minor: number;
+}
+
+export interface ModifierSnapshot {
+  name: string;
+  price_minor: number;
+}
+
+// ── Payment ──
+export interface Payment {
+  id: string;
+  order_id: string;
+  tender_type: TenderType;
+  payment_status: PaymentStatus;
+  amount_minor: number;
+  gateway_reference: string | null;
+  recorded_by: string;
+  created_at: string;
+}
+
+// ── Bill ──
+export interface Bill {
+  id: string;
+  order_id: string;
+  bill_number: string;
+  outlet_id: string;
+  business_name: string;
+  subtotal_minor: number;
+  tax_minor: number;
+  service_charge_minor: number;
+  discount_minor: number;
+  total_minor: number;
+  payment_method: string;
+  is_void: boolean;
+  created_at: string;
+  adjustments?: Adjustment[];
+}
+
+// ── Adjustment ──
+export interface Adjustment {
+  id: string;
+  bill_id: string;
+  type: 'void' | 'refund' | 'discount';
+  amount_minor: number;
+  reason: string;
+  actor_id: string;
+  created_at: string;
+}
+
+// ── User ──
+export interface User {
+  id: string;
+  auth_id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  property_id: string;
+  role: UserRole;
+  is_active: boolean;
+  created_at: string;
+}
+
+// ── Audit Event ──
+export interface AuditEvent {
+  id: string;
+  actor_id: string;
+  action: string;
+  entity_type: string;
+  entity_id: string;
+  old_values: Record<string, unknown> | null;
+  new_values: Record<string, unknown> | null;
+  reason: string | null;
+  created_at: string;
+  actor?: User;
+}
+
+// ── Delivery Area ──
+export interface DeliveryArea {
+  id: string;
+  outlet_id: string;
+  area_name: string;
+  area_polygon: string;
+  is_active: boolean;
+}
+
+// ── Cart (client-side) ──
+export interface CartItem {
+  menuItem: MenuItem;
+  quantity: number;
+  notes: string;
+  selectedModifiers: Modifier[];
+  lineTotal: number;
+}
+
+// ── Availability Result ──
+export interface AvailabilityResult {
+  roomType: RoomType;
+  availableCount: number;
+  totalPrice: number; // minor units for the full stay
+  nightCount: number;
+}
