@@ -1172,7 +1172,7 @@ export const JharokhaFrame: React.FC<{
       <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#FAF8F3] px-3 py-0.5 rounded-full border border-[#B08D57]/40 shadow-xs flex items-center justify-center">
         <svg width="36" height="18" viewBox="0 0 36 18" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M 18 2 L 23 10 L 18 16 L 13 10 Z" fill="#B08D57" />
-          <circle cx="18" cy="2" r="2" fill="#173B35" />
+          <circle cx="18" cy="2" r="2" fill="#670E10" />
           <line x1="6" y1="12" x2="30" y2="12" stroke="#B08D57" strokeWidth="1" strokeDasharray="2 2" />
         </svg>
       </div>

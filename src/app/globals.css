@@ -7,10 +7,9 @@
     --ivory: #F5F1E8;
     --ivory-light: #FAF8F3;
     --ivory-dark: #EBE5D6;
-    --forest-green: #173B35;
-    --forest-green-light: #22524A;
-    --forest-green-dark: #0F2723;
     --maroon: #670E10;
+    --maroon-light: #821215;
+    --maroon-dark: #4A0A0C;
     --espresso: #241F1A;
     --espresso-light: #3D352C;
     --gold: #B08D57;
@@ -22,7 +21,7 @@
     --foreground: var(--espresso);
     --card: #FFFFFF;
     --card-foreground: var(--espresso);
-    --primary: var(--forest-green);
+    --primary: var(--maroon);
     --primary-foreground: #FFFFFF;
     --secondary: var(--ivory-dark);
     --secondary-foreground: var(--espresso);
@@ -32,7 +31,7 @@
     --accent-foreground: var(--espresso);
     --border: #D4CBBB;
     --border-light: #E8E2D5;
-    --ring: var(--forest-green);
+    --ring: var(--maroon);
 
     /* Status Colors */
     --success: #2D6A4F;

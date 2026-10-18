@@ -29,7 +29,7 @@ export function BookingBar() {
               name="checkIn"
               value={checkIn}
               onChange={(e) => setCheckIn(e.target.value)}
-              className="w-full bg-transparent text-sm text-[#173B35] font-semibold focus:outline-none cursor-pointer"
+              className="w-full bg-transparent text-sm text-[#670E10] font-semibold focus:outline-none cursor-pointer"
             />
           </div>
         </div>
@@ -46,7 +46,7 @@ export function BookingBar() {
               name="checkOut"
               value={checkOut}
               onChange={(e) => setCheckOut(e.target.value)}
-              className="w-full bg-transparent text-sm text-[#173B35] font-semibold focus:outline-none cursor-pointer"
+              className="w-full bg-transparent text-sm text-[#670E10] font-semibold focus:outline-none cursor-pointer"
             />
           </div>
         </div>
@@ -61,7 +61,7 @@ export function BookingBar() {
             <select
               name="guests"
               defaultValue="2"
-              className="w-full bg-transparent text-sm text-[#173B35] font-semibold focus:outline-none cursor-pointer"
+              className="w-full bg-transparent text-sm text-[#670E10] font-semibold focus:outline-none cursor-pointer"
             >
               <option value="1">1 Adult</option>
               <option value="2">2 Adults</option>
@@ -75,7 +75,7 @@ export function BookingBar() {
         <div>
           <button
             type="submit"
-            className="w-full h-full py-3.5 px-6 rounded-lg bg-[#173B35] hover:bg-[#22524A] text-[#FAF8F3] font-medium text-sm tracking-wide transition-all shadow-md active:scale-95 flex items-center justify-center space-x-2 cursor-pointer"
+            className="w-full h-full py-3.5 px-6 rounded-lg bg-[#670E10] hover:bg-[#821215] text-[#FAF8F3] font-medium text-sm tracking-wide transition-all shadow-md active:scale-95 flex items-center justify-center space-x-2 cursor-pointer"
           >
             <Search className="w-4 h-4 mr-1 text-[#C9A96E]" />
             <span>Search Rooms</span>

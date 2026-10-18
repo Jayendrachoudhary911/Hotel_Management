@@ -51,20 +51,20 @@ export function RoomDetailClient({ room, allRooms }: RoomDetailClientProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Breadcrumb matching image */}
         <nav className="flex items-center space-x-2 text-xs text-[#7A6F62] mb-6">
-          <Link href="/" className="hover:text-[#173B35] transition-colors">
+          <Link href="/" className="hover:text-[#670E10] transition-colors">
             Home
           </Link>
           <ChevronRight className="w-3.5 h-3.5 text-[#B08D57]" />
-          <Link href="/rooms" className="hover:text-[#173B35] transition-colors">
+          <Link href="/rooms" className="hover:text-[#670E10] transition-colors">
             Rooms
           </Link>
           <ChevronRight className="w-3.5 h-3.5 text-[#B08D57]" />
-          <span className="text-[#173B35] font-medium">{room.name}</span>
+          <span className="text-[#670E10] font-medium">{room.name}</span>
         </nav>
 
         {/* Top Header & Quick Specs Row matching image */}
         <div className="mb-8">
-          <h1 className="font-heritage text-3xl sm:text-4xl lg:text-5xl font-bold text-[#173B35] mb-2">
+          <h1 className="font-heritage text-3xl sm:text-4xl lg:text-5xl font-bold text-[#670E10] mb-2">
             {room.name}
           </h1>
           <p className="text-sm sm:text-base text-[#6E6356] font-light max-w-2xl mb-4">
@@ -132,8 +132,8 @@ export function RoomDetailClient({ room, allRooms }: RoomDetailClientProps) {
                   onClick={() => setActiveTab(tab)}
                   className={`pb-3 capitalize transition-all relative ${
                     activeTab === tab
-                      ? 'text-[#13251E] font-bold after:content-[""] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-[#13251E]'
-                      : 'text-[#7A6F62] hover:text-[#13251E]'
+                      ? 'text-[#4A0A0C] font-bold after:content-[""] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-[#670E10]'
+                      : 'text-[#7A6F62] hover:text-[#4A0A0C]'
                   }`}
                 >
                   {tab}
@@ -158,7 +158,7 @@ export function RoomDetailClient({ room, allRooms }: RoomDetailClientProps) {
                   </p>
 
                   <div className="pt-4 border-t border-[#F2ECE1]">
-                    <h4 className="font-heritage text-base font-bold text-[#13251E] mb-4">
+                    <h4 className="font-heritage text-base font-bold text-[#4A0A0C] mb-4">
                       Chamber Highlights & Features
                     </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -180,7 +180,7 @@ export function RoomDetailClient({ room, allRooms }: RoomDetailClientProps) {
 
               {activeTab === 'amenities' && (
                 <div className="relative z-10 space-y-4">
-                  <h4 className="font-heritage text-base font-bold text-[#13251E]">
+                  <h4 className="font-heritage text-base font-bold text-[#4A0A0C]">
                     All Included Amenities
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -211,7 +211,7 @@ export function RoomDetailClient({ room, allRooms }: RoomDetailClientProps) {
 
               {activeTab === 'location' && (
                 <div className="relative z-10 text-xs text-[#4A4237] leading-relaxed">
-                  <h4 className="font-heritage text-base font-bold text-[#13251E] mb-2">
+                  <h4 className="font-heritage text-base font-bold text-[#4A0A0C] mb-2">
                     Prime Lake Palace Road, Udaipur
                   </h4>
                   <p>
@@ -227,7 +227,7 @@ export function RoomDetailClient({ room, allRooms }: RoomDetailClientProps) {
             <div className="bg-white rounded-xl border border-[#E5DFD5] p-6 shadow-lg text-left">
               <div className="flex items-baseline justify-between mb-6 pb-4 border-b border-[#F2ECE1]">
                 <div>
-                  <span className="font-heritage text-3xl font-bold text-[#13251E]">
+                  <span className="font-heritage text-3xl font-bold text-[#4A0A0C]">
                     {formatMoney(room.base_rate_minor)}
                   </span>
                   <span className="text-xs text-[#7A6F62] ml-1.5 font-normal">/ night</span>
@@ -248,7 +248,7 @@ export function RoomDetailClient({ room, allRooms }: RoomDetailClientProps) {
                       type="date"
                       value={checkIn}
                       onChange={(e) => setCheckIn(e.target.value)}
-                      className="bg-transparent text-sm text-[#13251E] font-medium focus:outline-none w-full"
+                      className="bg-transparent text-sm text-[#4A0A0C] font-medium focus:outline-none w-full"
                     />
                     <Calendar className="w-4 h-4 text-[#8F7245]" />
                   </div>
@@ -263,7 +263,7 @@ export function RoomDetailClient({ room, allRooms }: RoomDetailClientProps) {
                       type="date"
                       value={checkOut}
                       onChange={(e) => setCheckOut(e.target.value)}
-                      className="bg-transparent text-sm text-[#13251E] font-medium focus:outline-none w-full"
+                      className="bg-transparent text-sm text-[#4A0A0C] font-medium focus:outline-none w-full"
                     />
                     <Calendar className="w-4 h-4 text-[#8F7245]" />
                   </div>
@@ -277,7 +277,7 @@ export function RoomDetailClient({ room, allRooms }: RoomDetailClientProps) {
                     <select
                       value={guests}
                       onChange={(e) => setGuests(e.target.value)}
-                      className="bg-transparent text-sm text-[#13251E] font-medium focus:outline-none w-full"
+                      className="bg-transparent text-sm text-[#4A0A0C] font-medium focus:outline-none w-full"
                     >
                       <option value="1 Adult">1 Adult</option>
                       <option value="2 Adults">2 Adults</option>
@@ -293,13 +293,13 @@ export function RoomDetailClient({ room, allRooms }: RoomDetailClientProps) {
               <div className="space-y-3">
                 <Link
                   href={`/book?roomTypeId=${room.id}&checkIn=${checkIn}&checkOut=${checkOut}`}
-                  className="w-full py-3.5 px-4 rounded-lg bg-[#173B35] hover:bg-[#22524A] text-[#FAF8F3] font-medium text-sm tracking-wide transition-all shadow-md block text-center"
+                  className="w-full py-3.5 px-4 rounded-lg bg-[#670E10] hover:bg-[#821215] text-[#FAF8F3] font-medium text-sm tracking-wide transition-all shadow-md block text-center"
                 >
                   Book Now
                 </Link>
                 <Link
                   href="/#contact"
-                  className="w-full py-3 px-4 rounded-lg border border-[#B08D57]/70 bg-transparent hover:bg-[#FAF8F3] text-[#173B35] font-medium text-sm tracking-wide transition-all block text-center"
+                  className="w-full py-3 px-4 rounded-lg border border-[#B08D57]/70 bg-transparent hover:bg-[#FAF8F3] text-[#670E10] font-medium text-sm tracking-wide transition-all block text-center"
                 >
                   Enquire Now
                 </Link>

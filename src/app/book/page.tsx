@@ -109,7 +109,7 @@ function BookRoomForm() {
       <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header matching Mobile - Booking mockup */}
         <div className="text-center mb-8">
-          <h1 className="font-heritage text-3xl sm:text-4xl font-bold text-[#173B35] mb-2">
+          <h1 className="font-heritage text-3xl sm:text-4xl font-bold text-[#670E10] mb-2">
             Book Your Stay
           </h1>
           <p className="text-xs sm:text-sm text-[#6E6356] font-light">
@@ -122,7 +122,7 @@ function BookRoomForm() {
         {confirmedReservation ? (
           <div className="bg-white rounded-2xl border border-[#B08D57]/40 p-8 text-center space-y-6 shadow-xl">
             <CheckCircle2 className="w-14 h-14 text-[#2D6A4F] mx-auto" />
-            <h2 className="font-heritage text-3xl font-bold text-[#173B35]">
+            <h2 className="font-heritage text-3xl font-bold text-[#670E10]">
               Reservation Confirmed!
             </h2>
             <div className="p-4 rounded-xl bg-[#FAF8F3] border border-[#E5DFD5] max-w-md mx-auto text-xs space-y-2 text-left">
@@ -143,7 +143,7 @@ function BookRoomForm() {
             <div className="pt-2 flex justify-center space-x-4">
               <Link
                 href="/rooms"
-                className="px-6 py-2.5 rounded-lg bg-[#173B35] text-[#FAF8F3] text-xs font-medium"
+                className="px-6 py-2.5 rounded-lg bg-[#670E10] hover:bg-[#821215] text-[#FAF8F3] text-xs font-medium transition-all"
               >
                 Back to Chambers
               </Link>
@@ -163,7 +163,7 @@ function BookRoomForm() {
                       type="date"
                       value={checkIn}
                       onChange={(e) => setCheckIn(e.target.value)}
-                      className="bg-transparent text-sm text-[#173B35] font-medium focus:outline-none w-full"
+                      className="bg-transparent text-sm text-[#670E10] font-medium focus:outline-none w-full"
                     />
                     <Calendar className="w-4 h-4 text-[#8F7245]" />
                   </div>
@@ -178,7 +178,7 @@ function BookRoomForm() {
                       type="date"
                       value={checkOut}
                       onChange={(e) => setCheckOut(e.target.value)}
-                      className="bg-transparent text-sm text-[#173B35] font-medium focus:outline-none w-full"
+                      className="bg-transparent text-sm text-[#670E10] font-medium focus:outline-none w-full"
                     />
                     <Calendar className="w-4 h-4 text-[#8F7245]" />
                   </div>
@@ -192,7 +192,7 @@ function BookRoomForm() {
                     <select
                       value={`${partySize} Adults`}
                       onChange={(e) => setPartySize(parseInt(e.target.value.split(' ')[0], 10))}
-                      className="bg-transparent text-sm text-[#173B35] font-medium focus:outline-none w-full"
+                      className="bg-transparent text-sm text-[#670E10] font-medium focus:outline-none w-full"
                     >
                       <option value="1 Adults">1 Adult</option>
                       <option value="2 Adults">2 Adults</option>
@@ -211,7 +211,7 @@ function BookRoomForm() {
                 <select
                   value={roomTypeId}
                   onChange={(e) => setRoomTypeId(e.target.value)}
-                  className="w-full p-3 rounded-lg border border-[#E5DFD5] bg-[#FAF8F3]/60 text-sm font-semibold text-[#173B35] focus:outline-none focus:border-[#B08D57]"
+                  className="w-full p-3 rounded-lg border border-[#E5DFD5] bg-[#FAF8F3]/60 text-sm font-semibold text-[#670E10] focus:outline-none focus:border-[#B08D57]"
                 >
                   {INITIAL_ROOM_TYPES.map((r) => (
                     <option key={r.id} value={r.id}>
@@ -233,7 +233,7 @@ function BookRoomForm() {
                 />
               </div>
               <div className="p-6 w-full sm:w-1/2 text-left space-y-3">
-                <h3 className="font-heritage text-2xl font-bold text-[#173B35]">
+                <h3 className="font-heritage text-2xl font-bold text-[#670E10]">
                   {selectedRoom.name}
                 </h3>
                 <div className="flex items-center space-x-4 text-xs text-[#7A6F62]">
@@ -250,7 +250,7 @@ function BookRoomForm() {
                 <div className="pt-2 border-t border-[#F2ECE1] flex items-baseline justify-between">
                   <div>
                     <span className="text-xs text-[#7A6F62]">Tariff:</span>
-                    <span className="font-heritage text-xl font-bold text-[#173B35] ml-1.5">
+                    <span className="font-heritage text-xl font-bold text-[#670E10] ml-1.5">
                       {formatMoney(totalAmount)}
                     </span>
                     <span className="text-[11px] text-[#7A6F62] ml-1">
@@ -263,7 +263,7 @@ function BookRoomForm() {
 
             {/* 3. Guest Details & Confirmation Form */}
             <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-[#D4CBBB]/70 p-6 sm:p-8 shadow-sm text-left space-y-4">
-              <h3 className="font-heritage text-xl font-bold text-[#173B35] mb-2">
+              <h3 className="font-heritage text-xl font-bold text-[#670E10] mb-2">
                 Guest Information
               </h3>
 
@@ -275,7 +275,7 @@ function BookRoomForm() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-[#173B35] mb-1">
+                  <label className="block text-xs font-semibold text-[#670E10] mb-1">
                     Full Name *
                   </label>
                   <input
@@ -289,7 +289,7 @@ function BookRoomForm() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[#173B35] mb-1">
+                  <label className="block text-xs font-semibold text-[#670E10] mb-1">
                     Mobile Phone *
                   </label>
                   <input
@@ -304,7 +304,7 @@ function BookRoomForm() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#173B35] mb-1">
+                <label className="block text-xs font-semibold text-[#670E10] mb-1">
                   Email Address
                 </label>
                 <input
@@ -317,7 +317,7 @@ function BookRoomForm() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#173B35] mb-1">
+                <label className="block text-xs font-semibold text-[#670E10] mb-1">
                   Special Requests (Optional)
                 </label>
                 <textarea
@@ -333,7 +333,7 @@ function BookRoomForm() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-3.5 rounded-lg bg-[#173B35] hover:bg-[#22524A] text-[#FAF8F3] font-medium text-sm tracking-wide transition-all shadow-md cursor-pointer disabled:opacity-50"
+                  className="w-full py-3.5 rounded-lg bg-[#670E10] hover:bg-[#821215] text-[#FAF8F3] font-medium text-sm tracking-wide transition-all shadow-md cursor-pointer disabled:opacity-50"
                 >
                   {isSubmitting ? 'Confirming Reservation...' : 'Confirm Royal Reservation'}
                 </button>
@@ -343,14 +343,14 @@ function BookRoomForm() {
             {/* 4. Need Help Card matching Mobile - Booking mockup */}
             <div className="bg-white rounded-xl border border-[#D4CBBB]/70 p-5 flex flex-col sm:flex-row items-center justify-between gap-4 text-left shadow-2xs">
               <div>
-                <h4 className="font-semibold text-sm text-[#173B35]">Need Help?</h4>
+                <h4 className="font-semibold text-sm text-[#670E10]">Need Help?</h4>
                 <p className="text-xs text-[#7A6F62]">
                   Contact our team for special requests, royal transfers, or group bookings.
                 </p>
               </div>
               <Link
                 href="/#contact"
-                className="px-5 py-2 rounded-lg border border-[#B08D57] bg-white hover:bg-[#173B35] hover:text-[#FAF8F3] text-[#173B35] font-medium text-xs tracking-wide transition-all shrink-0"
+                className="px-5 py-2 rounded-lg border border-[#B08D57] bg-white hover:bg-[#670E10] hover:text-[#FAF8F3] text-[#670E10] font-medium text-xs tracking-wide transition-all shrink-0"
               >
                 Contact Us
               </Link>

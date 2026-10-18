@@ -20,12 +20,12 @@ export const Navbar: React.FC = () => {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full shadow-md bg-[#173B35] border-b border-[#B08D57]/30 transition-all">
+    <header className="sticky top-0 z-50 w-full shadow-md bg-[#670E10] border-b border-[#B08D57]/40 transition-all">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Logo with Arch Crest matching image */}
           <Link href="/" className="flex items-center space-x-3 group">
-            <div className="w-10 h-10 rounded-md border border-[#B08D57]/60 flex items-center justify-center bg-[#102924] group-hover:scale-105 transition-transform shadow-inner">
+            <div className="w-10 h-10 rounded-md border border-[#B08D57]/60 flex items-center justify-center bg-[#4A0A0C] group-hover:scale-105 transition-transform shadow-inner">
               <IconPalaceCrest className="w-7 h-7 text-[#C9A96E]" />
             </div>
             <div>
@@ -68,7 +68,7 @@ export const Navbar: React.FC = () => {
             </Link>
             <Link
               href="/book"
-              className="px-5 py-2 rounded-md bg-[#C59B63] hover:bg-[#B88E55] text-[#13251E] font-medium text-sm tracking-wide transition-all shadow hover:shadow-md active:scale-95"
+              className="px-5 py-2 rounded-md bg-[#C59B63] hover:bg-[#B88E55] text-[#4A0A0C] font-semibold text-sm tracking-wide transition-all shadow hover:shadow-md active:scale-95"
             >
               Book Now
             </Link>
@@ -78,7 +78,7 @@ export const Navbar: React.FC = () => {
           <div className="flex md:hidden items-center space-x-3">
             <Link
               href="/book"
-              className="px-3.5 py-1.5 rounded-md bg-[#C59B63] text-[#13251E] font-medium text-xs tracking-wide shadow"
+              className="px-3.5 py-1.5 rounded-md bg-[#C59B63] text-[#4A0A0C] font-semibold text-xs tracking-wide shadow"
             >
               Book Now
             </Link>
@@ -95,13 +95,13 @@ export const Navbar: React.FC = () => {
 
       {/* Mobile Menu Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-[#102924] border-b border-[#B08D57]/40 px-4 pt-3 pb-6 space-y-3">
+        <div className="md:hidden bg-[#4A0A0C] border-b border-[#B08D57]/40 px-4 pt-3 pb-6 space-y-3">
           {navLinks.map((link) => (
             <Link
               key={link.label}
               href={link.href}
               onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-md text-base text-[#FAF8F3] hover:text-[#C9A96E] hover:bg-[#173B35]/80"
+              className="block px-3 py-2 rounded-md text-base text-[#FAF8F3] hover:text-[#C9A96E] hover:bg-[#670E10]/80"
             >
               {link.label}
             </Link>

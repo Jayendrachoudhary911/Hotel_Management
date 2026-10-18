@@ -117,7 +117,7 @@ export default function HallPage() {
             <DarbarChhatriOrnament color="#C9A96E" opacity={0.7} />
           </div>
 
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0F2723]/95 via-[#0F2723]/60 to-transparent flex items-center justify-center p-6 sm:p-12 text-center">
+          <div className="absolute inset-0 bg-gradient-to-t from-[#380608]/95 via-[#4A0A0C]/65 to-transparent flex items-center justify-center p-6 sm:p-12 text-center">
             <div className="max-w-2xl">
               <h1 className="font-heritage text-3xl sm:text-5xl font-bold text-[#FAF8F3] mb-3 leading-tight">
                 Party Hall
@@ -132,7 +132,7 @@ export default function HallPage() {
               <div>
                 <a
                   href="#enquire"
-                  className="px-6 py-3 rounded-md bg-[#173B35] border border-[#B08D57]/60 hover:bg-[#22524A] text-[#FAF8F3] font-medium text-sm tracking-wide transition-all shadow"
+                  className="px-6 py-3 rounded-md bg-[#670E10] border border-[#B08D57]/60 hover:bg-[#821215] text-[#FAF8F3] font-medium text-sm tracking-wide transition-all shadow"
                 >
                   Enquire Now
                 </a>
@@ -153,7 +153,7 @@ export default function HallPage() {
                 <div className="w-14 h-14 rounded-full bg-[#FAF8F3] border border-[#B08D57]/50 flex items-center justify-center mb-3">
                   <Icon className="w-7 h-7 text-[#B08D57]" />
                 </div>
-                <h4 className="text-xs sm:text-sm font-semibold text-[#173B35]">
+                <h4 className="text-xs sm:text-sm font-semibold text-[#670E10]">
                   {feat.label}
                 </h4>
               </div>
@@ -172,7 +172,7 @@ export default function HallPage() {
           </div>
 
           <div className="relative z-10 text-center mb-8">
-            <h2 className="font-heritage text-2xl sm:text-3xl font-bold text-[#173B35] mb-2">
+            <h2 className="font-heritage text-2xl sm:text-3xl font-bold text-[#670E10] mb-2">
               Plan Your Celebration
             </h2>
             <p className="text-xs sm:text-sm text-[#6E6356]">
@@ -183,11 +183,11 @@ export default function HallPage() {
           {confirmedEnquiry ? (
             <div className="p-6 rounded-xl bg-[#FAF8F3] border border-[#B08D57]/40 text-center space-y-4">
               <CheckCircle2 className="w-12 h-12 text-[#2D6A4F] mx-auto" />
-              <h3 className="font-heritage text-2xl font-bold text-[#173B35]">
+              <h3 className="font-heritage text-2xl font-bold text-[#670E10]">
                 Enquiry Successfully Registered!
               </h3>
               <p className="text-xs text-[#6E6356]">
-                Reference Code: <strong className="text-[#173B35] font-mono">{confirmedEnquiry.referenceCode}</strong>
+                Reference Code: <strong className="text-[#670E10] font-mono">{confirmedEnquiry.referenceCode}</strong>
               </p>
               <div className="p-4 rounded-lg bg-white border border-[#E5DFD5] text-xs space-y-1.5 text-left max-w-md mx-auto">
                 <p><strong>Occasion:</strong> {confirmedEnquiry.eventType}</p>
@@ -197,7 +197,7 @@ export default function HallPage() {
               </div>
               <button
                 onClick={() => setConfirmedEnquiry(null)}
-                className="mt-4 px-5 py-2 rounded-md bg-[#173B35] text-[#FAF8F3] text-xs font-medium"
+                className="mt-4 px-5 py-2 rounded-md bg-[#670E10] hover:bg-[#821215] text-[#FAF8F3] text-xs font-medium transition-all"
               >
                 Submit Another Enquiry
               </button>
@@ -212,7 +212,7 @@ export default function HallPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-[#173B35] mb-1">
+                  <label className="block text-xs font-semibold text-[#670E10] mb-1">
                     Your Name *
                   </label>
                   <input
@@ -226,7 +226,7 @@ export default function HallPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[#173B35] mb-1">
+                  <label className="block text-xs font-semibold text-[#670E10] mb-1">
                     Phone Number *
                   </label>
                   <input
@@ -242,7 +242,7 @@ export default function HallPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-[#173B35] mb-1">
+                  <label className="block text-xs font-semibold text-[#670E10] mb-1">
                     Email Address
                   </label>
                   <input
@@ -255,7 +255,7 @@ export default function HallPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[#173B35] mb-1">
+                  <label className="block text-xs font-semibold text-[#670E10] mb-1">
                     Occasion / Event Type
                   </label>
                   <select
@@ -274,7 +274,7 @@ export default function HallPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-[#173B35] mb-1">
+                  <label className="block text-xs font-semibold text-[#670E10] mb-1">
                     Estimated Guests
                   </label>
                   <input
@@ -288,7 +288,7 @@ export default function HallPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[#173B35] mb-1">
+                  <label className="block text-xs font-semibold text-[#670E10] mb-1">
                     Event Date
                   </label>
                   <input
@@ -300,7 +300,7 @@ export default function HallPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[#173B35] mb-1">
+                  <label className="block text-xs font-semibold text-[#670E10] mb-1">
                     Seating Layout (WEB-05)
                   </label>
                   <select
@@ -317,7 +317,7 @@ export default function HallPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#173B35] mb-1">
+                <label className="block text-xs font-semibold text-[#670E10] mb-1">
                   Decor, Acoustic & Floral Preferences
                 </label>
                 <textarea
@@ -333,7 +333,7 @@ export default function HallPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-3.5 rounded-lg bg-[#173B35] hover:bg-[#22524A] text-[#FAF8F3] font-medium text-sm tracking-wide transition-all shadow-md cursor-pointer disabled:opacity-50"
+                  className="w-full py-3.5 rounded-lg bg-[#670E10] hover:bg-[#821215] text-[#FAF8F3] font-medium text-sm tracking-wide transition-all shadow-md cursor-pointer disabled:opacity-50"
                 >
                   {isSubmitting ? 'Submitting Enquiry...' : 'Submit Banquet Enquiry'}
                 </button>

@@ -38,7 +38,7 @@ async function RoomsContent({ searchParams }: RoomsPageProps) {
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header matching image */}
         <div className="text-center max-w-2xl mx-auto mb-10">
-          <h1 className="font-heritage text-3xl sm:text-4xl lg:text-5xl font-bold text-[#173B35] mb-3">
+          <h1 className="font-heritage text-3xl sm:text-4xl lg:text-5xl font-bold text-[#670E10] mb-3">
             Our Heritage Rooms
           </h1>
           <p className="text-sm sm:text-base text-[#6E6356] font-light">
@@ -57,7 +57,7 @@ async function RoomsContent({ searchParams }: RoomsPageProps) {
                   type="date"
                   name="checkIn"
                   defaultValue={checkIn}
-                  className="w-full bg-transparent text-xs text-[#173B35] font-semibold focus:outline-none"
+                  className="w-full bg-transparent text-xs text-[#670E10] font-semibold focus:outline-none"
                 />
               </div>
             </div>
@@ -70,7 +70,7 @@ async function RoomsContent({ searchParams }: RoomsPageProps) {
                   type="date"
                   name="checkOut"
                   defaultValue={checkOut}
-                  className="w-full bg-transparent text-xs text-[#173B35] font-semibold focus:outline-none"
+                  className="w-full bg-transparent text-xs text-[#670E10] font-semibold focus:outline-none"
                 />
               </div>
             </div>
@@ -82,7 +82,7 @@ async function RoomsContent({ searchParams }: RoomsPageProps) {
                 <select
                   name="guests"
                   defaultValue={guests}
-                  className="w-full bg-transparent text-xs text-[#173B35] font-semibold focus:outline-none"
+                  className="w-full bg-transparent text-xs text-[#670E10] font-semibold focus:outline-none"
                 >
                   <option value="1">1 Adult</option>
                   <option value="2">2 Adults</option>
@@ -95,7 +95,7 @@ async function RoomsContent({ searchParams }: RoomsPageProps) {
             <div>
               <button
                 type="submit"
-                className="w-full py-3 px-4 rounded-lg bg-[#173B35] hover:bg-[#22524A] text-[#FAF8F3] font-medium text-xs tracking-wide transition-all shadow flex items-center justify-center space-x-1.5"
+                className="w-full py-3 px-4 rounded-lg bg-[#670E10] hover:bg-[#821215] text-[#FAF8F3] font-medium text-xs tracking-wide transition-all shadow flex items-center justify-center space-x-1.5"
               >
                 <Search className="w-3.5 h-3.5 text-[#C9A96E]" />
                 <span>Search Rooms</span>
@@ -120,14 +120,14 @@ async function RoomsContent({ searchParams }: RoomsPageProps) {
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-500"
                   />
-                  <div className="absolute top-3 right-3 bg-[#173B35]/92 backdrop-blur-xs text-[#FAF8F3] px-3 py-1 rounded-md text-xs font-semibold border border-[#B08D57]/40">
+                  <div className="absolute top-3 right-3 bg-[#670E10]/92 backdrop-blur-xs text-[#FAF8F3] px-3 py-1 rounded-md text-xs font-semibold border border-[#B08D57]/40">
                     {formatMoney(room.base_rate_minor)} <span className="text-[10px] text-[#C9A96E] font-normal">/ night</span>
                   </div>
                 </div>
 
                 <div className="p-5 flex-1 flex flex-col justify-between">
                   <div>
-                    <h3 className="font-heritage text-xl font-bold text-[#173B35] mb-2 group-hover:text-[#B08D57] transition-colors">
+                    <h3 className="font-heritage text-xl font-bold text-[#670E10] mb-2 group-hover:text-[#B08D57] transition-colors">
                       {room.name}
                     </h3>
                     <div className="flex items-center space-x-4 text-xs text-[#7A6F62] mb-4">
@@ -145,14 +145,14 @@ async function RoomsContent({ searchParams }: RoomsPageProps) {
                   <div className="pt-3 border-t border-[#F2ECE1] flex items-center justify-between">
                     <Link
                       href={`/rooms/${room.id}`}
-                      className="inline-flex items-center text-xs font-semibold text-[#173B35] hover:text-[#C59B63] transition-colors group/link"
+                      className="inline-flex items-center text-xs font-semibold text-[#670E10] hover:text-[#C59B63] transition-colors group/link"
                     >
                       <span>View Details</span>
                       <ArrowRight className="w-3.5 h-3.5 ml-1 group-hover/link:translate-x-1 transition-transform" />
                     </Link>
                     <Link
                       href={`/book?roomTypeId=${room.id}&checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}`}
-                      className="px-4 py-1.5 rounded bg-[#173B35] hover:bg-[#22524A] text-[#FAF8F3] text-xs font-medium transition-all shadow-xs"
+                      className="px-4 py-1.5 rounded bg-[#670E10] hover:bg-[#821215] text-[#FAF8F3] text-xs font-medium transition-all shadow-xs"
                     >
                       Book Now
                     </Link>
@@ -167,7 +167,7 @@ async function RoomsContent({ searchParams }: RoomsPageProps) {
         <HeritageDivider className="opacity-70 mt-12 mb-8" color="#B08D57" />
 
         {/* Bottom Recommendation Dark Banner matching image */}
-        <div className="bg-[#173B35] text-[#FAF8F3] rounded-xl p-6 sm:p-8 border border-[#B08D57]/40 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xl">
+        <div className="bg-[#4A0A0C] text-[#FAF8F3] rounded-xl p-6 sm:p-8 border border-[#B08D57]/40 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xl">
           <div className="text-left max-w-xl">
             <h3 className="font-heritage text-xl sm:text-2xl font-bold text-[#FAF8F3] mb-2">
               Not sure which room to choose?
@@ -179,7 +179,7 @@ async function RoomsContent({ searchParams }: RoomsPageProps) {
           <div className="flex items-center space-x-4">
             <Link
               href="/#contact"
-              className="px-6 py-3 rounded-md bg-[#0F2723] border border-[#B08D57]/60 hover:bg-[#C59B63] hover:text-[#173B35] text-[#FAF8F3] font-medium text-sm tracking-wide transition-all flex items-center space-x-2"
+              className="px-6 py-3 rounded-md bg-[#380608] border border-[#B08D57]/60 hover:bg-[#C59B63] hover:text-[#4A0A0C] text-[#FAF8F3] font-medium text-sm tracking-wide transition-all flex items-center space-x-2"
             >
               <span>Contact Us</span>
               <ArrowRight className="w-4 h-4" />

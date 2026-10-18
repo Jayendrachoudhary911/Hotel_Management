@@ -50,8 +50,8 @@ export default function HomePage() {
             className="object-cover object-center scale-105"
           />
           {/* Subtle warm royal darkened overlay for high text legibility */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#102924]/92 via-[#102924]/75 to-[#102924]/40" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#102924]/95 via-transparent to-black/25" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#380608]/92 via-[#4A0A0C]/75 to-[#4A0A0C]/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#380608]/95 via-transparent to-black/25" />
         </div>
 
 
@@ -69,7 +69,7 @@ export default function HomePage() {
             </p>
             <Link
               href="/rooms"
-              className="inline-flex items-center space-x-2 px-7 py-3.5 rounded-md bg-[#C59B63] hover:bg-[#B88E55] text-[#173B35] font-semibold text-base tracking-wide transition-all shadow-lg hover:shadow-xl group"
+              className="inline-flex items-center space-x-2 px-7 py-3.5 rounded-md bg-[#C59B63] hover:bg-[#B88E55] text-[#4A0A0C] font-semibold text-base tracking-wide transition-all shadow-lg hover:shadow-xl group"
             >
               <span>Check Availability</span>
               <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
@@ -98,7 +98,7 @@ export default function HomePage() {
                   <div className="w-16 h-16 rounded-full border border-[#B08D57]/50 flex items-center justify-center bg-white group-hover:border-[#B08D57] group-hover:shadow-md transition-all mb-3">
                     <IconComp className="w-8 h-8 text-[#B08D57] group-hover:scale-110 transition-transform" />
                   </div>
-                  <span className="text-xs sm:text-sm font-medium text-[#241F1A] tracking-tight group-hover:text-[#173B35]">
+                  <span className="text-xs sm:text-sm font-medium text-[#241F1A] tracking-tight group-hover:text-[#670E10]">
                     {feature.label}
                   </span>
                 </Link>
@@ -143,7 +143,7 @@ export default function HomePage() {
               <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[#8F7245] block mb-2">
                 Authentic Rajputana Grandeur
               </span>
-              <h2 className="font-heritage text-3xl sm:text-4xl lg:text-5xl font-bold text-[#173B35] mb-6 leading-tight">
+              <h2 className="font-heritage text-3xl sm:text-4xl lg:text-5xl font-bold text-[#670E10] mb-6 leading-tight">
                 Experience the Royal Heritage <br />
                 of Rajasthan
               </h2>
@@ -152,7 +152,7 @@ export default function HomePage() {
               </p>
               <Link
                 href="/rooms"
-                className="inline-flex items-center space-x-2 px-6 py-3 rounded-md bg-[#C59B63] hover:bg-[#B88E55] text-[#173B35] font-medium text-sm tracking-wide transition-all shadow group"
+                className="inline-flex items-center space-x-2 px-6 py-3 rounded-md bg-[#C59B63] hover:bg-[#B88E55] text-[#4A0A0C] font-semibold text-sm tracking-wide transition-all shadow group"
               >
                 <span>Explore Property</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -169,7 +169,7 @@ export default function HomePage() {
       <section className="py-16 bg-[#F5F1E8]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-14">
-            <h2 className="font-heritage text-3xl sm:text-4xl font-bold text-[#173B35] mb-3">
+            <h2 className="font-heritage text-3xl sm:text-4xl font-bold text-[#670E10] mb-3">
               Our Heritage Rooms
             </h2>
             <p className="text-sm sm:text-base text-[#6E6356] font-light">
@@ -197,7 +197,7 @@ export default function HomePage() {
 
                   <div className="p-5 flex-1 flex flex-col justify-between">
                     <div>
-                      <h3 className="font-heritage text-xl font-bold text-[#173B35] mb-2 group-hover:text-[#B08D57] transition-colors">
+                      <h3 className="font-heritage text-xl font-bold text-[#670E10] mb-2 group-hover:text-[#B08D57] transition-colors">
                         {room.name}
                       </h3>
                       {/* Icons row: King Bed & 2 Guests */}
@@ -216,14 +216,14 @@ export default function HomePage() {
                     <div className="pt-2 border-t border-[#F2ECE1] flex items-center justify-between">
                       <Link
                         href={`/rooms/${room.id}`}
-                        className="inline-flex items-center text-xs font-semibold text-[#173B35] hover:text-[#C59B63] transition-colors group/link"
+                        className="inline-flex items-center text-xs font-semibold text-[#670E10] hover:text-[#C59B63] transition-colors group/link"
                       >
                         <span>View Details</span>
                         <ArrowRight className="w-3.5 h-3.5 ml-1 group-hover/link:translate-x-1 transition-transform" />
                       </Link>
                       <Link
                         href={`/book?roomTypeId=${room.id}`}
-                        className="px-3.5 py-1.5 rounded bg-[#173B35] hover:bg-[#215149] text-[#FAF8F3] text-xs font-medium transition-all"
+                        className="px-3.5 py-1.5 rounded bg-[#670E10] hover:bg-[#821215] text-[#FAF8F3] text-xs font-medium transition-all"
                       >
                         Book
                       </Link>
@@ -235,7 +235,7 @@ export default function HomePage() {
           </div>
 
           {/* Bottom Recommendation Dark Banner matching image */}
-          <div className="mt-14 bg-[#173B35] text-[#FAF8F3] rounded-xl p-6 sm:p-8 border border-[#B08D57]/40 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xl">
+          <div className="mt-14 bg-[#4A0A0C] text-[#FAF8F3] rounded-xl p-6 sm:p-8 border border-[#B08D57]/40 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xl">
             <div className="text-left max-w-xl">
               <h3 className="font-heritage text-xl sm:text-2xl font-bold text-[#FAF8F3] mb-2">
                 Not sure which room to choose?
@@ -247,7 +247,7 @@ export default function HomePage() {
             <div className="flex items-center space-x-4">
               <Link
                 href="/#contact"
-                className="px-6 py-3 rounded-md bg-[#0F2723] border border-[#B08D57]/60 hover:bg-[#C59B63] hover:text-[#173B35] text-[#FAF8F3] font-medium text-sm tracking-wide transition-all flex items-center space-x-2"
+                className="px-6 py-3 rounded-md bg-[#380608] border border-[#B08D57]/60 hover:bg-[#C59B63] hover:text-[#4A0A0C] text-[#FAF8F3] font-medium text-sm tracking-wide transition-all flex items-center space-x-2"
               >
                 <span>Contact Us</span>
                 <ArrowRight className="w-4 h-4" />
@@ -261,7 +261,7 @@ export default function HomePage() {
       <section id="contact" className="py-16 bg-[#FAF8F3] border-t border-[#D4CBBB]/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-12">
-            <h2 className="font-heritage text-3xl font-bold text-[#173B35] mb-2">
+            <h2 className="font-heritage text-3xl font-bold text-[#670E10] mb-2">
               Contact Us
             </h2>
             <p className="text-sm text-[#6E6356] font-light">
@@ -274,7 +274,7 @@ export default function HomePage() {
               <div className="w-10 h-10 rounded-lg bg-[#FAF8F3] border border-[#B08D57]/40 flex items-center justify-center mb-3">
                 <MapPin className="w-5 h-5 text-[#8F7245]" />
               </div>
-              <h4 className="text-sm font-bold text-[#173B35] mb-1">Address</h4>
+              <h4 className="text-sm font-bold text-[#670E10] mb-1">Address</h4>
               <p className="text-xs text-[#6E6356] leading-relaxed">
                 {property.address}
               </p>
@@ -284,7 +284,7 @@ export default function HomePage() {
               <div className="w-10 h-10 rounded-lg bg-[#FAF8F3] border border-[#B08D57]/40 flex items-center justify-center mb-3">
                 <Phone className="w-5 h-5 text-[#8F7245]" />
               </div>
-              <h4 className="text-sm font-bold text-[#173B35] mb-1">Phone</h4>
+              <h4 className="text-sm font-bold text-[#670E10] mb-1">Phone</h4>
               <p className="text-xs text-[#6E6356] leading-relaxed">
                 {property.phone}
               </p>
@@ -294,7 +294,7 @@ export default function HomePage() {
               <div className="w-10 h-10 rounded-lg bg-[#FAF8F3] border border-[#B08D57]/40 flex items-center justify-center mb-3">
                 <Mail className="w-5 h-5 text-[#8F7245]" />
               </div>
-              <h4 className="text-sm font-bold text-[#173B35] mb-1">Email</h4>
+              <h4 className="text-sm font-bold text-[#670E10] mb-1">Email</h4>
               <p className="text-xs text-[#6E6356] leading-relaxed">
                 {property.email}
               </p>
@@ -304,7 +304,7 @@ export default function HomePage() {
               <div className="w-10 h-10 rounded-lg bg-[#FAF8F3] border border-[#B08D57]/40 flex items-center justify-center mb-3">
                 <Clock className="w-5 h-5 text-[#8F7245]" />
               </div>
-              <h4 className="text-sm font-bold text-[#173B35] mb-1">Operating Hours</h4>
+              <h4 className="text-sm font-bold text-[#670E10] mb-1">Operating Hours</h4>
               <p className="text-xs text-[#6E6356] leading-relaxed">
                 Hotel: 24 x 7<br />
                 Dining: 12:30 PM – 11:00 PM<br />
