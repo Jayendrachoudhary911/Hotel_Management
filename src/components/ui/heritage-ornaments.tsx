@@ -20,7 +20,7 @@ export const MandalaOrnament: React.FC<MandalaOrnamentProps> = ({
   position = 'top-left',
   className = '',
   color = '#B08D57',
-  opacity = 0.45,
+  opacity = 0.2,
   size,
 }) => {
   const positionClasses = {
@@ -208,7 +208,7 @@ export interface ToranJharokhaArchProps {
 export const ToranJharokhaArch: React.FC<ToranJharokhaArchProps> = ({
   className = '',
   color = '#B08D57',
-  opacity = 0.85,
+  opacity = 0.3,
   showContentArea = true,
   children,
 }) => {
@@ -477,7 +477,7 @@ export interface LataJaaliRunnerProps {
 export const LataJaaliRunner: React.FC<LataJaaliRunnerProps> = ({
   className = '',
   color = '#B08D57',
-  opacity = 0.55,
+  opacity = 0.2,
   side = 'left',
 }) => {
   const sideClass = {
@@ -688,7 +688,7 @@ export interface RoyalProcessionBannerProps {
 export const RoyalProcessionBanner: React.FC<RoyalProcessionBannerProps> = ({
   className = '',
   color = '#B08D57',
-  opacity = 0.9,
+  opacity = 0.45,
 }) => {
   return (
     <div
@@ -861,7 +861,7 @@ export interface PaisleyButaProps {
 export const PaisleyButaOrnament: React.FC<PaisleyButaProps> = ({
   className = '',
   color = '#B08D57',
-  opacity = 0.5,
+  opacity = 0.2,
   size = '260px',
 }) => {
   return (
@@ -958,7 +958,7 @@ export interface DarbarChhatriProps {
 export const DarbarChhatriOrnament: React.FC<DarbarChhatriProps> = ({
   className = '',
   color = '#B08D57',
-  opacity = 0.5,
+  opacity = 0.25,
 }) => {
   return (
     <div
@@ -1061,7 +1061,7 @@ export interface HeritageDividerProps {
 export const HeritageDivider: React.FC<HeritageDividerProps> = ({
   className = '',
   color = '#B08D57',
-  opacity = 0.75,
+  opacity = 0.35,
 }) => {
   return (
     <div

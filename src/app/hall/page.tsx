@@ -98,8 +98,8 @@ export default function HallPage() {
   return (
     <div className="relative bg-[#F5F1E8] min-h-screen py-10 sm:py-16 text-[#241F1A] overflow-hidden">
       {/* ── BESPOKE VERTICAL LATA JAALI BORDERS ── */}
-      <LataJaaliRunner side="left" opacity={0.3} color="#B08D57" className="hidden lg:block" />
-      <LataJaaliRunner side="right" opacity={0.3} color="#B08D57" className="hidden lg:block" />
+      <LataJaaliRunner side="left" opacity={0.15} color="#B08D57" className="hidden lg:block" />
+      <LataJaaliRunner side="right" opacity={0.15} color="#B08D57" className="hidden lg:block" />
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-14">
         {/* ── HERO BANNER (Matching Mobile - Party Hall mockup) ── */}
@@ -112,12 +112,13 @@ export default function HallPage() {
             className="object-cover"
           />
 
-          {/* Dedicated Royal Darbar Chhatri Ornament Watermark */}
-          <div className="absolute top-0 right-4 w-64 h-64 pointer-events-none opacity-20 hidden md:block">
-            <DarbarChhatriOrnament color="#C9A96E" opacity={0.7} />
+          {/* Dedicated Royal Darbar Chhatri Ornament Watermark with subtle opacity */}
+          <div className="absolute top-0 right-4 w-64 h-64 pointer-events-none opacity-10 hidden md:block">
+            <DarbarChhatriOrnament color="#C9A96E" opacity={0.3} />
           </div>
 
-          <div className="absolute inset-0 bg-gradient-to-t from-[#380608]/95 via-[#4A0A0C]/65 to-transparent flex items-center justify-center p-6 sm:p-12 text-center">
+          {/* Subtle clear overlay so ballroom photo stays clear and majestic */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/25 to-black/10 flex items-center justify-center p-6 sm:p-12 text-center">
             <div className="max-w-2xl">
               <h1 className="font-heritage text-3xl sm:text-5xl font-bold text-[#FAF8F3] mb-3 leading-tight">
                 Party Hall
@@ -162,13 +163,13 @@ export default function HallPage() {
         </div>
 
         {/* Symmetrical Jaali Divider */}
-        <HeritageDivider className="opacity-70 my-6" color="#B08D57" />
+        <HeritageDivider className="opacity-35 my-6" color="#B08D57" />
 
         {/* ── ENQUIRY SECTION (WEB-05) ── */}
         <div id="enquire" className="relative max-w-3xl mx-auto bg-white rounded-2xl border border-[#D4CBBB]/70 p-6 sm:p-10 shadow-lg text-left overflow-hidden">
-          {/* Architectural Archway Watermark framing the card */}
-          <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-full max-w-lg h-[650px] pointer-events-none opacity-10">
-            <ToranJharokhaArch color="#B08D57" opacity={0.6} showContentArea={false} />
+          {/* Architectural Archway Watermark framing the card with subtle opacity */}
+          <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-full max-w-lg h-[650px] pointer-events-none opacity-5">
+            <ToranJharokhaArch color="#B08D57" opacity={0.25} showContentArea={false} />
           </div>
 
           <div className="relative z-10 text-center mb-8">

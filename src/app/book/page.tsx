@@ -102,9 +102,9 @@ function BookRoomForm() {
 
   return (
     <div className="relative bg-[#F5F1E8] min-h-screen py-10 sm:py-16 text-[#241F1A] overflow-hidden">
-      {/* Decorative Mandala Corner Line Art */}
-      <MandalaOrnament position="top-left" opacity={0.3} color="#B08D57" className="hidden lg:block" />
-      <MandalaOrnament position="bottom-right" opacity={0.25} color="#B08D57" className="hidden lg:block" />
+      {/* Decorative Mandala Corner Line Art with subtle watermark opacity */}
+      <MandalaOrnament position="top-left" opacity={0.16} color="#B08D57" className="hidden lg:block" />
+      <MandalaOrnament position="bottom-right" opacity={0.16} color="#B08D57" className="hidden lg:block" />
 
       <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header matching Mobile - Booking mockup */}
@@ -117,7 +117,7 @@ function BookRoomForm() {
           </p>
         </div>
 
-        <HeritageDivider className="opacity-60 mb-8" color="#B08D57" />
+        <HeritageDivider className="opacity-35 mb-8" color="#B08D57" />
 
         {confirmedReservation ? (
           <div className="bg-white rounded-2xl border border-[#B08D57]/40 p-8 text-center space-y-6 shadow-xl">

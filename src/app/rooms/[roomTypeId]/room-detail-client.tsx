@@ -143,9 +143,9 @@ export function RoomDetailClient({ room, allRooms }: RoomDetailClientProps) {
 
             {/* Tab Content with delicate architectural Jharokha line art illustration on right */}
             <div className="relative bg-white rounded-xl border border-[#D4CBBB]/70 p-6 sm:p-8 shadow-xs overflow-hidden">
-              {/* Toran Jharokha Arch Architectural Line Art in background on right, exactly matching reference image */}
-              <div className="absolute -top-4 right-2 w-56 sm:w-72 h-[640px] pointer-events-none opacity-30 hidden md:block">
-                <ToranJharokhaArch className="w-full h-full" color="#B08D57" opacity={0.65} showContentArea={false} />
+              {/* Toran Jharokha Arch Architectural Line Art in background on right, with subtle soft opacity */}
+              <div className="absolute -top-4 right-2 w-56 sm:w-72 h-[640px] pointer-events-none opacity-10 hidden md:block">
+                <ToranJharokhaArch className="w-full h-full" color="#B08D57" opacity={0.25} showContentArea={false} />
               </div>
 
               {activeTab === 'overview' && (

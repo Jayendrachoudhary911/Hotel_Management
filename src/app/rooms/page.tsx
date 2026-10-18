@@ -32,8 +32,8 @@ async function RoomsContent({ searchParams }: RoomsPageProps) {
   return (
     <div className="relative bg-[#F5F1E8] min-h-screen py-12 sm:py-16 text-[#241F1A] overflow-hidden">
       {/* ── BESPOKE VERTICAL LATA JAALI RUNNERS (Flanking Left & Right) ── */}
-      <LataJaaliRunner side="left" opacity={0.4} color="#B08D57" className="hidden lg:block" />
-      <LataJaaliRunner side="right" opacity={0.4} color="#B08D57" className="hidden lg:block" />
+      <LataJaaliRunner side="left" opacity={0.15} color="#B08D57" className="hidden lg:block" />
+      <LataJaaliRunner side="right" opacity={0.15} color="#B08D57" className="hidden lg:block" />
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header matching image */}
@@ -164,7 +164,7 @@ async function RoomsContent({ searchParams }: RoomsPageProps) {
         </div>
 
         {/* Symmetrical Jaali Divider */}
-        <HeritageDivider className="opacity-70 mt-12 mb-8" color="#B08D57" />
+        <HeritageDivider className="opacity-35 mt-12 mb-8" color="#B08D57" />
 
         {/* Bottom Recommendation Dark Banner matching image */}
         <div className="bg-[#4A0A0C] text-[#FAF8F3] rounded-xl p-6 sm:p-8 border border-[#B08D57]/40 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xl">

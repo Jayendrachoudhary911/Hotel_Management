@@ -33,8 +33,8 @@ export default function CafePage() {
   return (
     <div className="relative bg-[#F5F1E8] min-h-screen py-10 sm:py-16 text-[#241F1A] overflow-hidden">
       {/* ── BESPOKE VERTICAL LATA JAALI BORDERS ── */}
-      <LataJaaliRunner side="left" opacity={0.3} color="#B08D57" className="hidden lg:block" />
-      <LataJaaliRunner side="right" opacity={0.3} color="#B08D57" className="hidden lg:block" />
+      <LataJaaliRunner side="left" opacity={0.15} color="#B08D57" className="hidden lg:block" />
+      <LataJaaliRunner side="right" opacity={0.15} color="#B08D57" className="hidden lg:block" />
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-14">
         {/* ── HERO BANNER (Matching Mobile - Café mockup) ── */}
@@ -47,15 +47,16 @@ export default function CafePage() {
             className="object-cover"
           />
 
-          {/* Dedicated Paisley Kalka Ornaments in Hero Corners */}
+          {/* Dedicated Paisley Kalka Ornaments in Hero Corners with subtle opacity */}
           <div className="absolute top-2 left-2 pointer-events-none hidden sm:block">
-            <PaisleyButaOrnament size="180px" opacity={0.35} color="#C9A96E" />
+            <PaisleyButaOrnament size="180px" opacity={0.15} color="#C9A96E" />
           </div>
           <div className="absolute top-2 right-2 pointer-events-none hidden sm:block scale-x-[-1]">
-            <PaisleyButaOrnament size="180px" opacity={0.35} color="#C9A96E" />
+            <PaisleyButaOrnament size="180px" opacity={0.15} color="#C9A96E" />
           </div>
 
-          <div className="absolute inset-0 bg-gradient-to-t from-[#380608]/95 via-[#4A0A0C]/60 to-transparent flex items-center justify-center p-6 sm:p-12 text-center">
+          {/* Subtle clear overlay so cafe photo stays bright and inviting */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/25 to-black/10 flex items-center justify-center p-6 sm:p-12 text-center">
             <div className="max-w-2xl">
               <h1 className="font-heritage text-3xl sm:text-5xl font-bold text-[#FAF8F3] mb-3 leading-tight">
                 Café & Lounge
@@ -104,7 +105,7 @@ export default function CafePage() {
         </div>
 
         {/* Symmetrical Jaali Divider */}
-        <HeritageDivider className="opacity-70 my-6" color="#B08D57" />
+        <HeritageDivider className="opacity-35 my-6" color="#B08D57" />
 
         {/* ── CAFÉ MENU ITEMS ── */}
         <div id="cafe-menu" className="pt-4 space-y-12">

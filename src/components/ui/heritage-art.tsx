@@ -106,7 +106,7 @@ export const JharokhaArchBorder: React.FC<{ className?: string; children?: React
 
 // ── 4. DINE LIKE ROYALTY ELEPHANTS BANNER ──
 export const DineLikeRoyaltyBanner: React.FC<{ className?: string }> = ({ className = '' }) => (
-  <div className={`relative bg-[#11241B] text-[#FAF8F3] rounded-xl overflow-hidden p-6 sm:p-8 border border-[#B08D57]/40 shadow-xl ${className}`}>
+  <div className={`relative bg-[#4A0A0C] text-[#FAF8F3] rounded-xl overflow-hidden p-6 sm:p-8 border border-[#B08D57]/40 shadow-xl ${className}`}>
     {/* Subtle backdrop pattern */}
     <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#B08D57_1px,transparent_1px)] [background-size:16px_16px]" />
 
@@ -123,7 +123,7 @@ export const DineLikeRoyaltyBanner: React.FC<{ className?: string }> = ({ classN
             strokeLinejoin="round"
           />
           {/* Howdah on back */}
-          <rect x="55" y="16" width="35" height="15" rx="3" stroke="currentColor" strokeWidth="1.8" fill="#1B382A" />
+          <rect x="55" y="16" width="35" height="15" rx="3" stroke="currentColor" strokeWidth="1.8" fill="#380608" />
           <path d="M 50 16 C 72 6 72 6 95 16 Z" stroke="currentColor" strokeWidth="1.8" fill="#B08D57" fillOpacity="0.3" />
           <circle cx="72" cy="6" r="3" fill="currentColor" />
           {/* Royal Blanket / Jhool */}
@@ -160,7 +160,7 @@ export const DineLikeRoyaltyBanner: React.FC<{ className?: string }> = ({ classN
             strokeLinecap="round"
             strokeLinejoin="round"
           />
-          <rect x="55" y="16" width="35" height="15" rx="3" stroke="currentColor" strokeWidth="1.8" fill="#1B382A" />
+          <rect x="55" y="16" width="35" height="15" rx="3" stroke="currentColor" strokeWidth="1.8" fill="#380608" />
           <path d="M 50 16 C 72 6 72 6 95 16 Z" stroke="currentColor" strokeWidth="1.8" fill="#B08D57" fillOpacity="0.3" />
           <circle cx="72" cy="6" r="3" fill="currentColor" />
           <path d="M 50 40 Q 72 55 95 40 L 95 65 Q 72 72 50 65 Z" stroke="currentColor" strokeWidth="1.5" fill="#B08D57" fillOpacity="0.2" />

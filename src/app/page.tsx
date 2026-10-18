@@ -49,9 +49,9 @@ export default function HomePage() {
             priority
             className="object-cover object-center scale-105"
           />
-          {/* Subtle warm royal darkened overlay for high text legibility */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#380608]/92 via-[#4A0A0C]/75 to-[#4A0A0C]/40" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#380608]/95 via-transparent to-black/25" />
+          {/* Localized subtle vignette primarily behind left text, leaving the palace photo clear & vibrant */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#240507]/75 via-[#240507]/35 to-transparent w-full md:w-3/4 lg:w-3/5" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#240507]/50 via-transparent to-black/20" />
         </div>
 
 
@@ -110,16 +110,16 @@ export default function HomePage() {
 
       {/* ── 3. EXPERIENCE THE ROYAL HERITAGE OF RAJASTHAN ── */}
       <section className="relative py-20 overflow-hidden bg-[#FAF8F3]">
-        {/* Intricate Corner Mandala Ornaments in Top-Left and Bottom-Right */}
+        {/* Intricate Corner Mandala Ornaments with delicate subtle opacity */}
         <MandalaOrnament
           position="top-left"
           color="#B08D57"
-          opacity={0.45}
+          opacity={0.18}
         />
         <MandalaOrnament
           position="bottom-right"
           color="#B08D57"
-          opacity={0.45}
+          opacity={0.18}
         />
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -163,7 +163,7 @@ export default function HomePage() {
       </section>
 
       {/* ── SYMMETRICAL FLORAL JAALI ORNAMENTAL SECTION DIVIDER ── */}
-      <HeritageDivider className="opacity-80" color="#B08D57" />
+      <HeritageDivider className="opacity-35" color="#B08D57" />
 
       {/* ── 4. OUR HERITAGE ROOMS (6 SUITES SHOWCASE) ── */}
       <section className="py-16 bg-[#F5F1E8]">

@@ -58,8 +58,8 @@ export default function RestaurantPage() {
   return (
     <div className="relative bg-[#F5F1E8] min-h-screen py-10 sm:py-16 text-[#241F1A] overflow-hidden">
       {/* ── BESPOKE VERTICAL LATA JAALI BORDERS (Flanking Margins) ── */}
-      <LataJaaliRunner side="left" opacity={0.35} color="#B08D57" className="hidden lg:block" />
-      <LataJaaliRunner side="right" opacity={0.35} color="#B08D57" className="hidden lg:block" />
+      <LataJaaliRunner side="left" opacity={0.15} color="#B08D57" className="hidden lg:block" />
+      <LataJaaliRunner side="right" opacity={0.15} color="#B08D57" className="hidden lg:block" />
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
         {/* ── 1. HERO BANNER (Matching image) ── */}
@@ -71,7 +71,8 @@ export default function RestaurantPage() {
             priority
             className="object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#380608]/95 via-[#4A0A0C]/65 to-transparent flex items-center justify-center p-6 sm:p-12 text-center">
+          {/* Subtle clear overlay so dining photo stays bright and appetizing */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/25 to-black/10 flex items-center justify-center p-6 sm:p-12 text-center">
             <div className="max-w-3xl">
               <h1 className="font-heritage text-3xl sm:text-5xl lg:text-6xl font-bold text-[#FAF8F3] mb-3 leading-tight">
                 Rajasthani Restaurant
@@ -130,7 +131,7 @@ export default function RestaurantPage() {
         </div>
 
         {/* Symmetrical Jaali Divider */}
-        <HeritageDivider className="opacity-70" color="#B08D57" />
+        <HeritageDivider className="opacity-35" color="#B08D57" />
 
         {/* ── 3. OUR SIGNATURE DISHES (Matching image with circular food photos) ── */}
         <div className="space-y-8 text-center">
@@ -194,7 +195,7 @@ export default function RestaurantPage() {
 
             {/* Bespoke Royal Rajput Procession Artwork: Elephant with Howdah, Camel, Chhatri */}
             <div className="pt-2 pb-2">
-              <RoyalProcessionBanner color="#C9A96E" opacity={0.95} />
+              <RoyalProcessionBanner color="#C9A96E" opacity={0.45} />
             </div>
 
             <div className="pt-2 flex justify-center gap-4">
@@ -215,7 +216,7 @@ export default function RestaurantPage() {
         </div>
 
         {/* Symmetrical Jaali Divider */}
-        <HeritageDivider className="opacity-70" color="#B08D57" />
+        <HeritageDivider className="opacity-35" color="#B08D57" />
 
         {/* ── 5. FULL CATEGORIZED ROYAL MENU ── */}
         <div id="menu" className="pt-4 space-y-12">
