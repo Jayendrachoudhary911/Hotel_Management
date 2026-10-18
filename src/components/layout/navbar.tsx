@@ -20,12 +20,12 @@ export const Navbar: React.FC = () => {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full shadow-md bg-[#13251E] border-b border-[#B08D57]/30 transition-all">
+    <header className="sticky top-0 z-50 w-full shadow-md bg-[#173B35] border-b border-[#B08D57]/30 transition-all">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Logo with Arch Crest matching image */}
           <Link href="/" className="flex items-center space-x-3 group">
-            <div className="w-10 h-10 rounded-md border border-[#B08D57]/60 flex items-center justify-center bg-[#1B362B] group-hover:scale-105 transition-transform shadow-inner">
+            <div className="w-10 h-10 rounded-md border border-[#B08D57]/60 flex items-center justify-center bg-[#102924] group-hover:scale-105 transition-transform shadow-inner">
               <IconPalaceCrest className="w-7 h-7 text-[#C9A96E]" />
             </div>
             <div>
@@ -95,13 +95,13 @@ export const Navbar: React.FC = () => {
 
       {/* Mobile Menu Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-[#182F26] border-b border-[#B08D57]/40 px-4 pt-3 pb-6 space-y-3">
+        <div className="md:hidden bg-[#102924] border-b border-[#B08D57]/40 px-4 pt-3 pb-6 space-y-3">
           {navLinks.map((link) => (
             <Link
               key={link.label}
               href={link.href}
               onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-md text-base text-[#FAF8F3] hover:text-[#C9A96E] hover:bg-[#13251E]/80"
+              className="block px-3 py-2 rounded-md text-base text-[#FAF8F3] hover:text-[#C9A96E] hover:bg-[#173B35]/80"
             >
               {link.label}
             </Link>

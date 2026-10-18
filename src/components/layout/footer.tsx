@@ -7,16 +7,16 @@ import { MapPin, Phone, Mail, Clock, ShieldCheck } from 'lucide-react';
 
 export const Footer: React.FC = () => {
   return (
-    <footer className="border-t border-[#B08D57]/30 bg-[#13251E] text-[#FAF8F3] mt-auto">
+    <footer className="border-t border-[#B08D57]/30 bg-[#173B35] text-[#FAF8F3] mt-auto">
       {/* Top Gold Filigree Accent Line */}
-      <div className="h-0.5 bg-gradient-to-r from-[#13251E] via-[#B08D57] to-[#13251E]" />
+      <div className="h-0.5 bg-gradient-to-r from-[#173B35] via-[#B08D57] to-[#173B35]" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 pb-24 md:pb-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Brand info */}
           <div className="space-y-4">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-md bg-[#1B362B] border border-[#B08D57]/60 flex items-center justify-center shadow">
+              <div className="w-10 h-10 rounded-md bg-[#102924] border border-[#B08D57]/60 flex items-center justify-center shadow">
                 <IconPalaceCrest className="w-7 h-7 text-[#C9A96E]" />
               </div>
               <div>
@@ -106,7 +106,7 @@ export const Footer: React.FC = () => {
             </p>
             <Link
               href="/dashboard"
-              className="inline-flex items-center px-4 py-2 rounded-md bg-[#1B362B] border border-[#B08D57]/60 text-xs font-medium text-[#FAF8F3] hover:bg-[#C59B63] hover:text-[#13251E] transition-all shadow"
+              className="inline-flex items-center px-4 py-2 rounded-md bg-[#102924] border border-[#B08D57]/60 text-xs font-medium text-[#FAF8F3] hover:bg-[#C59B63] hover:text-[#173B35] transition-all shadow"
             >
               Access Staff Cockpit
             </Link>

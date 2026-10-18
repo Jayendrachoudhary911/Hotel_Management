@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { dataRepository } from '@/lib/data/repository';
 import { formatMoney } from '@/lib/utils/money';
+import { HeritageDivider } from '@/components/ui/heritage-ornaments';
 import {
   IconTraditionalCuisine,
   IconIndoorOutdoor,
@@ -52,7 +53,7 @@ export default function RestaurantPage() {
   ];
 
   return (
-    <div className="bg-[#FAF7F2] min-h-screen py-10 sm:py-16 text-[#1E1A17]">
+    <div className="bg-[#F5F1E8] min-h-screen py-10 sm:py-16 text-[#241F1A]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
         {/* ── 1. HERO BANNER (Matching image) ── */}
         <div className="relative h-[380px] sm:h-[480px] rounded-2xl overflow-hidden shadow-xl border border-[#D4CBBB]">
@@ -63,7 +64,7 @@ export default function RestaurantPage() {
             priority
             className="object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#111A15]/95 via-[#111A15]/65 to-transparent flex items-center justify-center p-6 sm:p-12 text-center">
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0F2723]/95 via-[#0F2723]/65 to-transparent flex items-center justify-center p-6 sm:p-12 text-center">
             <div className="max-w-3xl">
               <h1 className="font-heritage text-3xl sm:text-5xl lg:text-6xl font-bold text-[#FAF8F3] mb-3 leading-tight">
                 Rajasthani Restaurant
@@ -79,13 +80,13 @@ export default function RestaurantPage() {
               <div className="flex flex-wrap items-center justify-center gap-4">
                 <a
                   href="#menu"
-                  className="px-6 py-3 rounded-md bg-[#C59B63] hover:bg-[#B88E55] text-[#13251E] font-medium text-sm tracking-wide transition-all shadow"
+                  className="px-6 py-3 rounded-md bg-[#C59B63] hover:bg-[#B88E55] text-[#173B35] font-medium text-sm tracking-wide transition-all shadow"
                 >
                   View Menu
                 </a>
                 <Link
                   href="/#contact"
-                  className="px-6 py-3 rounded-md bg-[#13251E] border border-[#B08D57]/60 hover:bg-[#1C382D] text-[#FAF8F3] font-medium text-sm tracking-wide transition-all shadow"
+                  className="px-6 py-3 rounded-md bg-[#173B35] border border-[#B08D57]/60 hover:bg-[#22524A] text-[#FAF8F3] font-medium text-sm tracking-wide transition-all shadow"
                 >
                   Reserve a Table
                 </Link>
@@ -108,12 +109,12 @@ export default function RestaurantPage() {
             return (
               <div
                 key={idx}
-                className="flex flex-col items-center p-4 rounded-xl bg-white border border-[#E5DFD5] shadow-2xs hover:shadow-md transition-all"
+                className="flex flex-col items-center p-4 rounded-xl bg-white border border-[#D4CBBB]/70 shadow-2xs hover:shadow-md transition-all"
               >
                 <div className="w-14 h-14 rounded-full bg-[#FAF8F3] border border-[#B08D57]/50 flex items-center justify-center mb-3">
                   <Icon className="w-7 h-7 text-[#B08D57]" />
                 </div>
-                <h4 className="text-xs sm:text-sm font-semibold text-[#13251E] max-w-[160px] leading-snug">
+                <h4 className="text-xs sm:text-sm font-semibold text-[#173B35] max-w-[160px] leading-snug">
                   {feat.label}
                 </h4>
               </div>
@@ -121,10 +122,13 @@ export default function RestaurantPage() {
           })}
         </div>
 
+        {/* Symmetrical Jaali Divider */}
+        <HeritageDivider className="opacity-70" color="#B08D57" />
+
         {/* ── 3. OUR SIGNATURE DISHES (Matching image with circular food photos) ── */}
         <div className="space-y-8 text-center">
           <div>
-            <h2 className="font-heritage text-3xl sm:text-4xl font-bold text-[#13251E] mb-2">
+            <h2 className="font-heritage text-3xl sm:text-4xl font-bold text-[#173B35] mb-2">
               Our Signature Dishes
             </h2>
             <p className="text-sm text-[#6E6356] font-light">
@@ -136,7 +140,7 @@ export default function RestaurantPage() {
             {signatureDishes.map((dish, idx) => (
               <div
                 key={idx}
-                className="bg-white rounded-2xl p-5 border border-[#E5DFD5] shadow-xs hover:shadow-lg transition-all flex flex-col items-center text-center group"
+                className="bg-white rounded-2xl p-5 border border-[#D4CBBB]/70 shadow-xs hover:shadow-lg transition-all flex flex-col items-center text-center group"
               >
                 {/* Circular image matching image */}
                 <div className="relative w-40 h-40 sm:w-44 sm:h-44 rounded-full overflow-hidden border-2 border-[#B08D57]/40 shadow-md mb-4 group-hover:scale-105 transition-transform duration-300">
@@ -147,7 +151,7 @@ export default function RestaurantPage() {
                     className="object-cover"
                   />
                 </div>
-                <h3 className="font-heritage text-lg font-bold text-[#13251E] mb-1.5 group-hover:text-[#B08D57] transition-colors">
+                <h3 className="font-heritage text-lg font-bold text-[#173B35] mb-1.5 group-hover:text-[#B08D57] transition-colors">
                   {dish.name}
                 </h3>
                 <p className="text-xs text-[#7A6F62] leading-relaxed font-light">
@@ -160,7 +164,7 @@ export default function RestaurantPage() {
           <div>
             <a
               href="#menu"
-              className="inline-flex items-center space-x-2 px-6 py-3 rounded-md bg-[#13251E] hover:bg-[#1C382D] text-[#FAF8F3] font-medium text-sm tracking-wide transition-all shadow"
+              className="inline-flex items-center space-x-2 px-6 py-3 rounded-md bg-[#173B35] hover:bg-[#22524A] text-[#FAF8F3] font-medium text-sm tracking-wide transition-all shadow"
             >
               <span>View Full Menu</span>
               <ArrowRight className="w-4 h-4 text-[#C9A96E]" />
@@ -171,10 +175,13 @@ export default function RestaurantPage() {
         {/* ── 4. DINE LIKE ROYALTY ELEPHANTS BANNER (Matching image) ── */}
         <DineLikeRoyaltyBanner />
 
+        {/* Symmetrical Jaali Divider */}
+        <HeritageDivider className="opacity-70" color="#B08D57" />
+
         {/* ── 5. FULL CATEGORIZED ROYAL MENU ── */}
-        <div id="menu" className="pt-8 space-y-12">
+        <div id="menu" className="pt-4 space-y-12">
           <div className="text-center max-w-xl mx-auto">
-            <h2 className="font-heritage text-2xl sm:text-3xl font-bold text-[#13251E] mb-2">
+            <h2 className="font-heritage text-2xl sm:text-3xl font-bold text-[#173B35] mb-2">
               Royal Dining Selection
             </h2>
             <p className="text-xs sm:text-sm text-[#7A6F62]">
@@ -184,31 +191,31 @@ export default function RestaurantPage() {
 
           {categories.map((category) => (
             <div key={category.id} className="space-y-4">
-              <h3 className="font-heritage text-xl font-bold text-[#13251E] pb-2 border-b border-[#D4CBBB]">
+              <h3 className="font-heritage text-xl font-bold text-[#173B35] pb-2 border-b border-[#D4CBBB]">
                 {category.name}
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {category.items?.map((item) => (
                   <div
                     key={item.id}
-                    className="bg-white p-4 sm:p-5 rounded-xl border border-[#E5DFD5] shadow-2xs hover:border-[#B08D57] transition-all flex justify-between items-start"
+                    className="bg-white p-4 sm:p-5 rounded-xl border border-[#D4CBBB]/70 shadow-2xs hover:border-[#B08D57] transition-all flex justify-between items-start"
                   >
                     <div className="pr-4">
                       <div className="flex items-center space-x-2 mb-1">
                         <span className={`w-3 h-3 rounded-full ${(item.dietary_labels || []).includes('veg') ? 'bg-emerald-600' : 'bg-red-700'}`} />
-                        <h4 className="font-semibold text-sm text-[#13251E]">{item.name}</h4>
+                        <h4 className="font-semibold text-sm text-[#173B35]">{item.name}</h4>
                       </div>
                       <p className="text-xs text-[#7A6F62] leading-relaxed mb-2 font-light">
                         {item.description}
                       </p>
-                      <span className="font-heritage font-bold text-sm text-[#13251E]">
+                      <span className="font-heritage font-bold text-sm text-[#173B35]">
                         {formatMoney(item.price_minor)}
                       </span>
                     </div>
 
                     <Link
                       href="/order/pickup"
-                      className="px-3 py-1.5 rounded bg-[#FAF8F3] hover:bg-[#13251E] hover:text-[#FAF8F3] border border-[#D4CBBB] text-xs font-medium text-[#13251E] transition-all shrink-0"
+                      className="px-3 py-1.5 rounded bg-[#FAF8F3] hover:bg-[#173B35] hover:text-[#FAF8F3] border border-[#D4CBBB] text-xs font-medium text-[#173B35] transition-all shrink-0"
                     >
                       Order
                     </Link>

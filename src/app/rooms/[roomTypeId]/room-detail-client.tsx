@@ -17,8 +17,8 @@ import {
   IconInRoomDining,
   IconWorkDesk,
   IconRoomService24,
-  RajasthaniCornerMandala,
 } from '@/components/ui/heritage-art';
+import { JharokhaOrnament, HeritageDivider } from '@/components/ui/heritage-ornaments';
 import { Calendar, Users, ChevronRight, Check } from 'lucide-react';
 
 interface RoomDetailClientProps {
@@ -47,24 +47,24 @@ export function RoomDetailClient({ room, allRooms }: RoomDetailClientProps) {
   ];
 
   return (
-    <div className="bg-[#FAF7F2] min-h-screen py-8 sm:py-12 text-[#1E1A17]">
+    <div className="bg-[#F5F1E8] min-h-screen py-8 sm:py-12 text-[#241F1A]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Breadcrumb matching image */}
         <nav className="flex items-center space-x-2 text-xs text-[#7A6F62] mb-6">
-          <Link href="/" className="hover:text-[#13251E] transition-colors">
+          <Link href="/" className="hover:text-[#173B35] transition-colors">
             Home
           </Link>
           <ChevronRight className="w-3.5 h-3.5 text-[#B08D57]" />
-          <Link href="/rooms" className="hover:text-[#13251E] transition-colors">
+          <Link href="/rooms" className="hover:text-[#173B35] transition-colors">
             Rooms
           </Link>
           <ChevronRight className="w-3.5 h-3.5 text-[#B08D57]" />
-          <span className="text-[#13251E] font-medium">{room.name}</span>
+          <span className="text-[#173B35] font-medium">{room.name}</span>
         </nav>
 
         {/* Top Header & Quick Specs Row matching image */}
         <div className="mb-8">
-          <h1 className="font-heritage text-3xl sm:text-4xl lg:text-5xl font-bold text-[#13251E] mb-2">
+          <h1 className="font-heritage text-3xl sm:text-4xl lg:text-5xl font-bold text-[#173B35] mb-2">
             {room.name}
           </h1>
           <p className="text-sm sm:text-base text-[#6E6356] font-light max-w-2xl mb-4">
@@ -141,11 +141,11 @@ export function RoomDetailClient({ room, allRooms }: RoomDetailClientProps) {
               ))}
             </div>
 
-            {/* Tab Content with decorative jharokha watermark */}
-            <div className="relative bg-white rounded-xl border border-[#E5DFD5] p-6 sm:p-8 shadow-xs overflow-hidden">
-              {/* Corner Mandala Watermark in background */}
-              <div className="absolute -top-6 -right-6 pointer-events-none opacity-20">
-                <RajasthaniCornerMandala className="w-40 h-40 text-[#B08D57]" />
+            {/* Tab Content with delicate architectural Jharokha line art illustration on right */}
+            <div className="relative bg-white rounded-xl border border-[#D4CBBB]/70 p-6 sm:p-8 shadow-xs overflow-hidden">
+              {/* Jharokha Architectural Line Art in background on right, exactly matching reference image */}
+              <div className="absolute top-0 right-2 w-48 sm:w-64 h-[580px] pointer-events-none opacity-25 hidden md:block">
+                <JharokhaOrnament className="w-full h-full" color="#B08D57" opacity={0.35} />
               </div>
 
               {activeTab === 'overview' && (
@@ -293,13 +293,13 @@ export function RoomDetailClient({ room, allRooms }: RoomDetailClientProps) {
               <div className="space-y-3">
                 <Link
                   href={`/book?roomTypeId=${room.id}&checkIn=${checkIn}&checkOut=${checkOut}`}
-                  className="w-full py-3.5 px-4 rounded-lg bg-[#13251E] hover:bg-[#1C382D] text-[#FAF8F3] font-medium text-sm tracking-wide transition-all shadow-md block text-center"
+                  className="w-full py-3.5 px-4 rounded-lg bg-[#173B35] hover:bg-[#22524A] text-[#FAF8F3] font-medium text-sm tracking-wide transition-all shadow-md block text-center"
                 >
                   Book Now
                 </Link>
                 <Link
                   href="/#contact"
-                  className="w-full py-3 px-4 rounded-lg border border-[#B08D57]/70 bg-transparent hover:bg-[#FAF8F3] text-[#13251E] font-medium text-sm tracking-wide transition-all block text-center"
+                  className="w-full py-3 px-4 rounded-lg border border-[#B08D57]/70 bg-transparent hover:bg-[#FAF8F3] text-[#173B35] font-medium text-sm tracking-wide transition-all block text-center"
                 >
                   Enquire Now
                 </Link>
