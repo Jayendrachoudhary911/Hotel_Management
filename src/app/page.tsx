@@ -17,6 +17,8 @@ import {
   IconGuests,
 } from '@/components/ui/heritage-art';
 import { ArrowRight, MapPin, Phone, Mail, Clock } from 'lucide-react';
+import { InstaLookbook } from '@/components/home/insta-lookbook';
+import { RoyalMemories } from '@/components/home/royal-memories';
 
 export const metadata = {
   title: 'Rajmahal Heritage Hotel | A Royal Stay Rooted in Rajasthan',
@@ -257,7 +259,16 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── 5. CONTACT US SECTION (Matching Mobile - Contact mockup) ── */}
+      {/* ── 5. INSTA LOOKBOOK & REELS SECTION ── */}
+      <InstaLookbook />
+
+      {/* ── JAALI DIVIDER ── */}
+      <HeritageDivider className="opacity-35" color="#B08D57" />
+
+      {/* ── 6. ROYAL MEMORIES & CELEBRATIONS SECTION ── */}
+      <RoyalMemories />
+
+      {/* ── 7. CONTACT US SECTION (Matching Mobile - Contact mockup) ── */}
       <section id="contact" className="py-16 bg-[#FAF8F3] border-t border-[#D4CBBB]/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-12">

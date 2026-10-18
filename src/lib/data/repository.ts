@@ -19,6 +19,7 @@ import type {
   Room,
   Hall,
   MenuCategory,
+  MenuItem,
   Table,
   QRToken,
   Order,
@@ -81,6 +82,20 @@ export const dataRepository = {
     if (idx === -1) return null;
     roomsState[idx] = { ...roomsState[idx], housekeeping_state: state };
     return roomsState[idx];
+  },
+  addRoom(room: { room_number: string; room_type_id: string; housekeeping_state: Room['housekeeping_state']; notes?: string | null }): Room {
+    const newRoom: Room = {
+      id: `room-${Date.now()}`,
+      room_number: room.room_number,
+      room_type_id: room.room_type_id,
+      housekeeping_state: room.housekeeping_state,
+      notes: room.notes || null,
+    };
+    roomsState.push(newRoom);
+    return {
+      ...newRoom,
+      room_type: roomTypesState.find((rt) => rt.id === newRoom.room_type_id),
+    };
   },
 
   // Room Availability Search
@@ -239,6 +254,45 @@ export const dataRepository = {
       }
     }
     return false;
+  },
+  addMenuItem(itemData: {
+    category_id: string;
+    name: string;
+    description: string;
+    price_minor: number;
+    dietary_labels: string[];
+    image_url?: string;
+  }): MenuItem {
+    const newItem: MenuItem = {
+      id: `item-${Date.now()}`,
+      category_id: itemData.category_id,
+      name: itemData.name,
+      description: itemData.description,
+      price_minor: itemData.price_minor,
+      dietary_labels: itemData.dietary_labels,
+      image_url: itemData.image_url || '/images/dining_ambiance.jpg',
+      is_available: true,
+      sort_order: 99,
+    };
+    const cat = menuCategoriesState.find((c) => c.id === itemData.category_id);
+    if (cat) {
+      if (!cat.items) cat.items = [];
+      cat.items.push(newItem);
+    }
+    return newItem;
+  },
+  updateMenuItem(
+    itemId: string,
+    updates: Partial<Pick<MenuItem, 'name' | 'description' | 'price_minor' | 'dietary_labels' | 'is_available'>>
+  ): MenuItem | null {
+    for (const cat of menuCategoriesState) {
+      const item = cat.items?.find((i) => i.id === itemId);
+      if (item) {
+        Object.assign(item, updates);
+        return item;
+      }
+    }
+    return null;
   },
 
   // QR & Tables

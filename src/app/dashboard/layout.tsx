@@ -11,6 +11,10 @@ import {
   Receipt,
   Sparkles,
   Utensils,
+  ShoppingBag,
+  BarChart3,
+  History,
+  Settings,
   ExternalLink,
   ShieldCheck,
 } from 'lucide-react';
@@ -20,25 +24,29 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
 
   const navItems = [
     { label: 'Operations Overview', href: '/dashboard', icon: LayoutDashboard },
+    { label: 'All Orders Hub', href: '/dashboard/orders', icon: ShoppingBag },
     { label: 'Reservations', href: '/dashboard/reservations', icon: CalendarCheck },
     { label: 'Rooms & Housekeeping', href: '/dashboard/rooms', icon: BedDouble },
     { label: 'Kitchen Display (KDS)', href: '/dashboard/kitchen', icon: ChefHat },
     { label: 'POS & Billing', href: '/dashboard/pos', icon: Receipt },
     { label: 'Party Hall Enquiries', href: '/dashboard/hall', icon: Sparkles },
     { label: 'Menu Management', href: '/dashboard/menu', icon: Utensils },
+    { label: 'Reports & Analytics', href: '/dashboard/reports', icon: BarChart3 },
+    { label: 'Audit History', href: '/dashboard/audit', icon: History },
+    { label: 'Property & Settings', href: '/dashboard/settings', icon: Settings },
   ];
 
   return (
     <div className="flex min-h-[calc(100vh-80px)] w-full bg-[#1C1814] text-[#FAF8F3]">
       {/* Sidebar */}
       <aside className="w-64 border-r border-[#3D352C] bg-[#241F1A] p-4 flex flex-col justify-between hidden md:flex shrink-0">
-        <div className="space-y-6">
+        <div className="space-y-5">
           <div className="px-3 pt-2">
             <span className="text-[10px] uppercase tracking-widest text-[#B08D57] font-bold block">
               Heritage Operations Console
             </span>
             <span className="font-heritage text-base font-bold text-[#FAF8F3] block mt-0.5">
-              Aura Grand Staff Portal
+              Rajmahal Staff Portal
             </span>
           </div>
 
@@ -54,14 +62,14 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                  className={`flex items-center px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
                     isActive
                       ? 'bg-[#670E10] text-white border border-[#B08D57]/50 shadow-sm'
                       : 'text-[#D4CBBB] hover:text-white hover:bg-[#2A2420]'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 mr-3 ${isActive ? 'text-[#B08D57]' : 'text-[#8F7245]'}`} />
-                  {item.label}
+                  <Icon className={`w-4 h-4 mr-2.5 shrink-0 ${isActive ? 'text-[#B08D57]' : 'text-[#8F7245]'}`} />
+                  <span className="truncate">{item.label}</span>
                 </Link>
               );
             })}
