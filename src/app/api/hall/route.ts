@@ -1,9 +1,16 @@
 import { NextResponse } from 'next/server';
-import { dataRepository } from '@/lib/data/repository';
+import { hallService } from '@/lib/services/hall-service';
 
 export async function GET() {
-  const leads = dataRepository.getEventLeads();
-  return NextResponse.json({ leads });
+  try {
+    const [hall, leads] = await Promise.all([
+      hallService.getHall(),
+      hallService.getEventLeads(),
+    ]);
+    return NextResponse.json({ success: true, hall, leads });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {
@@ -12,10 +19,10 @@ export async function POST(request: Request) {
     const { contactName, contactPhone, contactEmail, eventType, expectedGuests, seatingLayout, setupNeeds, notes } = body;
 
     if (!contactName || !contactPhone) {
-      return NextResponse.json({ error: 'Name and contact phone are required' }, { status: 400 });
+      return NextResponse.json({ success: false, error: 'Name and contact phone are required' }, { status: 400 });
     }
 
-    const lead = dataRepository.createEventLead({
+    const lead = await hallService.createEventLead({
       contactName,
       contactPhone,
       contactEmail,
@@ -29,6 +36,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, lead }, { status: 201 });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Server error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

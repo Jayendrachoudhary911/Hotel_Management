@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
-import { dataRepository } from '@/lib/data/repository';
+import { reservationsService } from '@/lib/services/reservations-service';
 
 export async function GET() {
-  const reservations = dataRepository.getReservations();
-  return NextResponse.json({ reservations });
+  try {
+    const reservations = await reservationsService.getReservations();
+    return NextResponse.json({ success: true, reservations });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {
@@ -12,10 +16,10 @@ export async function POST(request: Request) {
     const { roomTypeId, checkIn, checkOut, partySize, guestName, guestPhone, guestEmail, notes } = body;
 
     if (!roomTypeId || !checkIn || !checkOut || !guestName || !guestPhone) {
-      return NextResponse.json({ error: 'Missing required reservation fields' }, { status: 400 });
+      return NextResponse.json({ success: false, error: 'Missing required reservation fields' }, { status: 400 });
     }
 
-    const reservation = dataRepository.createReservation({
+    const reservation = await reservationsService.createReservation({
       roomTypeId,
       checkIn,
       checkOut,
@@ -29,6 +33,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, reservation }, { status: 201 });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Server error creating reservation';
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

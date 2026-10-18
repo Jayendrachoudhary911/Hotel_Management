@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server';
-import { dataRepository } from '@/lib/data/repository';
+import { ordersService } from '@/lib/services/orders-service';
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const outletId = searchParams.get('outletId') || undefined;
-  const orders = dataRepository.getOrders(outletId);
-  return NextResponse.json({ orders });
+  try {
+    const { searchParams } = new URL(request.url);
+    const outletId = searchParams.get('outletId') || undefined;
+    const orders = await ordersService.getOrders(outletId);
+    return NextResponse.json({ success: true, orders });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {
@@ -33,12 +37,12 @@ export async function POST(request: Request) {
 
     if (!outlet_id || !channel || !fulfilment_mode || !order_lines || order_lines.length === 0) {
       return NextResponse.json(
-        { error: 'Missing required order fields or order lines' },
+        { success: false, error: 'Missing required order fields or order lines' },
         { status: 400 }
       );
     }
 
-    const order = dataRepository.createOrder({
+    const order = await ordersService.createOrder({
       outlet_id,
       table_id: table_id || null,
       channel,
@@ -55,16 +59,12 @@ export async function POST(request: Request) {
       service_charge_minor: service_charge_minor || 0,
       discount_minor: discount_minor || 0,
       total_minor: total_minor || 0,
-      status: 'new',
-      cancel_reason: null,
-      created_by: null,
-      assigned_delivery_staff: null,
       order_lines,
     });
 
     return NextResponse.json({ success: true, order }, { status: 201 });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Server error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
