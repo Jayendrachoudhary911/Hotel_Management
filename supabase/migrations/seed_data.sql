@@ -94,10 +94,10 @@ BEGIN
     INSERT INTO menu_items (category_id, name, description, price_minor, dietary_labels, is_available, image_url)
     VALUES
     (cat_starters, 'Dhungar Paneer Tikka', 'Clay-oven smoked cottage cheese infused with cloves and royal yellow mustard.', 38000, ARRAY['Vegetarian', 'Gluten-Free'], true, '/images/dining_ambiance.jpg'),
-    (cat_starters, 'Rajputana Maas ke Sooley', 'Tender lamb escalopes smoked on open charcoal with kachri and Mathania chillies.', 54000, ARRAY['Non-Vegetarian', "Chef's Special"], true, '/images/dining_ambiance.jpg'),
+    (cat_starters, 'Rajputana Maas ke Sooley', 'Tender lamb escalopes smoked on open charcoal with kachri and Mathania chillies.', 54000, ARRAY['Non-Vegetarian', 'Chef''s Special'], true, '/images/dining_ambiance.jpg'),
     (cat_thalis, 'Royal Rajputana 56 Bhog Thali', 'Complete imperial banquet: Dal Baati Churma, Ker Sangri, Gatte, Laal Maas, Missi Roti, and Ghevar.', 125000, ARRAY['Specialty'], true, '/images/food/dal-baati.jpg'),
     (cat_mains, 'Traditional Dal Baati Churma', 'Panchmel dal cooked over slow wood embers served with ghee-soaked baatis and rose churma.', 45000, ARRAY['Vegetarian'], true, '/images/food/dal-baati.jpg'),
-    (cat_mains, 'Heritage Laal Maas', 'Slow braised young mutton prepared with hand-pounded fiery Mathania red chillies and pure desi ghee.', 62000, ARRAY['Non-Vegetarian', "Chef's Special"], true, '/images/dining_ambiance.jpg'),
+    (cat_mains, 'Heritage Laal Maas', 'Slow braised young mutton prepared with hand-pounded fiery Mathania red chillies and pure desi ghee.', 62000, ARRAY['Non-Vegetarian', 'Chef''s Special'], true, '/images/dining_ambiance.jpg'),
     (cat_mains, 'Jodhpuri Gatte ki Sabzi', 'Poached gram flour dumplings tempered in a rich spiced curd gravy with whole coriander.', 42000, ARRAY['Vegetarian', 'Jain'], true, '/images/dining_ambiance.jpg'),
     (cat_mains, 'Marwadi Ker Sangri', 'Wild desert beans and berries sauteed in unrefined mustard oil with dried mango powder.', 52000, ARRAY['Vegetarian', 'Vegan'], true, '/images/dining_ambiance.jpg'),
     (cat_desserts, 'Malai Ghevar with Saffron Rabdi', 'Disc of crispy honeycomb pastry drenched in green cardamom syrup and crowned with thick clotted rabdi.', 28000, ARRAY['Vegetarian'], true, '/images/dining_ambiance.jpg'),

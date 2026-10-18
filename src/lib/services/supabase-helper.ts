@@ -18,12 +18,28 @@ export function isSupabaseConfigured(): boolean {
 
 /**
  * Returns a configured Supabase client or null if not yet configured.
+ * Uses service role key when running on server for unrestricted backend operations,
+ * and anon key when running in client browser.
  */
 export function getSupabaseClient() {
   if (!isSupabaseConfigured()) {
     return null;
   }
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  
+  if (
+    typeof window === 'undefined' &&
+    process.env.SUPABASE_SERVICE_ROLE_KEY &&
+    !process.env.SUPABASE_SERVICE_ROLE_KEY.includes('your_service_role_key_here')
+  ) {
+    return createSupabaseClient(url, process.env.SUPABASE_SERVICE_ROLE_KEY, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    });
+  }
+
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
   return createSupabaseClient(url, anonKey);
 }

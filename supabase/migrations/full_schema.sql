@@ -380,34 +380,90 @@ ALTER TABLE royal_memories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 
 -- ── 16. PUBLIC POLICIES ──
+DROP POLICY IF EXISTS "Public read properties" ON properties;
 CREATE POLICY "Public read properties" ON properties FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public read outlets" ON outlets;
 CREATE POLICY "Public read outlets" ON outlets FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public read room_types" ON room_types;
 CREATE POLICY "Public read room_types" ON room_types FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public read rooms" ON rooms;
 CREATE POLICY "Public read rooms" ON rooms FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public read menu_categories" ON menu_categories;
 CREATE POLICY "Public read menu_categories" ON menu_categories FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public read menu_items" ON menu_items;
 CREATE POLICY "Public read menu_items" ON menu_items FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public read halls" ON halls;
 CREATE POLICY "Public read halls" ON halls FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public read tables" ON tables;
 CREATE POLICY "Public read tables" ON tables FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public read qr_tokens" ON qr_tokens;
 CREATE POLICY "Public read qr_tokens" ON qr_tokens FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public read approved reels" ON reels;
 CREATE POLICY "Public read approved reels" ON reels FOR SELECT USING (is_approved = true);
+
+DROP POLICY IF EXISTS "Public insert reels" ON reels;
 CREATE POLICY "Public insert reels" ON reels FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public update reel likes" ON reels;
 CREATE POLICY "Public update reel likes" ON reels FOR UPDATE USING (true);
+
+DROP POLICY IF EXISTS "Public read featured memories" ON royal_memories;
 CREATE POLICY "Public read featured memories" ON royal_memories FOR SELECT USING (is_featured = true);
+
+DROP POLICY IF EXISTS "Public insert memories" ON royal_memories;
 CREATE POLICY "Public insert memories" ON royal_memories FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public update memory likes" ON royal_memories;
 CREATE POLICY "Public update memory likes" ON royal_memories FOR UPDATE USING (true);
+
+DROP POLICY IF EXISTS "Public insert event leads" ON event_leads;
 CREATE POLICY "Public insert event leads" ON event_leads FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public insert reservations" ON reservations;
 CREATE POLICY "Public insert reservations" ON reservations FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public insert orders" ON orders;
 CREATE POLICY "Public insert orders" ON orders FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public insert order_lines" ON order_lines;
 CREATE POLICY "Public insert order_lines" ON order_lines FOR INSERT WITH CHECK (true);
 
 -- Allow full access for backend service role
+DROP POLICY IF EXISTS "Service role full properties" ON properties;
 CREATE POLICY "Service role full properties" ON properties USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Service role full outlets" ON outlets;
 CREATE POLICY "Service role full outlets" ON outlets USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Service role full room_types" ON room_types;
 CREATE POLICY "Service role full room_types" ON room_types USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Service role full rooms" ON rooms;
 CREATE POLICY "Service role full rooms" ON rooms USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Service role full reservations" ON reservations;
 CREATE POLICY "Service role full reservations" ON reservations USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Service role full orders" ON orders;
 CREATE POLICY "Service role full orders" ON orders USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Service role full order_lines" ON order_lines;
 CREATE POLICY "Service role full order_lines" ON order_lines USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Service role full menu_items" ON menu_items;
 CREATE POLICY "Service role full menu_items" ON menu_items USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Service role full event_leads" ON event_leads;
 CREATE POLICY "Service role full event_leads" ON event_leads USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Service role full audit_events" ON audit_events;
 CREATE POLICY "Service role full audit_events" ON audit_events USING (true) WITH CHECK (true);
