@@ -54,21 +54,6 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-gradient-to-t from-[#102924]/95 via-transparent to-black/25" />
         </div>
 
-        {/* ── BESPOKE CORNER MANDALA ORNAMENTS (Top-Left & Bottom-Right) ── */}
-        <MandalaOrnament
-          position="top-left"
-          color="#B08D57"
-          opacity={0.48}
-          size="clamp(320px, 42vw, 680px)"
-          className="hidden sm:block"
-        />
-        <MandalaOrnament
-          position="bottom-right"
-          color="#B08D57"
-          opacity={0.42}
-          size="clamp(320px, 42vw, 680px)"
-          className="hidden sm:block"
-        />
 
         {/* Hero Content - Left Aligned with generous top breathing room below navbar */}
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-32 md:pt-36 pb-16 sm:pb-20 w-full">
