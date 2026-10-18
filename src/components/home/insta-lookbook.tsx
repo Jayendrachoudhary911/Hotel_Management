@@ -259,8 +259,8 @@ export function InstaLookbook() {
               {/* Bottom Meta & Creator Info */}
               <div className="absolute bottom-0 left-0 right-0 p-4 z-10 flex flex-col justify-end text-left">
                 <div className="flex items-center space-x-2 mb-2">
-                  <div className="w-7 h-7 rounded-full overflow-hidden border border-[#B08D57] relative">
-                    <Image src={reel.avatar} alt={reel.creator} fill className="object-cover" />
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#670E10] to-[#B08D57] flex items-center justify-center text-[10px] font-bold text-white border border-[#B08D57] shadow-sm shrink-0">
+                    {reel.creator.charAt(0)}
                   </div>
                   <span className="text-xs font-bold text-[#FAF8F3] truncate drop-shadow">
                     {reel.handle}
@@ -409,8 +409,8 @@ export function InstaLookbook() {
             {/* Bottom Content & Meta */}
             <div className="relative z-20 p-5 pr-16 text-left">
               <div className="flex items-center space-x-2.5 mb-2.5">
-                <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-[#B08D57] relative shadow-md">
-                  <Image src={activeReel.avatar} alt={activeReel.creator} fill className="object-cover" />
+                <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#670E10] to-[#B08D57] flex items-center justify-center text-xs font-bold text-white border-2 border-[#B08D57] shadow-md shrink-0">
+                  {activeReel.creator.charAt(0)}
                 </div>
                 <div>
                   <span className="text-sm font-bold text-white block drop-shadow">
