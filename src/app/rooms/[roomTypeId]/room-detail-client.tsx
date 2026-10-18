@@ -18,7 +18,7 @@ import {
   IconWorkDesk,
   IconRoomService24,
 } from '@/components/ui/heritage-art';
-import { JharokhaOrnament, HeritageDivider } from '@/components/ui/heritage-ornaments';
+import { ToranJharokhaArch, HeritageDivider } from '@/components/ui/heritage-ornaments';
 import { Calendar, Users, ChevronRight, Check } from 'lucide-react';
 
 interface RoomDetailClientProps {
@@ -143,9 +143,9 @@ export function RoomDetailClient({ room, allRooms }: RoomDetailClientProps) {
 
             {/* Tab Content with delicate architectural Jharokha line art illustration on right */}
             <div className="relative bg-white rounded-xl border border-[#D4CBBB]/70 p-6 sm:p-8 shadow-xs overflow-hidden">
-              {/* Jharokha Architectural Line Art in background on right, exactly matching reference image */}
-              <div className="absolute top-0 right-2 w-48 sm:w-64 h-[580px] pointer-events-none opacity-25 hidden md:block">
-                <JharokhaOrnament className="w-full h-full" color="#B08D57" opacity={0.35} />
+              {/* Toran Jharokha Arch Architectural Line Art in background on right, exactly matching reference image */}
+              <div className="absolute -top-4 right-2 w-56 sm:w-72 h-[640px] pointer-events-none opacity-30 hidden md:block">
+                <ToranJharokhaArch className="w-full h-full" color="#B08D57" opacity={0.65} showContentArea={false} />
               </div>
 
               {activeTab === 'overview' && (

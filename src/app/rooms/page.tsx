@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { dataRepository } from '@/lib/data/repository';
 import { formatMoney } from '@/lib/utils/money';
 import { IconKingBed, IconGuests } from '@/components/ui/heritage-art';
-import { MandalaOrnament, HeritageDivider } from '@/components/ui/heritage-ornaments';
+import { LataJaaliRunner, HeritageDivider } from '@/components/ui/heritage-ornaments';
 import { ArrowRight, Calendar, Users, Search } from 'lucide-react';
 
 interface RoomsPageProps {
@@ -31,9 +31,9 @@ async function RoomsContent({ searchParams }: RoomsPageProps) {
 
   return (
     <div className="relative bg-[#F5F1E8] min-h-screen py-12 sm:py-16 text-[#241F1A] overflow-hidden">
-      {/* Delicate Corner Mandala Watermarks */}
-      <MandalaOrnament position="top-left" opacity={0.3} color="#B08D57" className="hidden lg:block" />
-      <MandalaOrnament position="bottom-right" opacity={0.25} color="#B08D57" className="hidden lg:block" />
+      {/* ── BESPOKE VERTICAL LATA JAALI RUNNERS (Flanking Left & Right) ── */}
+      <LataJaaliRunner side="left" opacity={0.4} color="#B08D57" className="hidden lg:block" />
+      <LataJaaliRunner side="right" opacity={0.4} color="#B08D57" className="hidden lg:block" />
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header matching image */}

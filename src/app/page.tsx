@@ -39,57 +39,61 @@ export default function HomePage() {
   return (
     <div className="flex flex-col w-full bg-[#F5F1E8] text-[#241F1A]">
       {/* ── 1. HERO SECTION ── */}
-      <section className="relative min-h-[82vh] sm:min-h-[88vh] flex flex-col justify-between overflow-hidden">
+      <section className="relative min-h-[640px] lg:min-h-[720px] flex flex-col justify-between">
         {/* Palace Heritage Background Image */}
-        <div className="absolute inset-0 z-0">
+        <div className="absolute inset-0 z-0 overflow-hidden">
           <Image
-            src="/images/hero_resort.jpg"
-            alt="Rajmahal Heritage Hotel Palace"
+            src="/images/hero_haveli.jpg"
+            alt="Rajmahal Heritage Hotel Palace Interior"
             fill
             priority
-            className="object-cover object-center"
+            className="object-cover object-center scale-105"
           />
-          {/* Subtle warm darkened overlay for text legibility */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#102924]/88 via-[#102924]/65 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#102924]/90 via-transparent to-transparent" />
+          {/* Subtle warm royal darkened overlay for high text legibility */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#102924]/92 via-[#102924]/75 to-[#102924]/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#102924]/95 via-transparent to-black/25" />
         </div>
 
         {/* ── BESPOKE CORNER MANDALA ORNAMENTS (Top-Left & Bottom-Right) ── */}
         <MandalaOrnament
           position="top-left"
           color="#B08D57"
-          opacity={0.4}
+          opacity={0.48}
+          size="clamp(320px, 42vw, 680px)"
           className="hidden sm:block"
         />
         <MandalaOrnament
           position="bottom-right"
           color="#B08D57"
-          opacity={0.35}
+          opacity={0.42}
+          size="clamp(320px, 42vw, 680px)"
           className="hidden sm:block"
         />
 
-        {/* Hero Content - Left Aligned matching reference image */}
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-28 pb-12 w-full">
+        {/* Hero Content - Left Aligned with generous top breathing room below navbar */}
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-32 md:pt-36 pb-16 sm:pb-20 w-full">
           <div className="max-w-xl text-left">
-            <h1 className="font-heritage text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-[#FAF8F3] mb-4 leading-[1.15]">
-              A Royal Stay <br />
+            <span className="text-[#E5C388] font-heritage text-base sm:text-xl font-medium tracking-[0.25em] uppercase block mb-3 drop-shadow">
+              A Royal Stay
+            </span>
+            <h1 className="font-heritage text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-[#FAF8F3] mb-5 leading-[1.1] drop-shadow-xl">
               Rooted in Rajasthan
             </h1>
-            <p className="text-base sm:text-lg text-[#E6E0D5] mb-8 font-light leading-relaxed">
+            <p className="text-base sm:text-lg text-[#E6E0D5] mb-8 font-light leading-relaxed drop-shadow">
               Heritage rooms, authentic cuisine and unforgettable experiences.
             </p>
             <Link
               href="/rooms"
-              className="inline-flex items-center space-x-2 px-6 py-3 rounded-md bg-[#C59B63] hover:bg-[#B88E55] text-[#173B35] font-medium text-sm sm:text-base tracking-wide transition-all shadow-md group"
+              className="inline-flex items-center space-x-2 px-7 py-3.5 rounded-md bg-[#C59B63] hover:bg-[#B88E55] text-[#173B35] font-semibold text-base tracking-wide transition-all shadow-lg hover:shadow-xl group"
             >
               <span>Check Availability</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
         </div>
 
         {/* Overlapping Floating Booking Widget */}
-        <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full -mb-6 sm:-mb-8">
+        <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full -mb-8 sm:-mb-10">
           <BookingBar />
         </div>
       </section>

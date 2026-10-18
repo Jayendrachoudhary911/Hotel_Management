@@ -2,13 +2,16 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { dataRepository } from '@/lib/data/repository';
 import { formatMoney } from '@/lib/utils/money';
-import { HeritageDivider } from '@/components/ui/heritage-ornaments';
+import {
+  HeritageDivider,
+  LataJaaliRunner,
+  RoyalProcessionBanner,
+} from '@/components/ui/heritage-ornaments';
 import {
   IconTraditionalCuisine,
   IconIndoorOutdoor,
   IconLiveFolkMusic,
   IconSpecialThali,
-  DineLikeRoyaltyBanner,
 } from '@/components/ui/heritage-art';
 import { ArrowRight, QrCode } from 'lucide-react';
 
@@ -53,8 +56,12 @@ export default function RestaurantPage() {
   ];
 
   return (
-    <div className="bg-[#F5F1E8] min-h-screen py-10 sm:py-16 text-[#241F1A]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+    <div className="relative bg-[#F5F1E8] min-h-screen py-10 sm:py-16 text-[#241F1A] overflow-hidden">
+      {/* ── BESPOKE VERTICAL LATA JAALI BORDERS (Flanking Margins) ── */}
+      <LataJaaliRunner side="left" opacity={0.35} color="#B08D57" className="hidden lg:block" />
+      <LataJaaliRunner side="right" opacity={0.35} color="#B08D57" className="hidden lg:block" />
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
         {/* ── 1. HERO BANNER (Matching image) ── */}
         <div className="relative h-[380px] sm:h-[480px] rounded-2xl overflow-hidden shadow-xl border border-[#D4CBBB]">
           <Image
@@ -172,8 +179,40 @@ export default function RestaurantPage() {
           </div>
         </div>
 
-        {/* ── 4. DINE LIKE ROYALTY ELEPHANTS BANNER (Matching image) ── */}
-        <DineLikeRoyaltyBanner />
+        {/* ── 4. DINE LIKE ROYALTY (Matching Reference Image Screen 4) ── */}
+        <div className="relative bg-[#173B35] text-[#FAF8F3] rounded-2xl overflow-hidden p-8 sm:p-12 border border-[#B08D57]/50 shadow-2xl text-center">
+          <div className="relative z-10 max-w-4xl mx-auto space-y-4">
+            <span className="text-[#C9A96E] text-xs font-semibold tracking-[0.3em] uppercase block">
+              ✦ Shahi Sawari & Royal Feasts ✦
+            </span>
+            <h3 className="font-heritage text-3xl sm:text-4xl lg:text-5xl font-bold text-[#FAF8F3] tracking-wide">
+              Dine Like Royalty
+            </h3>
+            <p className="text-[#D8D2C4] text-sm sm:text-base max-w-2xl mx-auto font-light leading-relaxed">
+              A culinary journey through the rich heritage of Rajasthan, served in a regal setting with recipes passed down through royal palace kitchens.
+            </p>
+
+            {/* Bespoke Royal Rajput Procession Artwork: Elephant with Howdah, Camel, Chhatri */}
+            <div className="pt-2 pb-2">
+              <RoyalProcessionBanner color="#C9A96E" opacity={0.95} />
+            </div>
+
+            <div className="pt-2 flex justify-center gap-4">
+              <Link
+                href="/order/pickup"
+                className="px-6 py-2.5 rounded bg-[#C59B63] hover:bg-[#B88E55] text-[#173B35] font-semibold text-xs sm:text-sm tracking-wide transition-all shadow-md"
+              >
+                Order Direct
+              </Link>
+              <a
+                href="#menu"
+                className="px-6 py-2.5 rounded bg-transparent hover:bg-white/10 text-[#C9A96E] border border-[#B08D57]/60 text-xs sm:text-sm font-medium transition-all"
+              >
+                Explore Delicacies
+              </a>
+            </div>
+          </div>
+        </div>
 
         {/* Symmetrical Jaali Divider */}
         <HeritageDivider className="opacity-70" color="#B08D57" />
