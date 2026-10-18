@@ -24,11 +24,15 @@ export const ordersService = {
   async getOrderById(orderId: string): Promise<Order | undefined> {
     const supabase = getSupabaseClient();
     if (supabase) {
-      const { data, error } = await supabase
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
+      const query = supabase
         .from('orders')
-        .select('*, order_lines(*), tables(*), payments(*)')
-        .or(`id.eq.${orderId},order_number.eq.${orderId}`)
-        .maybeSingle();
+        .select('*, order_lines(*), tables(*), payments(*)');
+      
+      const { data, error } = isUuid
+        ? await query.or(`id.eq.${orderId},order_number.eq.${orderId}`).maybeSingle()
+        : await query.eq('order_number', orderId).maybeSingle();
+
       if (!error && data) return data as Order;
     }
     return dataRepository.getOrderByNumber(orderId) || dataRepository.getOrders().find((o) => o.id === orderId || o.order_number === orderId);
@@ -139,12 +143,13 @@ export const ordersService = {
   async updateOrderStatus(orderId: string, status: OrderStatus): Promise<Order | null> {
     const supabase = getSupabaseClient();
     if (supabase) {
-      const { data, error } = await supabase
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
+      const query = supabase
         .from('orders')
-        .update({ status })
-        .eq('id', orderId)
-        .select('*, order_lines(*), tables(*)')
-        .single();
+        .update({ status });
+      const { data, error } = isUuid
+        ? await query.eq('id', orderId).select('*, order_lines(*), tables(*)').maybeSingle()
+        : await query.eq('order_number', orderId).select('*, order_lines(*), tables(*)').maybeSingle();
       if (!error && data) return data as Order;
     }
     return dataRepository.updateOrderStatus(orderId, status);

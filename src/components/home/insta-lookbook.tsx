@@ -113,6 +113,39 @@ export function InstaLookbook() {
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
   const [copiedToast, setCopiedToast] = useState(false);
+  const [isSubmittingReel, setIsSubmittingReel] = useState(false);
+
+  // Fetch live reels from Supabase API
+  React.useEffect(() => {
+    async function loadLiveReels() {
+      try {
+        const res = await fetch('/api/reels');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.reels && data.reels.length > 0) {
+            const mapped = data.reels.map((r: any) => ({
+              id: r.id,
+              creator: r.creator_name || 'Guest Creator',
+              handle: r.handle || '@rajmahal_guest',
+              avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
+              title: r.title,
+              likes: r.likes_count ?? 1200,
+              comments: r.comments_count ?? 45,
+              views: r.views_count || '1.2K',
+              thumbnail: r.thumbnail_url || '/images/hero_haveli.jpg',
+              duration: r.duration || '0:30',
+              spot: r.spot_tag || 'Royal Courtyard',
+              userLiked: false,
+            }));
+            setReels(mapped);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch live reels:', err);
+      }
+    }
+    loadLiveReels();
+  }, []);
 
   // Upload modal state
   const [isUploadOpen, setIsUploadOpen] = useState(false);
@@ -123,8 +156,10 @@ export function InstaLookbook() {
   const [reelUrl, setReelUrl] = useState('');
   const [selectedThumb, setSelectedThumb] = useState('/images/hero_haveli.jpg');
 
-  const handleLikeReel = (reelId: string, e?: React.MouseEvent) => {
+  const handleLikeReel = async (reelId: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
+    
+    // Optimistic UI update
     setReels((prev) =>
       prev.map((r) => {
         if (r.id === reelId) {
@@ -150,6 +185,13 @@ export function InstaLookbook() {
           : null
       );
     }
+
+    // Call live Supabase like endpoint
+    try {
+      await fetch(`/api/reels/${reelId}/like`, { method: 'POST' });
+    } catch (err) {
+      console.error('Error syncing reel like to database:', err);
+    }
   };
 
   const handleShare = (e?: React.MouseEvent) => {
@@ -159,31 +201,75 @@ export function InstaLookbook() {
     setTimeout(() => setCopiedToast(false), 2500);
   };
 
-  const handleSubmitReel = (e: React.FormEvent) => {
+  const handleSubmitReel = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!handle || !title) return;
 
-    const newReel: Reel = {
-      id: `reel-${Date.now()}`,
-      creator: creatorName || handle.replace('@', ''),
-      handle: handle.startsWith('@') ? handle : `@${handle}`,
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
-      title,
-      likes: 1,
-      comments: 0,
-      views: '1.2K',
-      thumbnail: selectedThumb,
-      duration: '0:30',
-      spot,
-      userLiked: true,
-    };
+    setIsSubmittingReel(true);
+    const sanitizedHandle = handle.startsWith('@') ? handle : `@${handle}`;
+    const creator = creatorName || sanitizedHandle.replace('@', '');
 
-    setReels([newReel, ...reels]);
-    setIsUploadOpen(false);
-    setCreatorName('');
-    setHandle('');
-    setTitle('');
-    setReelUrl('');
+    try {
+      const res = await fetch('/api/reels', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          creator_name: creator,
+          handle: sanitizedHandle,
+          title,
+          spot_tag: spot,
+          thumbnail_url: selectedThumb,
+          video_url: reelUrl || null,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const created = data.reel;
+        const newReel: Reel = {
+          id: created.id,
+          creator: created.creator_name,
+          handle: created.handle,
+          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
+          title: created.title,
+          likes: created.likes_count || 1,
+          comments: 0,
+          views: created.views_count || '1.2K',
+          thumbnail: created.thumbnail_url || selectedThumb,
+          duration: created.duration || '0:30',
+          spot: created.spot_tag || spot,
+          userLiked: true,
+        };
+        setReels([newReel, ...reels]);
+      } else {
+        // Fallback optimistic insertion
+        const newReel: Reel = {
+          id: `reel-${Date.now()}`,
+          creator,
+          handle: sanitizedHandle,
+          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
+          title,
+          likes: 1,
+          comments: 0,
+          views: '1.2K',
+          thumbnail: selectedThumb,
+          duration: '0:30',
+          spot,
+          userLiked: true,
+        };
+        setReels([newReel, ...reels]);
+      }
+
+      setIsUploadOpen(false);
+      setCreatorName('');
+      setHandle('');
+      setTitle('');
+      setReelUrl('');
+    } catch (err) {
+      console.error('Failed to submit reel:', err);
+    } finally {
+      setIsSubmittingReel(false);
+    }
   };
 
   return (

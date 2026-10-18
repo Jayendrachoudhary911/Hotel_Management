@@ -18,14 +18,21 @@ export const reservationsService = {
   async getReservationByReference(reference: string): Promise<Reservation | undefined> {
     const supabase = getSupabaseClient();
     if (supabase) {
-      const { data, error } = await supabase
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(reference);
+      const query = supabase
         .from('reservations')
-        .select('*, guests(*), room_types(*), rooms(*)')
-        .eq('reference_code', reference.toUpperCase())
-        .maybeSingle();
+        .select('*, guests(*), room_types(*), rooms(*)');
+      
+      const { data, error } = isUuid
+        ? await query.eq('id', reference).maybeSingle()
+        : await query.eq('reference_code', reference.toUpperCase()).maybeSingle();
+
       if (!error && data) return data as Reservation;
     }
-    return dataRepository.getReservationByReference(reference);
+    return (
+      dataRepository.getReservationByReference(reference) ||
+      dataRepository.getReservations().find((r) => r.id === reference || r.reference_code === reference.toUpperCase())
+    );
   },
 
   async createReservation(data: {
@@ -107,12 +114,13 @@ export const reservationsService = {
   async updateReservationStatus(id: string, status: ReservationStatus): Promise<Reservation | null> {
     const supabase = getSupabaseClient();
     if (supabase) {
-      const { data, error } = await supabase
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      const query = supabase
         .from('reservations')
-        .update({ status })
-        .eq('id', id)
-        .select('*, guests(*), room_types(*)')
-        .single();
+        .update({ status });
+      const { data, error } = isUuid
+        ? await query.eq('id', id).select('*, guests(*), room_types(*)').maybeSingle()
+        : await query.eq('reference_code', id.toUpperCase()).select('*, guests(*), room_types(*)').maybeSingle();
       if (!error && data) return data as Reservation;
     }
     return dataRepository.updateReservationStatus(id, status);

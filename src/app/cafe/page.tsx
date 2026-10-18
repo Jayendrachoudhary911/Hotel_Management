@@ -1,6 +1,8 @@
+import { Suspense } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { dataRepository } from '@/lib/data/repository';
+import { menuService } from '@/lib/services/menu-service';
 import { formatMoney } from '@/lib/utils/money';
 import {
   HeritageDivider,
@@ -20,9 +22,9 @@ export const metadata = {
     'A cozy space to enjoy freshly brewed coffee, Rajasthani snacks and a relaxed ambience with beautiful views. Open daily 8:00 AM – 11:00 PM.',
 };
 
-export default function CafePage() {
+async function CafeContent() {
   const outlet = dataRepository.getOutletByType('cafe')!;
-  const categories = dataRepository.getMenuCategories(outlet.id);
+  const categories = await menuService.getMenuCategories(outlet.id);
 
   const features = [
     { label: 'Coffee & Beverages', icon: IconCafeLounge },
@@ -156,5 +158,19 @@ export default function CafePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CafePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#F5F1E8] flex items-center justify-center text-[#670E10] font-heritage text-lg">
+          Loading royal café & lounge...
+        </div>
+      }
+    >
+      <CafeContent />
+    </Suspense>
   );
 }

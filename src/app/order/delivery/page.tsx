@@ -12,7 +12,7 @@ import {
   INITIAL_RESTAURANT_CATEGORIES,
   INITIAL_CAFE_CATEGORIES,
 } from '@/lib/data/initial-data';
-import type { MenuItem } from '@/lib/types';
+import type { MenuItem, MenuCategory } from '@/lib/types';
 import { ShoppingBag, Plus, Minus, Clock, MapPin, Truck, ArrowRight } from 'lucide-react';
 
 export default function DeliveryOrderPage() {
@@ -25,11 +25,32 @@ export default function DeliveryOrderPage() {
   const [deliveryNotes, setDeliveryNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [liveCategories, setLiveCategories] = useState<MenuCategory[] | null>(null);
+
+  // Load live menu items from Supabase
+  React.useEffect(() => {
+    async function fetchMenu() {
+      try {
+        const res = await fetch('/api/menu');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.categories && data.categories.length > 0) {
+            setLiveCategories(data.categories);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load live menu:', err);
+      }
+    }
+    fetchMenu();
+  }, []);
 
   const currentOutlet =
     INITIAL_OUTLETS.find((o) => o.id === selectedOutletId) || INITIAL_OUTLETS[0];
   const categories =
-    currentOutlet.type === 'restaurant'
+    liveCategories && liveCategories.length > 0
+      ? liveCategories
+      : currentOutlet.type === 'restaurant'
       ? INITIAL_RESTAURANT_CATEGORIES
       : INITIAL_CAFE_CATEGORIES;
 
@@ -103,9 +124,15 @@ export default function DeliveryOrderPage() {
           fulfilment_mode: 'delivery',
           pickup_name: customerName,
           pickup_phone: customerPhone,
+          delivery_name: customerName,
+          delivery_phone: customerPhone,
           delivery_address: deliveryAddress,
-          kitchen_notes: deliveryNotes || null,
-          lines: orderLines,
+          delivery_notes: deliveryNotes || null,
+          subtotal_minor: subtotalMinor,
+          tax_minor: taxMinor,
+          delivery_fee_minor: deliveryFeeMinor,
+          total_minor: totalMinor,
+          order_lines: orderLines,
         }),
       });
 
@@ -172,7 +199,7 @@ export default function DeliveryOrderPage() {
                 </h2>
 
                 <div className="grid grid-cols-1 gap-3">
-                  {cat.items?.map((item) => {
+                  {cat.items?.map((item: MenuItem) => {
                     const qty = cart[item.id]?.quantity || 0;
                     return (
                       <div

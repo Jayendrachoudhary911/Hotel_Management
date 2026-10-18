@@ -10,17 +10,24 @@ import { IconKingBed, IconGuests, IconFreeWiFi } from '@/components/ui/heritage-
 import { MandalaOrnament, HeritageDivider } from '@/components/ui/heritage-ornaments';
 import { Calendar, Users, CheckCircle2 } from 'lucide-react';
 
+function getFormattedDate(offsetDays: number = 0): string {
+  const d = new Date();
+  d.setDate(d.getDate() + offsetDays);
+  return d.toISOString().split('T')[0];
+}
+
 function BookRoomForm() {
   const searchParams = useSearchParams();
-  const preselectedRoomTypeId = searchParams.get('roomTypeId') || INITIAL_ROOM_TYPES[0].id;
-  const preselectedCheckIn = searchParams.get('checkIn') || '2024-08-12';
-  const preselectedCheckOut = searchParams.get('checkOut') || '2024-08-16';
-  const preselectedGuests = parseInt(searchParams.get('guests') || '2', 10);
+  const paramRoomTypeId = searchParams.get('roomTypeId');
+  const paramCheckIn = searchParams.get('checkIn');
+  const paramCheckOut = searchParams.get('checkOut');
+  const paramGuests = searchParams.get('guests');
 
-  const [roomTypeId, setRoomTypeId] = useState(preselectedRoomTypeId);
-  const [checkIn, setCheckIn] = useState(preselectedCheckIn);
-  const [checkOut, setCheckOut] = useState(preselectedCheckOut);
-  const [partySize, setPartySize] = useState(preselectedGuests);
+  const [roomTypes, setRoomTypes] = useState(INITIAL_ROOM_TYPES);
+  const [roomTypeId, setRoomTypeId] = useState(paramRoomTypeId || INITIAL_ROOM_TYPES[0].id);
+  const [checkIn, setCheckIn] = useState(paramCheckIn || getFormattedDate(0));
+  const [checkOut, setCheckOut] = useState(paramCheckOut || getFormattedDate(2));
+  const [partySize, setPartySize] = useState(parseInt(paramGuests || '2', 10));
 
   const [guestName, setGuestName] = useState('');
   const [guestPhone, setGuestPhone] = useState('');
@@ -32,11 +39,37 @@ function BookRoomForm() {
     referenceCode: string;
     roomName: string;
     totalAmount: number;
+    depositAmount?: number;
     nights: number;
   } | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const selectedRoom = INITIAL_ROOM_TYPES.find((r) => r.id === roomTypeId) || INITIAL_ROOM_TYPES[0];
+  // Fetch live room types from Supabase via /api/rooms
+  useEffect(() => {
+    async function loadLiveRooms() {
+      try {
+        const res = await fetch('/api/rooms');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.roomTypes && data.roomTypes.length > 0) {
+            setRoomTypes(data.roomTypes);
+            // If roomTypeId in param matches a live room or wasn't set, select accordingly
+            if (paramRoomTypeId) {
+              const matched = data.roomTypes.find((r: any) => r.id === paramRoomTypeId || r.name.toLowerCase().includes(paramRoomTypeId.toLowerCase()));
+              if (matched) setRoomTypeId(matched.id);
+            } else {
+              setRoomTypeId(data.roomTypes[0].id);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch live rooms, using fallback:', err);
+      }
+    }
+    loadLiveRooms();
+  }, [paramRoomTypeId]);
+
+  const selectedRoom = roomTypes.find((r) => r.id === roomTypeId) || roomTypes[0] || INITIAL_ROOM_TYPES[0];
 
   const calculateNights = () => {
     const start = new Date(checkIn);
@@ -46,7 +79,7 @@ function BookRoomForm() {
   };
 
   const nights = calculateNights();
-  const totalAmount = selectedRoom.base_rate_minor * nights;
+  const totalAmount = (selectedRoom?.base_rate_minor || 500000) * nights;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,7 +101,7 @@ function BookRoomForm() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          roomTypeId,
+          roomTypeId: selectedRoom.id,
           checkIn,
           checkOut,
           partySize,
@@ -89,7 +122,8 @@ function BookRoomForm() {
       setConfirmedReservation({
         referenceCode: resData.reservation.reference_code,
         roomName: selectedRoom.name,
-        totalAmount,
+        totalAmount: resData.reservation.total_amount_minor || totalAmount,
+        depositAmount: resData.reservation.deposit_amount_minor,
         nights,
       });
     } catch (err: unknown) {
@@ -213,7 +247,7 @@ function BookRoomForm() {
                   onChange={(e) => setRoomTypeId(e.target.value)}
                   className="w-full p-3 rounded-lg border border-[#E5DFD5] bg-[#FAF8F3]/60 text-sm font-semibold text-[#670E10] focus:outline-none focus:border-[#B08D57]"
                 >
-                  {INITIAL_ROOM_TYPES.map((r) => (
+                  {roomTypes.map((r) => (
                     <option key={r.id} value={r.id}>
                       {r.name} — {formatMoney(r.base_rate_minor)} / night
                     </option>

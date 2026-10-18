@@ -1,6 +1,8 @@
+import { Suspense } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { dataRepository } from '@/lib/data/repository';
+import { menuService } from '@/lib/services/menu-service';
 import { formatMoney } from '@/lib/utils/money';
 import {
   HeritageDivider,
@@ -21,9 +23,9 @@ export const metadata = {
     'Experience the true taste of Rajasthan with traditional recipes, fresh local ingredients and a heritage dining atmosphere. Dal Baati Churma, Laal Maas, Gatte ki Sabzi, Ker Sangri.',
 };
 
-export default function RestaurantPage() {
+async function RestaurantContent() {
   const outlet = dataRepository.getOutletByType('restaurant')!;
-  const categories = dataRepository.getMenuCategories(outlet.id);
+  const categories = await menuService.getMenuCategories(outlet.id);
 
   const signatureDishes = [
     {
@@ -267,5 +269,19 @@ export default function RestaurantPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RestaurantPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#F5F1E8] flex items-center justify-center text-[#670E10] font-heritage text-lg">
+          Loading royal culinary experiences...
+        </div>
+      }
+    >
+      <RestaurantContent />
+    </Suspense>
   );
 }

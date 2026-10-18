@@ -112,6 +112,36 @@ export function RoyalMemories() {
   const [memories, setMemories] = useState<RoyalMemory[]>(INITIAL_MEMORIES);
   const [activeFilter, setActiveFilter] = useState('all');
   const [zoomMemory, setZoomMemory] = useState<RoyalMemory | null>(null);
+  const [isSubmittingMemory, setIsSubmittingMemory] = useState(false);
+
+  // Fetch live memories from Supabase API
+  React.useEffect(() => {
+    async function loadLiveMemories() {
+      try {
+        const res = await fetch('/api/memories');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.memories && data.memories.length > 0) {
+            const mapped = data.memories.map((m: any) => ({
+              id: m.id,
+              eventName: m.event_name,
+              eventType: (m.event_type || 'wedding') as RoyalMemory['eventType'],
+              hostName: m.host_name,
+              date: m.celebration_date,
+              story: m.story,
+              photoUrl: m.photo_url || '/images/hall/crystal-ballroom.jpg',
+              likes: m.likes_count ?? 300,
+              userLiked: false,
+            }));
+            setMemories(mapped);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load live memories, using fallback:', err);
+      }
+    }
+    loadLiveMemories();
+  }, []);
 
   // Add memory modal state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -127,8 +157,10 @@ export function RoyalMemories() {
     return m.eventType === activeFilter;
   });
 
-  const handleLike = (id: string, e: React.MouseEvent) => {
+  const handleLike = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    
+    // Optimistic UI update
     setMemories((prev) =>
       prev.map((m) => {
         if (m.id === id) {
@@ -142,30 +174,76 @@ export function RoyalMemories() {
         return m;
       })
     );
+
+    // Sync live with Supabase
+    try {
+      await fetch(`/api/memories/${id}/like`, { method: 'POST' });
+    } catch (err) {
+      console.error('Failed to sync memory like to database:', err);
+    }
   };
 
-  const handleAddMemory = (e: React.FormEvent) => {
+  const handleAddMemory = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!guestName || !eventName || !story) return;
 
-    const newMemory: RoyalMemory = {
-      id: `mem-${Date.now()}`,
-      eventName,
-      eventType,
-      hostName: guestName,
-      date: eventDate || 'Recent Celebration',
-      story,
-      photoUrl: selectedPhoto,
-      likes: 1,
-      userLiked: true,
-    };
+    setIsSubmittingMemory(true);
+    const celebrationDate = eventDate || 'Recent Celebration';
 
-    setMemories([newMemory, ...memories]);
-    setIsAddModalOpen(false);
-    setGuestName('');
-    setEventName('');
-    setStory('');
-    setEventDate('');
+    try {
+      const res = await fetch('/api/memories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event_name: eventName,
+          event_type: eventType,
+          host_name: guestName,
+          celebration_date: celebrationDate,
+          story,
+          photo_url: selectedPhoto,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const created = data.memory;
+        const newMemory: RoyalMemory = {
+          id: created.id,
+          eventName: created.event_name,
+          eventType: created.event_type as RoyalMemory['eventType'],
+          hostName: created.host_name,
+          date: created.celebration_date,
+          story: created.story,
+          photoUrl: created.photo_url || selectedPhoto,
+          likes: created.likes_count || 1,
+          userLiked: true,
+        };
+        setMemories([newMemory, ...memories]);
+      } else {
+        const newMemory: RoyalMemory = {
+          id: `mem-${Date.now()}`,
+          eventName,
+          eventType,
+          hostName: guestName,
+          date: celebrationDate,
+          story,
+          photoUrl: selectedPhoto,
+          likes: 1,
+          userLiked: true,
+        };
+        setMemories([newMemory, ...memories]);
+      }
+
+      setIsAddModalOpen(false);
+      setGuestName('');
+      setEventName('');
+      setStory('');
+      setEventDate('');
+    } catch (err) {
+      console.error('Failed to submit memory:', err);
+    } finally {
+      setIsSubmittingMemory(false);
+    }
   };
 
   return (

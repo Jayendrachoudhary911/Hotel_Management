@@ -21,13 +21,15 @@ export const metadata = {
     'Six unique Rajasthani experiences, each with its own story, architecture and charm. Haveli Suite, Jharokha Room, Meenakari Room, Thar Heritage Room, Royal Courtyard Room, Sheesh Mahal Room.',
 };
 
+import { roomsService } from '@/lib/services/rooms-service';
+
 async function RoomsContent({ searchParams }: RoomsPageProps) {
   const resolvedParams = await searchParams;
   const checkIn = resolvedParams.checkIn || '2026-10-18';
   const checkOut = resolvedParams.checkOut || '2026-10-22';
   const guests = parseInt(resolvedParams.guests || '2', 10);
 
-  const allRooms = dataRepository.getRoomTypes();
+  const allRooms = await roomsService.getRoomTypes();
 
   return (
     <div className="relative bg-[#F5F1E8] min-h-screen py-12 sm:py-16 text-[#241F1A] overflow-hidden">
