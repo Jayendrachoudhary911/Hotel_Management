@@ -63,6 +63,14 @@ export const dataRepository = {
   getOutletByType(type: 'restaurant' | 'cafe'): Outlet | undefined {
     return outletsState.find((o) => o.type === type);
   },
+  updateOutlet(id: string, patch: Partial<Outlet>): Outlet | undefined {
+    const idx = outletsState.findIndex((o) => o.id === id);
+    if (idx !== -1) {
+      outletsState[idx] = { ...outletsState[idx], ...patch };
+      return outletsState[idx];
+    }
+    return undefined;
+  },
 
   // Room Types & Rooms
   getRoomTypes(): RoomType[] {

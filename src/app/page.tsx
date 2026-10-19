@@ -1,7 +1,9 @@
+import { Suspense } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { BookingBar } from '@/components/home/booking-bar';
-import { dataRepository } from '@/lib/data/repository';
+import { roomsService } from '@/lib/services/rooms-service';
+import { INITIAL_PROPERTY } from '@/lib/data/initial-data';
 import {
   MandalaOrnament,
   HeritageDivider,
@@ -26,9 +28,9 @@ export const metadata = {
     'Experience the royal heritage of Rajasthan at Rajmahal Heritage Hotel. Six authentic heritage suites, traditional Rajasthani restaurant, café & lounge, and grand party hall.',
 };
 
-export default function HomePage() {
-  const roomTypes = dataRepository.getRoomTypes();
-  const property = dataRepository.getProperty();
+async function HomeContent() {
+  const roomTypes = await roomsService.getRoomTypes();
+  const property = INITIAL_PROPERTY;
 
   const featureIcons = [
     { label: '6 Themed Rooms', href: '/rooms', icon: IconThemedRooms },
@@ -326,5 +328,13 @@ export default function HomePage() {
         </div>
       </section>
     </div>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#F5F1E8]" />}>
+      <HomeContent />
+    </Suspense>
   );
 }

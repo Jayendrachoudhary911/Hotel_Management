@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Settings,
   Building,
@@ -22,7 +22,7 @@ import {
   Trash2,
   Percent,
 } from 'lucide-react';
-import { dataRepository } from '@/lib/data/repository';
+import { INITIAL_PROPERTY, INITIAL_OUTLETS } from '@/lib/data/initial-data';
 import { formatMoney } from '@/lib/utils/money';
 import type { Property, Outlet, Table, User, UserRole } from '@/lib/types';
 
@@ -31,20 +31,30 @@ export default function DashboardSettingsPage() {
   const [saveSuccessMsg, setSaveSuccessMsg] = useState('');
 
   // 1. Property State
-  const [property, setProperty] = useState<Property>(() => dataRepository.getProperty());
+  const [property, setProperty] = useState<Property>(INITIAL_PROPERTY);
 
   // 2. Outlets State
-  const [outlets, setOutlets] = useState<Outlet[]>(() => dataRepository.getOutlets());
+  const [outlets, setOutlets] = useState<Outlet[]>(INITIAL_OUTLETS);
 
   // 3. Tables State
-  const [tables, setTables] = useState<Table[]>(() => [
-    { id: 't1', outlet_id: 'b1', table_number: 'Table 1', capacity: 4, is_active: true },
-    { id: 't2', outlet_id: 'b1', table_number: 'Table 2', capacity: 4, is_active: true },
-    { id: 't3', outlet_id: 'b1', table_number: 'Table 3', capacity: 6, is_active: true },
-    { id: 't4', outlet_id: 'b1', table_number: 'Table 4 (Courtyard)', capacity: 4, is_active: true },
-    { id: 't5', outlet_id: 'b2', table_number: 'Cafe T1', capacity: 2, is_active: true },
-    { id: 't6', outlet_id: 'b2', table_number: 'Cafe T2 (Jharokha)', capacity: 4, is_active: true },
-  ]);
+  const [tables, setTables] = useState<Table[]>([]);
+
+  useEffect(() => {
+    async function loadSettings() {
+      try {
+        const res = await fetch('/api/settings');
+        const data = await res.json();
+        if (data.success) {
+          if (data.property) setProperty(data.property);
+          if (data.outlets?.length) setOutlets(data.outlets);
+          if (data.tables?.length) setTables(data.tables);
+        }
+      } catch (err) {
+        console.error('Error fetching settings:', err);
+      }
+    }
+    loadSettings();
+  }, []);
   const [selectedTableForQr, setSelectedTableForQr] = useState<Table | null>(null);
   const [newTableNum, setNewTableNum] = useState('');
   const [newTableCap, setNewTableCap] = useState(4);
@@ -279,9 +289,17 @@ export default function DashboardSettingsPage() {
 
           <div className="pt-2 flex justify-end">
             <button
-              onClick={() => {
-                dataRepository.updateProperty(property);
-                triggerSaveNotification('Property profile & policies saved.');
+              onClick={async () => {
+                try {
+                  await fetch('/api/settings', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ property }),
+                  });
+                  triggerSaveNotification('Property profile & policies saved to database.');
+                } catch (err) {
+                  triggerSaveNotification('Error saving property changes.');
+                }
               }}
               className="px-6 py-2.5 rounded-lg bg-[#670E10] hover:bg-[#821215] text-[#FAF8F3] text-xs font-semibold border border-[#B08D57]/60 flex items-center gap-2 shadow transition-all cursor-pointer"
             >

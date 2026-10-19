@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Modal } from '@/components/ui/modal';
 import { formatMoney } from '@/lib/utils/money';
-import { dataRepository } from '@/lib/data/repository';
 import { INITIAL_OUTLETS } from '@/lib/data/initial-data';
 import type { MenuCategory, MenuItem } from '@/lib/types';
 import {
@@ -26,9 +25,8 @@ import {
 
 export default function MenuManagementDashboardPage() {
   const [selectedOutletId, setSelectedOutletId] = useState(INITIAL_OUTLETS[0].id);
-  const [categories, setCategories] = useState<MenuCategory[]>(
-    dataRepository.getMenuCategories(INITIAL_OUTLETS[0].id)
-  );
+  const [categories, setCategories] = useState<MenuCategory[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Modals state
@@ -47,24 +45,55 @@ export default function MenuManagementDashboardPage() {
   const [editPrice, setEditPrice] = useState('');
   const [editDesc, setEditDesc] = useState('');
 
-  const refreshMenu = (outletId = selectedOutletId) => {
-    setCategories([...dataRepository.getMenuCategories(outletId)]);
+  const refreshMenu = async (outletId = selectedOutletId) => {
+    setIsLoading(true);
+    try {
+      const res = await fetch(`/api/menu?outletId=${outletId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setCategories(data.categories || []);
+      }
+    } catch (err) {
+      console.error('Failed to load menu from API:', err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleToggle = (itemId: string) => {
-    dataRepository.toggleItemAvailability(itemId);
-    refreshMenu();
+  React.useEffect(() => {
+    refreshMenu(selectedOutletId);
+  }, [selectedOutletId]);
+
+  const handleToggle = async (itemId: string) => {
+    // Optimistic UI update
+    setCategories((prev) =>
+      prev.map((c) => ({
+        ...c,
+        items: c.items?.map((it) =>
+          it.id === itemId ? { ...it, is_available: !it.is_available } : it
+        ),
+      }))
+    );
+
+    try {
+      await fetch(`/api/menu/${itemId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ toggleAvailability: true }),
+      });
+    } catch (err) {
+      console.error('Failed to toggle availability in Supabase:', err);
+      refreshMenu();
+    }
   };
 
   const handleOutletChange = (outletId: string) => {
     setSelectedOutletId(outletId);
-    refreshMenu(outletId);
   };
 
   const handleOpenAddModal = () => {
-    const currentCats = dataRepository.getMenuCategories(selectedOutletId);
-    if (currentCats.length > 0) {
-      setNewDishCategoryId(currentCats[0].id);
+    if (categories.length > 0) {
+      setNewDishCategoryId(categories[0].id);
     }
     setNewDishName('');
     setNewDishDesc('');
@@ -74,22 +103,32 @@ export default function MenuManagementDashboardPage() {
     setIsAddModalOpen(true);
   };
 
-  const handleCreateDish = (e: React.FormEvent) => {
+  const handleCreateDish = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newDishName || !newDishPrice || !newDishCategoryId) return;
 
     const priceMinor = Math.round(parseFloat(newDishPrice) * 100);
-    dataRepository.addMenuItem({
-      category_id: newDishCategoryId,
-      name: newDishName,
-      description: newDishDesc,
-      price_minor: priceMinor,
-      dietary_labels: selectedDietary,
-      image_url: newDishImage,
-    });
+    try {
+      const res = await fetch('/api/menu', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category_id: newDishCategoryId,
+          name: newDishName,
+          description: newDishDesc,
+          price_minor: priceMinor,
+          dietary_labels: selectedDietary,
+          image_url: newDishImage,
+        }),
+      });
 
-    setIsAddModalOpen(false);
-    refreshMenu();
+      if (res.ok) {
+        setIsAddModalOpen(false);
+        refreshMenu();
+      }
+    } catch (err) {
+      console.error('Failed to create dish in Supabase:', err);
+    }
   };
 
   const handleOpenEdit = (item: MenuItem) => {
@@ -98,17 +137,27 @@ export default function MenuManagementDashboardPage() {
     setEditDesc(item.description || '');
   };
 
-  const handleSaveEdit = (e: React.FormEvent) => {
+  const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingItem) return;
 
-    dataRepository.updateMenuItem(editingItem.id, {
-      price_minor: Math.round(parseFloat(editPrice) * 100),
-      description: editDesc,
-    });
+    try {
+      const res = await fetch(`/api/menu/${editingItem.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          price_minor: Math.round(parseFloat(editPrice) * 100),
+          description: editDesc,
+        }),
+      });
 
-    setEditingItem(null);
-    refreshMenu();
+      if (res.ok) {
+        setEditingItem(null);
+        refreshMenu();
+      }
+    } catch (err) {
+      console.error('Failed to update dish in Supabase:', err);
+    }
   };
 
   const toggleDietaryTag = (tag: string) => {
@@ -130,7 +179,7 @@ export default function MenuManagementDashboardPage() {
     ),
   })).filter((cat) => (cat.items?.length || 0) > 0 || searchQuery === '');
 
-  const availableCategoriesForOutlet = dataRepository.getMenuCategories(selectedOutletId);
+  const availableCategoriesForOutlet = categories;
 
   return (
     <div className="space-y-6">

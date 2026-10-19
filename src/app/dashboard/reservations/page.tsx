@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Modal } from '@/components/ui/modal';
 import { formatMoney } from '@/lib/utils/money';
-import { dataRepository } from '@/lib/data/repository';
 import type { Reservation, Room } from '@/lib/types';
 import {
   CalendarCheck,
@@ -21,48 +20,108 @@ import {
 } from 'lucide-react';
 
 export default function ReservationsDashboardPage() {
-  const [reservations, setReservations] = useState<Reservation[]>(dataRepository.getReservations());
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedResForCheckIn, setSelectedResForCheckIn] = useState<Reservation | null>(null);
   const [assignedRoomId, setAssignedRoomId] = useState('');
 
-  const rooms = dataRepository.getRooms();
+  const loadData = async () => {
+    setIsLoading(true);
+    try {
+      const [resData, roomData] = await Promise.all([
+        fetch('/api/reservations').then((r) => (r.ok ? r.json() : { reservations: [] })),
+        fetch('/api/rooms').then((r) => (r.ok ? r.json() : { rooms: [] })),
+      ]);
+      setReservations(resData.reservations || []);
+      setRooms(roomData.rooms || []);
+    } catch (err) {
+      console.error('Failed to load reservations data:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    loadData();
+  }, []);
+
   const availableRooms = rooms.filter((r) => r.housekeeping_state === 'available');
 
   const filtered = reservations.filter((r) => {
     if (statusFilter !== 'all' && r.status !== statusFilter) return false;
     if (searchTerm) {
-      const matchName = r.guest?.name.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchRef = r.reference_code.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchPhone = r.guest?.phone.includes(searchTerm);
+      const matchName = r.guest?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchRef = r.reference_code?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchPhone = r.guest?.phone?.includes(searchTerm);
       return matchName || matchRef || matchPhone;
     }
     return true;
   });
 
-  const handleCheckInConfirm = () => {
+  const handleCheckInConfirm = async () => {
     if (!selectedResForCheckIn || !assignedRoomId) return;
 
-    dataRepository.updateReservationStatus(selectedResForCheckIn.id, 'checked_in', assignedRoomId);
-    dataRepository.updateRoomHousekeeping(assignedRoomId, 'occupied');
-
-    setReservations([...dataRepository.getReservations()]);
-    setSelectedResForCheckIn(null);
-    setAssignedRoomId('');
-  };
-
-  const handleCheckOut = (res: Reservation) => {
-    dataRepository.updateReservationStatus(res.id, 'checked_out');
-    if (res.room_id) {
-      dataRepository.updateRoomHousekeeping(res.room_id, 'dirty');
+    try {
+      await Promise.all([
+        fetch(`/api/reservations/${selectedResForCheckIn.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'checked_in', room_id: assignedRoomId }),
+        }),
+        fetch(`/api/rooms/${assignedRoomId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ housekeeping_state: 'occupied' }),
+        }),
+      ]);
+      await loadData();
+    } catch (err) {
+      console.error('Failed to check in guest in Supabase:', err);
+    } finally {
+      setSelectedResForCheckIn(null);
+      setAssignedRoomId('');
     }
-    setReservations([...dataRepository.getReservations()]);
   };
 
-  const handleCancel = (res: Reservation) => {
-    dataRepository.updateReservationStatus(res.id, 'cancelled');
-    setReservations([...dataRepository.getReservations()]);
+  const handleCheckOut = async (res: Reservation) => {
+    try {
+      const promises: Promise<any>[] = [
+        fetch(`/api/reservations/${res.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'checked_out' }),
+        }),
+      ];
+      if (res.room_id) {
+        promises.push(
+          fetch(`/api/rooms/${res.room_id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ housekeeping_state: 'dirty' }),
+          })
+        );
+      }
+      await Promise.all(promises);
+      await loadData();
+    } catch (err) {
+      console.error('Failed to check out guest in Supabase:', err);
+    }
+  };
+
+  const handleCancel = async (res: Reservation) => {
+    try {
+      await fetch(`/api/reservations/${res.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'cancelled' }),
+      });
+      await loadData();
+    } catch (err) {
+      console.error('Failed to cancel reservation in Supabase:', err);
+    }
   };
 
   return (

@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { dataRepository } from '@/lib/data/repository';
+import { roomsService } from '@/lib/services/rooms-service';
 import { formatMoney } from '@/lib/utils/money';
 import { IconKingBed, IconGuests } from '@/components/ui/heritage-art';
 import { LataJaaliRunner, HeritageDivider } from '@/components/ui/heritage-ornaments';
@@ -20,8 +20,6 @@ export const metadata = {
   description:
     'Six unique Rajasthani experiences, each with its own story, architecture and charm. Haveli Suite, Jharokha Room, Meenakari Room, Thar Heritage Room, Royal Courtyard Room, Sheesh Mahal Room.',
 };
-
-import { roomsService } from '@/lib/services/rooms-service';
 
 async function RoomsContent({ searchParams }: RoomsPageProps) {
   const resolvedParams = await searchParams;

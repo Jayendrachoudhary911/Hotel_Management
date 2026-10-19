@@ -1,12 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Modal } from '@/components/ui/modal';
-import { dataRepository } from '@/lib/data/repository';
 import type { Room, HousekeepingState, RoomType } from '@/lib/types';
 import {
   BedDouble,
@@ -21,41 +20,99 @@ import {
 } from 'lucide-react';
 
 export default function RoomsHousekeepingPage() {
-  const [rooms, setRooms] = useState<Room[]>(dataRepository.getRooms());
-  const [roomTypes] = useState<RoomType[]>(dataRepository.getRoomTypes());
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [roomTypes, setRoomTypes] = useState<RoomType[]>([]);
   const [filterState, setFilterState] = useState<string>('all');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   // Add room modal
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newRoomNumber, setNewRoomNumber] = useState('');
-  const [newRoomTypeId, setNewRoomTypeId] = useState(roomTypes[0]?.id || '');
+  const [newRoomTypeId, setNewRoomTypeId] = useState('');
   const [newRoomState, setNewRoomState] = useState<HousekeepingState>('available');
   const [newRoomNotes, setNewRoomNotes] = useState('');
 
-  const refreshRooms = () => {
-    setRooms([...dataRepository.getRooms()]);
+  const fetchRoomsData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setActionError(null);
+      const res = await fetch('/api/rooms');
+      const data = await res.json();
+      if (data.success) {
+        setRooms(data.rooms || []);
+        setRoomTypes(data.roomTypes || []);
+        if (data.roomTypes?.length && !newRoomTypeId) {
+          setNewRoomTypeId(data.roomTypes[0].id);
+        }
+      } else {
+        setActionError(data.error || 'Failed to load rooms');
+      }
+    } catch (err: any) {
+      setActionError(err.message || 'Network error fetching rooms');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [newRoomTypeId]);
+
+  useEffect(() => {
+    fetchRoomsData();
+  }, [fetchRoomsData]);
+
+  const handleStateChange = async (roomId: string, newState: HousekeepingState) => {
+    try {
+      // Optimistic update
+      setRooms((prev) =>
+        prev.map((r) => (r.id === roomId ? { ...r, housekeeping_state: newState } : r))
+      );
+      const res = await fetch(`/api/rooms/${roomId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ housekeeping_state: newState }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        setActionError(data.error || 'Failed to update housekeeping state');
+        fetchRoomsData();
+      }
+    } catch (err: any) {
+      setActionError(err.message || 'Error updating room');
+      fetchRoomsData();
+    }
   };
 
-  const handleStateChange = (roomId: string, newState: HousekeepingState) => {
-    dataRepository.updateRoomHousekeeping(roomId, newState);
-    refreshRooms();
-  };
-
-  const handleCreateRoom = (e: React.FormEvent) => {
+  const handleCreateRoom = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newRoomNumber || !newRoomTypeId) return;
 
-    dataRepository.addRoom({
-      room_number: newRoomNumber,
-      room_type_id: newRoomTypeId,
-      housekeeping_state: newRoomState,
-      notes: newRoomNotes || null,
-    });
-
-    setIsAddModalOpen(false);
-    setNewRoomNumber('');
-    setNewRoomNotes('');
-    refreshRooms();
+    try {
+      setIsSubmitting(true);
+      setActionError(null);
+      const res = await fetch('/api/rooms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          room_number: newRoomNumber,
+          room_type_id: newRoomTypeId,
+          housekeeping_state: newRoomState,
+          notes: newRoomNotes || null,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIsAddModalOpen(false);
+        setNewRoomNumber('');
+        setNewRoomNotes('');
+        await fetchRoomsData();
+      } else {
+        setActionError(data.error || 'Failed to create room');
+      }
+    } catch (err: any) {
+      setActionError(err.message || 'Error creating room');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const filteredRooms = rooms.filter((r) => {
@@ -91,6 +148,16 @@ export default function RoomsHousekeepingPage() {
 
         <div className="flex items-center space-x-3">
           <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchRoomsData}
+            disabled={isLoading}
+            className="text-xs border-[#3D352C] text-[#FAF8F3] hover:bg-[#2A2420]"
+          >
+            <RotateCw className={`w-3.5 h-3.5 mr-1.5 ${isLoading ? 'animate-spin' : ''}`} />
+            <span>Refresh</span>
+          </Button>
+          <Button
             onClick={() => setIsAddModalOpen(true)}
             className="bg-[#C9A96E] hover:bg-[#B08D57] text-[#241F1A] font-bold text-xs px-4 py-2 rounded-xl flex items-center space-x-1.5 shadow"
           >
@@ -99,6 +166,18 @@ export default function RoomsHousekeepingPage() {
           </Button>
         </div>
       </div>
+
+      {actionError && (
+        <div className="p-3 bg-[#341618] border border-[#9B2226] text-rose-300 rounded-xl text-xs flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+            <span>{actionError}</span>
+          </div>
+          <button onClick={() => setActionError(null)} className="text-xs hover:underline ml-2">
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* KPI Counters */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Modal } from '@/components/ui/modal';
@@ -11,7 +11,7 @@ import {
   INITIAL_CAFE_CATEGORIES,
   INITIAL_PROPERTY,
 } from '@/lib/data/initial-data';
-import type { MenuItem } from '@/lib/types';
+import type { MenuItem, MenuCategory } from '@/lib/types';
 import {
   Receipt,
   Plus,
@@ -31,6 +31,26 @@ export default function POSTerminalPage() {
   const [cart, setCart] = useState<{ [id: string]: { item: MenuItem; quantity: number } }>({});
   const [discountPercent, setDiscountPercent] = useState<number>(0);
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'upi' | 'card'>('upi');
+  const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
+
+  // Live Menu Categories
+  const [categories, setCategories] = useState<MenuCategory[]>(INITIAL_RESTAURANT_CATEGORIES);
+
+  const fetchLiveMenu = useCallback(async (outletId: string) => {
+    try {
+      const res = await fetch(`/api/menu?outletId=${outletId}`);
+      const data = await res.json();
+      if (data.success && Array.isArray(data.categories) && data.categories.length > 0) {
+        setCategories(data.categories);
+      }
+    } catch (err) {
+      console.error('Failed to fetch live menu for POS:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchLiveMenu(selectedOutletId);
+  }, [selectedOutletId, fetchLiveMenu]);
 
   // Completed Bill State
   const [completedBill, setCompletedBill] = useState<{
@@ -46,10 +66,6 @@ export default function POSTerminalPage() {
 
   const currentOutlet =
     INITIAL_OUTLETS.find((o) => o.id === selectedOutletId) || INITIAL_OUTLETS[0];
-  const categories =
-    currentOutlet.type === 'restaurant'
-      ? INITIAL_RESTAURANT_CATEGORIES
-      : INITIAL_CAFE_CATEGORIES;
 
   const addToCart = (item: MenuItem) => {
     setCart((prev) => ({
@@ -83,12 +99,53 @@ export default function POSTerminalPage() {
   const taxMinor = Math.round((taxableMinor * currentOutlet.tax_rate_bps) / 10000);
   const totalMinor = taxableMinor + taxMinor;
 
-  const handleGenerateBill = () => {
+  const handleGenerateBill = async () => {
     if (cartList.length === 0) return;
 
-    const billNumber = `INV-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const fallbackBillNumber = `INV-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    setIsSubmittingOrder(true);
+    let finalBillNumber = fallbackBillNumber;
+
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          outlet_id: selectedOutletId,
+          channel: 'pos',
+          fulfilment_mode: mode,
+          pickup_name: mode === 'pickup' ? 'POS Counter Pickup' : undefined,
+          delivery_name: mode === 'delivery' ? 'POS Counter Delivery' : undefined,
+          delivery_address: mode === 'delivery' ? 'Front Desk / Express Dispatch' : undefined,
+          delivery_fee_minor: 0,
+          subtotal_minor: subtotalMinor,
+          discount_minor: discountMinor,
+          tax_minor: taxMinor,
+          total_minor: totalMinor,
+          order_lines: cartList.map((ci) => ({
+            menu_item_id: ci.item.id,
+            item_name_snapshot: ci.item.name,
+            quantity: ci.quantity,
+            unit_price_minor: ci.item.price_minor,
+            subtotal_minor: ci.item.price_minor * ci.quantity,
+            total_minor: ci.item.price_minor * ci.quantity,
+          })),
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success && data.order?.order_number) {
+        finalBillNumber = data.order.order_number;
+      }
+    } catch (err) {
+      console.error('Error posting POS order to Supabase:', err);
+    } finally {
+      setIsSubmittingOrder(false);
+    }
+
     const bill = {
-      billNumber,
+      billNumber: finalBillNumber,
       orderLines: cartList.map((ci) => ({
         name: ci.item.name,
         qty: ci.quantity,

@@ -1,5 +1,9 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
-import { dataRepository } from '@/lib/data/repository';
+import { reservationsService } from '@/lib/services/reservations-service';
+import { ordersService } from '@/lib/services/orders-service';
+import { roomsService } from '@/lib/services/rooms-service';
+import { hallService } from '@/lib/services/hall-service';
 import { formatMoney } from '@/lib/utils/money';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -14,13 +18,16 @@ import {
   Clock,
   CheckCircle2,
   AlertCircle,
+  RotateCw,
 } from 'lucide-react';
 
-export default function DashboardOverviewPage() {
-  const reservations = dataRepository.getReservations();
-  const orders = dataRepository.getOrders();
-  const rooms = dataRepository.getRooms();
-  const leads = dataRepository.getEventLeads();
+async function DashboardOverviewContent() {
+  const [reservations, orders, rooms, leads] = await Promise.all([
+    reservationsService.getReservations(),
+    ordersService.getOrders(),
+    roomsService.getRooms(),
+    hallService.getEventLeads(),
+  ]);
 
   // Metrics
   const activeReservations = reservations.filter((r) =>
@@ -42,7 +49,7 @@ export default function DashboardOverviewPage() {
             <span className="px-2.5 py-0.5 rounded-full bg-[#670E10] text-white text-[11px] font-bold border border-[#B08D57]/40">
               General Operations
             </span>
-            <span className="text-xs text-[#B08D57] font-semibold">Live System Status</span>
+            <span className="text-xs text-[#B08D57] font-semibold">Live Database Status</span>
           </div>
           <h1 className="font-heritage text-2xl sm:text-3xl font-bold text-[#FAF8F3]">
             Palace Operations & Live Metrics
@@ -87,7 +94,7 @@ export default function DashboardOverviewPage() {
           </div>
           <div className="font-heritage text-3xl font-bold text-[#FAF8F3] mb-1">{activeKitchenOrders.length}</div>
           <div className="text-xs text-[#9A8E7F]">
-            {orders.length} total orders recorded today
+            {orders.length} total orders recorded
           </div>
         </div>
 
@@ -129,44 +136,48 @@ export default function DashboardOverviewPage() {
           </div>
 
           <div className="space-y-3">
-            {reservations.slice(0, 4).map((res) => (
-              <div
-                key={res.id}
-                className="p-3.5 rounded-xl bg-[#2A2420] border border-[#3D352C] flex items-center justify-between"
-              >
-                <div>
-                  <div className="flex items-center space-x-2">
-                    <span className="font-semibold text-sm text-[#FAF8F3]">
-                      {res.guest?.name || 'Guest'}
+            {reservations.length === 0 ? (
+              <p className="text-xs text-[#9A8E7F] py-4 text-center">No reservations found.</p>
+            ) : (
+              reservations.slice(0, 4).map((res) => (
+                <div
+                  key={res.id}
+                  className="p-3.5 rounded-xl bg-[#2A2420] border border-[#3D352C] flex items-center justify-between"
+                >
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <span className="font-semibold text-sm text-[#FAF8F3]">
+                        {res.guest?.name || 'Guest'}
+                      </span>
+                      <Badge
+                        size="sm"
+                        variant={
+                          res.status === 'checked_in'
+                            ? 'emerald'
+                            : res.status === 'confirmed'
+                            ? 'gold'
+                            : 'slate'
+                        }
+                      >
+                        {res.status.replace('_', ' ')}
+                      </Badge>
+                    </div>
+                    <span className="text-xs text-[#9A8E7F] block mt-0.5">
+                      {res.room_type?.name} &bull; Check-in: {res.check_in}
                     </span>
-                    <Badge
-                      size="sm"
-                      variant={
-                        res.status === 'checked_in'
-                          ? 'emerald'
-                          : res.status === 'confirmed'
-                          ? 'gold'
-                          : 'slate'
-                      }
-                    >
-                      {res.status.replace('_', ' ')}
-                    </Badge>
                   </div>
-                  <span className="text-xs text-[#9A8E7F] block mt-0.5">
-                    {res.room_type?.name} &bull; Check-in: {res.check_in}
-                  </span>
-                </div>
 
-                <div className="text-right">
-                  <span className="font-mono text-xs font-bold text-[#C9A96E] block">
-                    {formatMoney(res.rate_snapshot_minor)}
-                  </span>
-                  <span className="text-[10px] text-[#9A8E7F] font-mono">
-                    {res.reference_code}
-                  </span>
+                  <div className="text-right">
+                    <span className="font-mono text-xs font-bold text-[#C9A96E] block">
+                      {formatMoney(res.rate_snapshot_minor)}
+                    </span>
+                    <span className="text-[10px] text-[#9A8E7F] font-mono">
+                      {res.reference_code}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
@@ -183,45 +194,74 @@ export default function DashboardOverviewPage() {
           </div>
 
           <div className="space-y-3">
-            {orders.slice(0, 4).map((order) => (
-              <div
-                key={order.id}
-                className="p-3.5 rounded-xl bg-[#2A2420] border border-[#3D352C] flex items-center justify-between"
-              >
-                <div>
-                  <div className="flex items-center space-x-2">
-                    <span className="font-mono text-xs font-bold text-[#FAF8F3]">
-                      #{order.order_number}
+            {orders.length === 0 ? (
+              <p className="text-xs text-[#9A8E7F] py-4 text-center">No orders found.</p>
+            ) : (
+              orders.slice(0, 4).map((order) => (
+                <div
+                  key={order.id}
+                  className="p-3.5 rounded-xl bg-[#2A2420] border border-[#3D352C] flex items-center justify-between"
+                >
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <span className="font-mono text-xs font-bold text-[#FAF8F3]">
+                        #{order.order_number}
+                      </span>
+                      <Badge
+                        size="sm"
+                        variant={
+                          order.status === 'preparing'
+                            ? 'amber'
+                            : order.status === 'ready'
+                            ? 'emerald'
+                            : 'slate'
+                        }
+                      >
+                        {order.status}
+                      </Badge>
+                    </div>
+                    <span className="text-xs text-[#9A8E7F] block mt-0.5">
+                      {order.fulfilment_mode.replace('_', ' ')} &bull;{' '}
+                      {order.order_lines?.length || 0} Items
                     </span>
-                    <Badge
-                      size="sm"
-                      variant={
-                        order.status === 'preparing'
-                          ? 'amber'
-                          : order.status === 'ready'
-                          ? 'emerald'
-                          : 'slate'
-                      }
-                    >
-                      {order.status}
-                    </Badge>
                   </div>
-                  <span className="text-xs text-[#9A8E7F] block mt-0.5">
-                    {order.fulfilment_mode.replace('_', ' ')} &bull;{' '}
-                    {order.order_lines?.length || 0} Items
-                  </span>
-                </div>
 
-                <div className="text-right">
-                  <span className="font-heritage text-xs font-bold text-[#C9A96E]">
-                    {formatMoney(order.total_minor)}
-                  </span>
+                  <div className="text-right">
+                    <span className="font-heritage text-xs font-bold text-[#C9A96E]">
+                      {formatMoney(order.total_minor)}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-8 animate-pulse">
+      <div className="h-16 bg-[#241F1A] rounded-2xl border border-[#3D352C]" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="h-32 bg-[#241F1A] rounded-2xl border border-[#3D352C]" />
+        ))}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="h-64 bg-[#241F1A] rounded-2xl border border-[#3D352C]" />
+        <div className="h-64 bg-[#241F1A] rounded-2xl border border-[#3D352C]" />
+      </div>
+    </div>
+  );
+}
+
+export default function DashboardOverviewPage() {
+  return (
+    <Suspense fallback={<DashboardSkeleton />}>
+      <DashboardOverviewContent />
+    </Suspense>
   );
 }

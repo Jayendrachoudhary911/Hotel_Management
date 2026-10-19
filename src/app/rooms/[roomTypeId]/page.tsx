@@ -1,20 +1,15 @@
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
-import { dataRepository } from '@/lib/data/repository';
+import { roomsService } from '@/lib/services/rooms-service';
 import { RoomDetailClient } from './room-detail-client';
 
 interface RoomDetailPageProps {
   params: Promise<{ roomTypeId: string }>;
 }
 
-export function generateStaticParams() {
-  const rooms = dataRepository.getRoomTypes();
-  return rooms.map((r) => ({ roomTypeId: r.id }));
-}
-
 export async function generateMetadata({ params }: RoomDetailPageProps) {
   const resolved = await params;
-  const room = dataRepository.getRoomTypeById(resolved.roomTypeId);
+  const room = await roomsService.getRoomTypeById(resolved.roomTypeId);
   if (!room) return { title: 'Room Not Found | Rajmahal Heritage Hotel' };
 
   return {
@@ -25,13 +20,13 @@ export async function generateMetadata({ params }: RoomDetailPageProps) {
 
 async function RoomDetailLoader({ params }: RoomDetailPageProps) {
   const resolved = await params;
-  const room = dataRepository.getRoomTypeById(resolved.roomTypeId);
+  const room = await roomsService.getRoomTypeById(resolved.roomTypeId);
 
   if (!room) {
     notFound();
   }
 
-  const allRooms = dataRepository.getRoomTypes();
+  const allRooms = await roomsService.getRoomTypes();
   return <RoomDetailClient room={room} allRooms={allRooms} />;
 }
 

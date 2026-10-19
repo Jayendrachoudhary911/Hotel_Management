@@ -1,34 +1,90 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
 import { Input } from '@/components/ui/input';
 import { formatMoney } from '@/lib/utils/money';
-import { dataRepository } from '@/lib/data/repository';
 import type { EventLead } from '@/lib/types';
-import { Sparkles, Phone, Mail, Calendar, Users, FileText, CheckCircle2 } from 'lucide-react';
+import { Sparkles, Phone, Mail, Calendar, Users, FileText, CheckCircle2, RotateCw } from 'lucide-react';
 
 export default function HallDashboardPage() {
-  const [leads, setLeads] = useState<EventLead[]>(dataRepository.getEventLeads());
+  const [leads, setLeads] = useState<EventLead[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedLead, setSelectedLead] = useState<EventLead | null>(null);
   const [quoteAmount, setQuoteAmount] = useState<string>('');
 
-  const handleSendQuote = () => {
+  const loadLeads = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetch('/api/hall');
+      const data = await res.json();
+      if (data.success && Array.isArray(data.leads)) {
+        setLeads(data.leads);
+      }
+    } catch (err) {
+      console.error('Failed to fetch banquet leads:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadLeads();
+  }, [loadLeads]);
+
+  const handleSendQuote = async () => {
     if (!selectedLead || !quoteAmount) return;
 
-    selectedLead.status = 'quoted';
-    selectedLead.quote_amount_minor = parseInt(quoteAmount, 10) * 100; // Rs to minor units
+    const leadId = selectedLead.id;
+    const quoteAmountMinor = parseInt(quoteAmount, 10) * 100;
+
+    // Optimistic update
+    setLeads((prev) =>
+      prev.map((l) =>
+        l.id === leadId
+          ? { ...l, status: 'quoted', quote_amount_minor: quoteAmountMinor }
+          : l
+      )
+    );
     setSelectedLead(null);
     setQuoteAmount('');
-    setLeads([...dataRepository.getEventLeads()]);
+
+    try {
+      await fetch(`/api/hall/${leadId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: 'quoted',
+          quote_amount_minor: quoteAmountMinor,
+        }),
+      });
+      await loadLeads();
+    } catch (err) {
+      console.error('Error sending quote:', err);
+      await loadLeads();
+    }
   };
 
-  const handleStatusChange = (lead: EventLead, newStatus: EventLead['status']) => {
-    lead.status = newStatus;
-    setLeads([...dataRepository.getEventLeads()]);
+  const handleStatusChange = async (lead: EventLead, newStatus: EventLead['status']) => {
+    // Optimistic update
+    setLeads((prev) =>
+      prev.map((l) => (l.id === lead.id ? { ...l, status: newStatus } : l))
+    );
+
+    try {
+      await fetch(`/api/hall/${lead.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      await loadLeads();
+    } catch (err) {
+      console.error('Error updating lead status:', err);
+      await loadLeads();
+    }
   };
 
   return (
@@ -47,6 +103,19 @@ export default function HallDashboardPage() {
           <p className="text-xs text-[#9A8E7F] mt-1">
             Crystal Ballroom event pipeline, seating layouts, quotations & status tracking
           </p>
+        </div>
+
+        <div className="flex items-center space-x-3">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={loadLeads}
+            disabled={isLoading}
+            className="border-[#3D352C] bg-[#241F1A] text-[#FAF8F3] hover:bg-[#3D352C] flex items-center gap-1.5"
+          >
+            <RotateCw className={`w-3.5 h-3.5 text-[#B08D57] ${isLoading ? 'animate-spin' : ''}`} />
+            <span>Refresh</span>
+          </Button>
         </div>
       </div>
 

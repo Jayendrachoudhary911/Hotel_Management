@@ -15,6 +15,20 @@ export const roomsService = {
     return dataRepository.getRoomTypes();
   },
 
+  async getRoomTypeById(id: string): Promise<RoomType | null> {
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      const query = supabase.from('room_types').select('*');
+      const { data, error } = isUuid
+        ? await query.eq('id', id).maybeSingle()
+        : await query.eq('name', id).maybeSingle();
+      if (!error && data) return data as RoomType;
+    }
+    const all = dataRepository.getRoomTypes();
+    return all.find((r) => r.id === id) || null;
+  },
+
   async getRooms(): Promise<Room[]> {
     const supabase = getSupabaseClient();
     if (supabase) {

@@ -25,13 +25,13 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { status } = body;
+    const { status, room_id } = body;
 
     if (!status) {
       return NextResponse.json({ success: false, error: 'Status is required' }, { status: 400 });
     }
 
-    const updated = await reservationsService.updateReservationStatus(id, status as ReservationStatus);
+    const updated = await reservationsService.updateReservationStatus(id, status as ReservationStatus, room_id);
     if (!updated) {
       return NextResponse.json({ success: false, error: 'Reservation not found' }, { status: 404 });
     }

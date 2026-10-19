@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Utensils,
   Bike,
@@ -22,17 +22,42 @@ import {
   Receipt,
   RotateCw,
 } from 'lucide-react';
-import { dataRepository } from '@/lib/data/repository';
 import { formatMoney } from '@/lib/utils/money';
 import type { Order, OrderStatus, FulfilmentMode, OrderLine, ModifierSnapshot } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 
 export default function DashboardOrdersPage() {
-  const [orders, setOrders] = useState<Order[]>(() => dataRepository.getOrders());
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeModeTab, setActiveModeTab] = useState<'all' | 'dine_in' | 'pickup' | 'delivery' | 'pos'>('all');
   const [activeStatus, setActiveStatus] = useState<'all' | OrderStatus>('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+
+  const loadOrders = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetch('/api/orders');
+      const data = await res.json();
+      if (data.success && Array.isArray(data.orders)) {
+        setOrders(data.orders);
+        if (selectedOrder) {
+          const fresh = data.orders.find(
+            (o: Order) => o.id === selectedOrder.id || o.order_number === selectedOrder.order_number
+          );
+          if (fresh) setSelectedOrder(fresh);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch orders:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [selectedOrder]);
+
+  useEffect(() => {
+    loadOrders();
+  }, []);
 
   // Helper functions for order fields
   const getGuestName = (order: Order) => {
@@ -77,13 +102,27 @@ export default function DashboardOrdersPage() {
     return true;
   });
 
-  const handleUpdateStatus = (orderId: string, newStatus: OrderStatus) => {
-    dataRepository.updateOrderStatus(orderId, newStatus);
-    const updated = dataRepository.getOrders();
-    setOrders([...updated]);
-    if (selectedOrder && selectedOrder.id === orderId) {
-      const current = updated.find((o) => o.id === orderId);
-      if (current) setSelectedOrder({ ...current });
+  const handleUpdateStatus = async (orderId: string, newStatus: OrderStatus) => {
+    try {
+      // Optimistic update
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === orderId || o.order_number === orderId ? { ...o, status: newStatus } : o
+        )
+      );
+      if (selectedOrder && (selectedOrder.id === orderId || selectedOrder.order_number === orderId)) {
+        setSelectedOrder((prev) => (prev ? { ...prev, status: newStatus } : null));
+      }
+
+      await fetch(`/api/orders/${orderId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      await loadOrders();
+    } catch (err) {
+      console.error('Failed to update order status:', err);
+      await loadOrders();
     }
   };
 
@@ -147,10 +186,11 @@ export default function DashboardOrdersPage() {
           <Button
             size="sm"
             variant="outline"
-            onClick={() => setOrders([...dataRepository.getOrders()])}
+            onClick={loadOrders}
+            disabled={isLoading}
             className="border-[#3D352C] bg-[#241F1A] text-[#FAF8F3] hover:bg-[#3D352C] flex items-center gap-1.5"
           >
-            <RotateCw className="w-4 h-4 text-[#B08D57]" />
+            <RotateCw className={`w-4 h-4 text-[#B08D57] ${isLoading ? 'animate-spin' : ''}`} />
             <span>Refresh</span>
           </Button>
         </div>

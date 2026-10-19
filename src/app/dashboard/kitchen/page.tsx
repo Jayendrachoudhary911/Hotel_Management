@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatMoney } from '@/lib/utils/money';
-import { dataRepository } from '@/lib/data/repository';
 import type { Order } from '@/lib/types';
 import {
   ChefHat,
@@ -20,10 +19,20 @@ export default function KitchenOrderBoardPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOutlet, setSelectedOutlet] = useState<string>('all');
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const loadOrders = () => {
-    const all = dataRepository.getOrders();
-    setOrders([...all]);
+  const loadOrders = async () => {
+    try {
+      const res = await fetch('/api/orders');
+      const data = await res.json();
+      if (data.success && Array.isArray(data.orders)) {
+        setOrders(data.orders);
+      }
+    } catch (err) {
+      console.error('Error fetching live kitchen orders:', err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -35,15 +44,21 @@ export default function KitchenOrderBoardPage() {
   const handleUpdateStatus = async (orderId: string, nextStatus: Order['status']) => {
     setIsUpdating(orderId);
     try {
+      // Optimistic update
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === orderId || o.order_number === orderId ? { ...o, status: nextStatus } : o
+        )
+      );
       await fetch(`/api/orders/${orderId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: nextStatus }),
       });
-      dataRepository.updateOrderStatus(orderId, nextStatus);
-      loadOrders();
+      await loadOrders();
     } catch (err) {
-      console.error(err);
+      console.error('Error updating order status:', err);
+      await loadOrders();
     } finally {
       setIsUpdating(null);
     }

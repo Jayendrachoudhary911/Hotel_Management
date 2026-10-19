@@ -84,16 +84,17 @@ export const hallService = {
   ): Promise<EventLead | null> {
     const supabase = getSupabaseClient();
     if (supabase) {
-      const { data, error } = await supabase
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(leadId);
+      const query = supabase
         .from('event_leads')
-        .update(updates)
-        .eq('id', leadId)
-        .select('*, halls(*)')
-        .single();
+        .update(updates);
+      const { data, error } = isUuid
+        ? await query.eq('id', leadId).select('*, halls(*)').maybeSingle()
+        : await query.eq('reference_code', leadId).select('*, halls(*)').maybeSingle();
       if (!error && data) return data as EventLead;
     }
     const leads = dataRepository.getEventLeads();
-    const found = leads.find((l) => l.id === leadId);
+    const found = leads.find((l) => l.id === leadId || l.reference_code === leadId);
     if (found) {
       found.status = updates.status;
       if (updates.quote_amount_minor !== undefined) {

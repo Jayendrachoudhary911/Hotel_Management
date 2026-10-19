@@ -111,18 +111,20 @@ export const reservationsService = {
     return dataRepository.createReservation(data);
   },
 
-  async updateReservationStatus(id: string, status: ReservationStatus): Promise<Reservation | null> {
+  async updateReservationStatus(id: string, status: ReservationStatus, roomId?: string): Promise<Reservation | null> {
     const supabase = getSupabaseClient();
     if (supabase) {
       const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      const updatePayload: any = { status, updated_at: new Date().toISOString() };
+      if (roomId) updatePayload.room_id = roomId;
       const query = supabase
         .from('reservations')
-        .update({ status });
+        .update(updatePayload);
       const { data, error } = isUuid
-        ? await query.eq('id', id).select('*, guests(*), room_types(*)').maybeSingle()
-        : await query.eq('reference_code', id.toUpperCase()).select('*, guests(*), room_types(*)').maybeSingle();
+        ? await query.eq('id', id).select('*, guests(*), room_types(*), rooms(*)').maybeSingle()
+        : await query.eq('reference_code', id.toUpperCase()).select('*, guests(*), room_types(*), rooms(*)').maybeSingle();
       if (!error && data) return data as Reservation;
     }
-    return dataRepository.updateReservationStatus(id, status);
+    return dataRepository.updateReservationStatus(id, status, roomId);
   },
 };
