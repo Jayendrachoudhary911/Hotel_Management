@@ -218,16 +218,16 @@ export default function ProfilePage() {
             </Link>
 
             <Link
-              href="/hotel#party-hall-enquiry"
+              href="/hotel"
               className="group p-5 rounded-2xl bg-[#FBF3E7]/60 hover:bg-[#FBF3E7] border border-[#E8DFCE] transition-all flex flex-col justify-between"
             >
               <div className="space-y-2">
                 <div className="w-9 h-9 rounded-lg bg-[#073B34] text-[#FFF8EB] flex items-center justify-center">
                   <PartyPopper className="w-5 h-5" />
                 </div>
-                <h3 className="font-bold text-sm text-[#380506]">Grand Banquets</h3>
+                <h3 className="font-bold text-sm text-[#380506]">Hotel &amp; Banquets</h3>
                 <p className="text-[11px] text-[#6B5E51] leading-relaxed">
-                  Host grand weddings, royal galas, and celebrations.
+                  Host grand weddings, royal galas, and stay in deluxe suites.
                 </p>
               </div>
               <div className="mt-4 flex items-center text-xs font-semibold text-[#073B34] group-hover:translate-x-1 transition-transform">

@@ -89,10 +89,9 @@ async function HomeContent() {
 
   const quickLinks: { label: string; href: string; icon: HeritageIconName }[] = [
     { label: 'Heritage Rooms', href: '/rooms', icon: 'arch' },
+    { label: 'Hotel & Celebrations', href: '/hotel', icon: 'pavilion' },
     { label: 'Rajasthani Restaurant', href: '/restaurant', icon: 'dining' },
     { label: 'Café & Lounge', href: '/cafe', icon: 'cafe' },
-    { label: 'Party Hall', href: '/hotel#party-hall-enquiry', icon: 'pavilion' },
-    { label: 'Events & Weddings', href: '/hotel#party-hall-enquiry', icon: 'wedding' },
   ];
 
   return (

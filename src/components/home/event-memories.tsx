@@ -167,7 +167,7 @@ export function EventMemories() {
         {/* ── VIEW GALLERY BUTTON (PLACED AFTER ALL IMAGES) ── */}
         <div className="mt-8 sm:mt-10 flex justify-center">
           <Link
-            href="/hotel#party-hall-enquiry"
+            href="/hotel"
             className="inline-flex items-center space-x-2 px-8 py-3 rounded-[6px] text-sm font-semibold tracking-wide transition-all duration-200 shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 cursor-pointer group"
             style={{
               backgroundColor: 'var(--antique-gold, #d8aa67)',
