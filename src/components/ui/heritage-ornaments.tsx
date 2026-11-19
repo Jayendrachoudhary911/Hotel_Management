@@ -2,6 +2,8 @@
 
 import React from 'react';
 
+const roundCoord = (val: number): number => Math.round(val * 100) / 100;
+
 // ==============================================================================
 // 1. CHANDRA MANDALA (Circular Royal Concentric Lotus Mandala)
 // Exact reference: media_1792316552622.png
@@ -605,8 +607,8 @@ export const LataJaaliRunner: React.FC<LataJaaliRunnerProps> = ({
               {/* 5 Petals */}
               {[0, 72, 144, 216, 288].map((ang, pIdx) => {
                 const rad = (ang * Math.PI) / 180;
-                const px = Math.cos(rad) * 9;
-                const py = Math.sin(rad) * 9;
+                const px = roundCoord(Math.cos(rad) * 9);
+                const py = roundCoord(Math.sin(rad) * 9);
                 return (
                   <circle
                     key={`p-${pIdx}`}
@@ -649,8 +651,8 @@ export const LataJaaliRunner: React.FC<LataJaaliRunnerProps> = ({
               <circle cx="0" cy="0" r="1.5" fill="currentColor" />
               {[0, 72, 144, 216, 288].map((ang, pIdx) => {
                 const rad = (ang * Math.PI) / 180;
-                const px = Math.cos(rad) * 9;
-                const py = Math.sin(rad) * 9;
+                const px = roundCoord(Math.cos(rad) * 9);
+                const py = roundCoord(Math.sin(rad) * 9);
                 return (
                   <circle
                     key={`p-bot-${pIdx}`}
@@ -916,8 +918,8 @@ export const PaisleyButaOrnament: React.FC<PaisleyButaProps> = ({
             {[0, 60, 120, 180, 240, 300].map((deg, i) => (
               <circle
                 key={`kalka-p-${i}`}
-                cx={Math.cos((deg * Math.PI) / 180) * 22}
-                cy={Math.sin((deg * Math.PI) / 180) * 22}
+                cx={roundCoord(Math.cos((deg * Math.PI) / 180) * 22)}
+                cy={roundCoord(Math.sin((deg * Math.PI) / 180) * 22)}
                 r="3.5"
                 fill="#FAF8F3"
                 stroke="currentColor"
@@ -932,8 +934,8 @@ export const PaisleyButaOrnament: React.FC<PaisleyButaProps> = ({
           {/* Scalloped Outer Fringe Beads along the Spine */}
           {Array.from({ length: 18 }).map((_, i) => {
             const rad = (i * 11 * Math.PI) / 180;
-            const x = 140 - Math.cos(rad) * 98;
-            const y = 150 + Math.sin(rad) * 98;
+            const x = roundCoord(140 - Math.cos(rad) * 98);
+            const y = roundCoord(150 + Math.sin(rad) * 98);
             return <circle key={`moti-spine-${i}`} cx={x} cy={y} r="2" fill="currentColor" />;
           })}
         </g>
@@ -993,7 +995,7 @@ export const DarbarChhatriOrnament: React.FC<DarbarChhatriProps> = ({
             <line
               key={`dome-rib-${idx}`}
               x1={250 + offset}
-              y1={120 - Math.cos((offset / 100) * (Math.PI / 2)) * 32}
+              y1={roundCoord(120 - Math.cos((offset / 100) * (Math.PI / 2)) * 32)}
               x2={250 + offset * 0.25}
               y2="48"
               strokeWidth="1"
@@ -1117,8 +1119,8 @@ export const HeritageDivider: React.FC<HeritageDividerProps> = ({
           <circle cx="400" cy="32" r="10" strokeWidth="1" />
           {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, idx) => {
             const rad = (angle * Math.PI) / 180;
-            const px = 400 + Math.cos(rad) * 16;
-            const py = 32 + Math.sin(rad) * 16;
+            const px = roundCoord(400 + Math.cos(rad) * 16);
+            const py = roundCoord(32 + Math.sin(rad) * 16);
             return (
               <g key={`center-petal-${idx}`}>
                 <line x1={400} y1={32} x2={px} y2={py} strokeWidth="1" />

@@ -16,12 +16,12 @@ export const RajasthaniCornerMandala: React.FC<{ className?: string }> = ({ clas
     {/* Radiating Petals & Lotus Motifs */}
     {Array.from({ length: 10 }).map((_, i) => {
       const angle = (i * 10 * Math.PI) / 180;
-      const x1 = Math.cos(angle) * 70;
-      const y1 = Math.sin(angle) * 70;
-      const x2 = Math.cos(angle) * 120;
-      const y2 = Math.sin(angle) * 120;
-      const x3 = Math.cos(angle) * 160;
-      const y3 = Math.sin(angle) * 160;
+      const x1 = Math.round(Math.cos(angle) * 70 * 100) / 100;
+      const y1 = Math.round(Math.sin(angle) * 70 * 100) / 100;
+      const x2 = Math.round(Math.cos(angle) * 120 * 100) / 100;
+      const y2 = Math.round(Math.sin(angle) * 120 * 100) / 100;
+      const x3 = Math.round(Math.cos(angle) * 160 * 100) / 100;
+      const y3 = Math.round(Math.sin(angle) * 160 * 100) / 100;
       return (
         <g key={i}>
           <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="currentColor" strokeWidth="0.8" />
