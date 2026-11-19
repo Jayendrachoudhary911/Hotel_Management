@@ -24,6 +24,15 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  async redirects() {
+    return [
+      {
+        source: "/hall",
+        destination: "/hotel#party-hall-enquiry",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

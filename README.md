@@ -111,7 +111,7 @@ flowchart TD
 | **Royal Chambers Explorer** | `/rooms` | Search & filter suites by guest capacity, suite tier, price range, and curated amenities. Dynamic availability badges. |
 | **Chamber Details** | `/rooms/[roomTypeId]` | High-resolution suite imagery, heritage architectural narratives, curated amenities, policy breakdown, and direct booking CTA. |
 | **Instant Booking Engine** | `/book` | Stay date picker, guest party size counters, automated night & 5% GST tax calculation, instant booking confirmation, reference code generation, and direct Supabase database insertion. |
-| **Royal Darbar Banquet Hall** | `/hall` | Palace wedding & banquet showcase, package breakdown (*Maharani*, *Rajwada*, *Royal Corporate*), interactive seating layout selector (*Rajasthani Baithak*, *Cluster Tables*, *Auditorium*, *U-Shape*), and quotation lead pipeline. |
+| **Royal Darbar Banquet Hall** | `/hotel#party-hall-enquiry` | Palace wedding & banquet showcase, package breakdown (*Maharani*, *Rajwada*, *Royal Corporate*), interactive seating layout selector (*Rajasthani Baithak*, *Cluster Tables*, *Auditorium*, *U-Shape*), and quotation lead pipeline integrated into the Hotel page. |
 | **Darbar Fine Dining** | `/restaurant` | Royal thalis, Rajputana culinary specialties, dietary categorization (*Veg*, *Non-Veg*, *Jain*), table reservation forms, and dine-in QR entry point. |
 | **Jharokha Artisan Cafe** | `/cafe` | Artisanal brews, Udaipur single-origin coffees, pastries, and quick takeaway ordering. |
 | **Contactless QR Table Ordering** | `/qr/[token]` | Table-side QR code ordering with dynamic cart drawer, special dietary notes, and direct dispatch to the kitchen. |
@@ -217,7 +217,7 @@ HotelManagement/
 │   └── images/                 # Royal palace interior, suite photography & decor
 ├── src/
 │   ├── app/                    # Next.js 16 App Router
-│   │   ├── (public)/           # Guest realms: /, /rooms, /hall, /restaurant, /cafe
+│   │   ├── (public)/           # Guest realms: /, /rooms, /hotel, /restaurant, /cafe
 │   │   ├── api/                # 17+ Modular Next.js REST API endpoints
 │   │   ├── auth/               # Authentication routes (login, callback, reset)
 │   │   ├── book/               # Instant room reservation flow
@@ -330,7 +330,7 @@ npm run start
 | **Palace Guest Portal** | `/` | Public hotel showcase, room preview, dining & banquet highlights. |
 | **Chambers & Suites** | `/rooms` | Room catalog with filtering and detailed suite amenities. |
 | **Instant Room Booking** | `/book` | Direct reservation engine with live stay calculations. |
-| **Royal Darbar Banquet** | `/hall` | Wedding and event hall details, seating layouts & inquiries. |
+| **Royal Darbar Banquet** | `/hotel#party-hall-enquiry` | Wedding and event hall details, seating layouts & inquiries. |
 | **Darbar Dining** | `/restaurant` | Heritage restaurant menu and table booking. |
 | **Jharokha Cafe** | `/cafe` | Cafe beverage and light snack ordering. |
 | **QR Table Ordering** | `/qr/t-101` | Sample dine-in digital menu for Table 101. |

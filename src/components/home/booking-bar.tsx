@@ -53,7 +53,7 @@ export function BookingBar() {
     if (el) {
       el.scrollIntoView({ behavior: 'smooth' });
     } else {
-      router.push('/hall#enquire');
+      router.push('/hotel#party-hall-enquiry');
     }
   };
 

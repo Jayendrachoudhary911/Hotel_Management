@@ -91,8 +91,8 @@ async function HomeContent() {
     { label: 'Heritage Rooms', href: '/rooms', icon: 'arch' },
     { label: 'Rajasthani Restaurant', href: '/restaurant', icon: 'dining' },
     { label: 'Café & Lounge', href: '/cafe', icon: 'cafe' },
-    { label: 'Party Hall', href: '/hall', icon: 'pavilion' },
-    { label: 'Events & Weddings', href: '/hall', icon: 'wedding' },
+    { label: 'Party Hall', href: '/hotel#party-hall-enquiry', icon: 'pavilion' },
+    { label: 'Events & Weddings', href: '/hotel#party-hall-enquiry', icon: 'wedding' },
   ];
 
   return (

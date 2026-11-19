@@ -218,7 +218,7 @@ export default function ProfilePage() {
             </Link>
 
             <Link
-              href="/hall"
+              href="/hotel#party-hall-enquiry"
               className="group p-5 rounded-2xl bg-[#FBF3E7]/60 hover:bg-[#FBF3E7] border border-[#E8DFCE] transition-all flex flex-col justify-between"
             >
               <div className="space-y-2">
