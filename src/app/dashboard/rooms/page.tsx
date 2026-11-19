@@ -1,12 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Modal } from '@/components/ui/modal';
-import type { Room, HousekeepingState, RoomType } from '@/lib/types';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   BedDouble,
   Sparkles,
@@ -17,14 +11,19 @@ import {
   Plus,
   Building,
   ClipboardList,
+  Search,
+  Filter,
+  Trash2,
 } from 'lucide-react';
+import { dataRepository } from '@/lib/data/repository';
+import type { Room, HousekeepingState, RoomType } from '@/lib/types';
 
 export default function RoomsHousekeepingPage() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [roomTypes, setRoomTypes] = useState<RoomType[]>([]);
   const [filterState, setFilterState] = useState<string>('all');
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
 
   // Add room modal
@@ -34,25 +33,13 @@ export default function RoomsHousekeepingPage() {
   const [newRoomState, setNewRoomState] = useState<HousekeepingState>('available');
   const [newRoomNotes, setNewRoomNotes] = useState('');
 
-  const fetchRoomsData = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setActionError(null);
-      const res = await fetch('/api/rooms');
-      const data = await res.json();
-      if (data.success) {
-        setRooms(data.rooms || []);
-        setRoomTypes(data.roomTypes || []);
-        if (data.roomTypes?.length && !newRoomTypeId) {
-          setNewRoomTypeId(data.roomTypes[0].id);
-        }
-      } else {
-        setActionError(data.error || 'Failed to load rooms');
-      }
-    } catch (err: any) {
-      setActionError(err.message || 'Network error fetching rooms');
-    } finally {
-      setIsLoading(false);
+  const fetchRoomsData = useCallback(() => {
+    const rms = dataRepository.getRooms();
+    const rt = dataRepository.getRoomTypes();
+    setRooms(rms);
+    setRoomTypes(rt);
+    if (rt.length > 0 && !newRoomTypeId) {
+      setNewRoomTypeId(rt[0].id);
     }
   }, [newRoomTypeId]);
 
@@ -60,352 +47,370 @@ export default function RoomsHousekeepingPage() {
     fetchRoomsData();
   }, [fetchRoomsData]);
 
-  const handleStateChange = async (roomId: string, newState: HousekeepingState) => {
-    try {
-      // Optimistic update
-      setRooms((prev) =>
-        prev.map((r) => (r.id === roomId ? { ...r, housekeeping_state: newState } : r))
-      );
-      const res = await fetch(`/api/rooms/${roomId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ housekeeping_state: newState }),
-      });
-      const data = await res.json();
-      if (!data.success) {
-        setActionError(data.error || 'Failed to update housekeeping state');
-        fetchRoomsData();
-      }
-    } catch (err: any) {
-      setActionError(err.message || 'Error updating room');
+  const handleStateChange = (roomId: string, newState: HousekeepingState) => {
+    dataRepository.updateRoomHousekeeping(roomId, newState);
+    fetchRoomsData();
+  };
+
+  const handleDeleteRoom = (roomId: string, roomNumber: string) => {
+    if (window.confirm(`Are you sure you want to delete Room ${roomNumber}?`)) {
+      dataRepository.deleteRoom(roomId);
       fetchRoomsData();
     }
   };
 
-  const handleCreateRoom = async (e: React.FormEvent) => {
+  const handleCreateRoom = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newRoomNumber || !newRoomTypeId) return;
 
-    try {
-      setIsSubmitting(true);
-      setActionError(null);
-      const res = await fetch('/api/rooms', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          room_number: newRoomNumber,
-          room_type_id: newRoomTypeId,
-          housekeeping_state: newRoomState,
-          notes: newRoomNotes || null,
-        }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setIsAddModalOpen(false);
-        setNewRoomNumber('');
-        setNewRoomNotes('');
-        await fetchRoomsData();
-      } else {
-        setActionError(data.error || 'Failed to create room');
-      }
-    } catch (err: any) {
-      setActionError(err.message || 'Error creating room');
-    } finally {
-      setIsSubmitting(false);
-    }
+    dataRepository.addRoom({
+      room_number: newRoomNumber.trim(),
+      room_type_id: newRoomTypeId,
+      housekeeping_state: newRoomState,
+      notes: newRoomNotes || null,
+    });
+
+    setIsAddModalOpen(false);
+    setNewRoomNumber('');
+    setNewRoomNotes('');
+    fetchRoomsData();
   };
 
-  const filteredRooms = rooms.filter((r) => {
-    if (filterState === 'all') return true;
-    return r.housekeeping_state === filterState;
-  });
+  const filteredRooms = useMemo(() => {
+    return rooms.filter((r) => {
+      const q = searchQuery.toLowerCase();
+      const matchesSearch =
+        !q ||
+        r.room_number.toLowerCase().includes(q) ||
+        (r.room_type?.name && r.room_type.name.toLowerCase().includes(q));
+      const matchesFilter = filterState === 'all' || r.housekeeping_state === filterState;
+      return matchesSearch && matchesFilter;
+    });
+  }, [rooms, searchQuery, filterState]);
 
   // Metric counts
+  const totalCount = rooms.length;
   const availableCount = rooms.filter((r) => r.housekeeping_state === 'available').length;
   const occupiedCount = rooms.filter((r) => r.housekeeping_state === 'occupied').length;
   const dirtyCount = rooms.filter((r) => r.housekeeping_state === 'dirty').length;
   const cleaningCount = rooms.filter((r) => r.housekeeping_state === 'cleaning').length;
-  const maintCount = rooms.filter((r) => r.housekeeping_state === 'maintenance').length;
 
   return (
-    <div className="space-y-6">
-      {/* Header & Filter Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#3D352C]">
+    <div className="space-y-4">
+      {/* ── Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[#E8DCD2]">
         <div>
-          <div className="flex items-center space-x-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full bg-[#670E10] text-white text-[11px] font-bold border border-[#B08D57]/40">
-              Housekeeping &amp; Chambers
-            </span>
-            <span className="text-xs text-[#B08D57] font-semibold">Live Room States &amp; Inventory</span>
-          </div>
-          <h1 className="font-heritage text-2xl sm:text-3xl font-bold text-[#FAF8F3]">
-            Chamber Housekeeping Board
+          <h1
+            className="text-2xl font-bold text-[#4F0809]"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+          >
+            Chambers &amp; Room Availability
           </h1>
-          <p className="text-xs text-[#9A8E7F] mt-1">
-            Real-time turnover tracking, cleaning inspection &amp; maintenance logs for all suites.
+          <p className="text-xs text-[#81736D] mt-0.5">
+            Real-time palace chamber status, housekeeping state management, and suite allocations
           </p>
         </div>
 
-        <div className="flex items-center space-x-3">
-          <Button
-            variant="outline"
-            size="sm"
+        <div className="flex items-center gap-2">
+          <button
             onClick={fetchRoomsData}
-            disabled={isLoading}
-            className="text-xs border-[#3D352C] text-[#FAF8F3] hover:bg-[#2A2420]"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#E8DCD2] bg-white text-[#4F0809] hover:bg-[#F6EAE0] text-xs font-medium shadow-xs transition"
           >
-            <RotateCw className={`w-3.5 h-3.5 mr-1.5 ${isLoading ? 'animate-spin' : ''}`} />
-            <span>Refresh</span>
-          </Button>
-          <Button
+            <RotateCw className="w-3.5 h-3.5" />
+            Refresh
+          </button>
+          <button
             onClick={() => setIsAddModalOpen(true)}
-            className="bg-[#C9A96E] hover:bg-[#B08D57] text-[#241F1A] font-bold text-xs px-4 py-2 rounded-xl flex items-center space-x-1.5 shadow"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#4F0809] hover:bg-[#6B1518] text-white text-xs font-semibold shadow-xs transition"
           >
-            <Plus className="w-4 h-4" />
-            <span>Add Chamber / Room</span>
-          </Button>
-        </div>
-      </div>
-
-      {actionError && (
-        <div className="p-3 bg-[#341618] border border-[#9B2226] text-rose-300 rounded-xl text-xs flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
-            <span>{actionError}</span>
-          </div>
-          <button onClick={() => setActionError(null)} className="text-xs hover:underline ml-2">
-            Dismiss
+            <Plus className="w-3.5 h-3.5 text-[#D8AA67]" />
+            Add Chamber
           </button>
         </div>
-      )}
+      </div>
 
-      {/* KPI Counters */}
+      {/* ── Metric Summary ── */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <div className="bg-[#241F1A] p-3 rounded-xl border border-[#3D352C]">
-          <span className="text-[11px] text-[#9A8E7F] block">Total Chambers</span>
-          <span className="text-xl font-bold text-[#FAF8F3] font-mono">{rooms.length}</span>
+        <div className="bg-white border border-[#E8DCD2] rounded-xl p-3 shadow-xs">
+          <span className="text-[10px] text-[#81736D] uppercase font-bold tracking-wider block">
+            Total Chambers
+          </span>
+          <span className="text-xl font-bold text-[#302421] mt-0.5 block">{totalCount}</span>
+          <span className="text-[10px] text-[#81736D]">Across all palace wings</span>
         </div>
-        <div className="bg-[#241F1A] p-3 rounded-xl border border-emerald-900/40">
-          <span className="text-[11px] text-emerald-400 block">Clean &amp; Ready</span>
-          <span className="text-xl font-bold text-emerald-400 font-mono">{availableCount}</span>
+
+        <div className="bg-white border border-[#E8DCD2] rounded-xl p-3 shadow-xs">
+          <span className="text-[10px] text-[#2E7D32] uppercase font-bold tracking-wider block">
+            Available Ready
+          </span>
+          <span className="text-xl font-bold text-[#2E7D32] mt-0.5 block">{availableCount}</span>
+          <span className="text-[10px] text-[#2E7D32]">Clean &amp; inspected</span>
         </div>
-        <div className="bg-[#241F1A] p-3 rounded-xl border border-[#B08D57]/40">
-          <span className="text-[11px] text-[#B08D57] block">Occupied</span>
-          <span className="text-xl font-bold text-[#B08D57] font-mono">{occupiedCount}</span>
+
+        <div className="bg-white border border-[#E8DCD2] rounded-xl p-3 shadow-xs">
+          <span className="text-[10px] text-[#4F0809] uppercase font-bold tracking-wider block">
+            Occupied Suites
+          </span>
+          <span className="text-xl font-bold text-[#4F0809] mt-0.5 block">{occupiedCount}</span>
+          <span className="text-[10px] text-[#81736D]">
+            {Math.round((occupiedCount / (totalCount || 1)) * 100)}% Occupancy
+          </span>
         </div>
-        <div className="bg-[#241F1A] p-3 rounded-xl border border-amber-900/40">
-          <span className="text-[11px] text-amber-400 block">In Cleaning</span>
-          <span className="text-xl font-bold text-amber-400 font-mono">{cleaningCount}</span>
+
+        <div className="bg-white border border-[#E8DCD2] rounded-xl p-3 shadow-xs">
+          <span className="text-[10px] text-[#D97706] uppercase font-bold tracking-wider block">
+            In Cleaning
+          </span>
+          <span className="text-xl font-bold text-[#D97706] mt-0.5 block">{cleaningCount}</span>
+          <span className="text-[10px] text-[#81736D]">Attendant turnaround</span>
         </div>
-        <div className="bg-[#241F1A] p-3 rounded-xl border border-rose-900/40">
-          <span className="text-[11px] text-rose-400 block">Dirty / Turnover</span>
-          <span className="text-xl font-bold text-rose-400 font-mono">{dirtyCount}</span>
+
+        <div className="bg-white border border-[#E8DCD2] rounded-xl p-3 shadow-xs">
+          <span className="text-[10px] text-red-600 uppercase font-bold tracking-wider block">
+            Dirty / Turnover
+          </span>
+          <span className="text-xl font-bold text-red-600 mt-0.5 block">{dirtyCount}</span>
+          <span className="text-[10px] text-[#81736D]">Needs housekeeping</span>
         </div>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex flex-wrap items-center gap-2">
-        {(['all', 'available', 'occupied', 'dirty', 'cleaning', 'maintenance'] as const).map(
-          (st) => (
-            <button
-              key={st}
-              onClick={() => setFilterState(st)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all cursor-pointer ${
-                filterState === st
-                  ? 'bg-[#670E10] text-white border border-[#B08D57]'
-                  : 'bg-[#2A2420] text-[#D4CBBB] hover:text-white'
-              }`}
+      {/* ── Search & Filter Controls ── */}
+      <div className="bg-white border border-[#E8DCD2] rounded-xl p-3 shadow-xs flex flex-col sm:flex-row gap-2.5 items-center justify-between">
+        <div className="relative w-full sm:w-80">
+          <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#81736D]" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search room number or suite type..."
+            className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-[#E8DCD2] text-xs bg-[#FBF6EF]/50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#4F0809]"
+          />
+        </div>
+
+        <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto">
+          {(['all', 'available', 'occupied', 'cleaning', 'dirty', 'maintenance'] as const).map(
+            (st) => (
+              <button
+                key={st}
+                onClick={() => setFilterState(st)}
+                className={`px-2.5 py-1 rounded-md text-xs font-semibold capitalize whitespace-nowrap transition ${
+                  filterState === st
+                    ? 'bg-[#4F0809] text-white shadow-xs'
+                    : 'bg-[#FBF6EF] text-[#81736D] hover:text-[#302421]'
+                }`}
+              >
+                {st}
+              </button>
+            )
+          )}
+        </div>
+      </div>
+
+      {/* ── Room Cards Grid ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        {filteredRooms.length === 0 ? (
+          <div className="col-span-full py-16 text-center bg-white border border-[#E8DCD2] rounded-2xl p-6">
+            <div className="w-12 h-12 rounded-full bg-[#FBF6EF] text-[#B78A48] flex items-center justify-center mx-auto mb-3">
+              <BedDouble className="w-6 h-6" />
+            </div>
+            <h3
+              className="text-lg font-bold text-[#302421]"
+              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
             >
-              {st}
+              No Palace Chambers Found
+            </h3>
+            <p className="text-xs text-[#81736D] max-w-sm mx-auto mt-1 mb-4">
+              {rooms.length === 0
+                ? 'No rooms exist in the palace inventory yet. Add your first chamber to start managing occupancy and housekeeping.'
+                : 'No rooms match the current search or filter criteria.'}
+            </p>
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#4F0809] hover:bg-[#6B1518] text-white text-xs font-semibold shadow-xs transition cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5 text-[#D8AA67]" />
+              Add Chamber
             </button>
-          )
+          </div>
+        ) : (
+          filteredRooms.map((room) => {
+            const isOcc = room.housekeeping_state === 'occupied';
+            const isAvail = room.housekeeping_state === 'available';
+            const isClean = room.housekeeping_state === 'cleaning';
+            const isDirty = room.housekeeping_state === 'dirty';
+
+            return (
+              <div
+                key={room.id}
+                className={`p-3 rounded-xl border shadow-xs transition hover:shadow-md flex flex-col justify-between ${
+                  isOcc
+                    ? 'bg-white border-[#4F0809]/40'
+                    : isAvail
+                    ? 'bg-white border-[#2E7D32]/40'
+                    : isClean
+                    ? 'bg-amber-50/50 border-amber-300'
+                    : 'bg-red-50/40 border-red-200'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span
+                      className="text-base font-bold text-[#302421]"
+                      style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+                    >
+                      Room {room.room_number}
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${
+                          isOcc
+                            ? 'bg-[#4F0809] text-white'
+                            : isAvail
+                            ? 'bg-[#2E7D32]/15 text-[#2E7D32]'
+                            : isClean
+                            ? 'bg-amber-200 text-amber-900'
+                            : 'bg-red-100 text-red-700'
+                        }`}
+                      >
+                        {room.housekeeping_state}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteRoom(room.id, room.room_number)}
+                        title="Delete Chamber"
+                        className="p-1 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded transition cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="text-[10px] text-[#81736D] truncate mb-2">
+                    {room.room_type?.name || 'Heritage Suite'}
+                  </div>
+                </div>
+
+                {/* Quick Actions Dropdown */}
+                <div className="pt-2 border-t border-[#E8DCD2] flex items-center justify-between gap-1.5">
+                  <select
+                    value={room.housekeeping_state}
+                    onChange={(e) => handleStateChange(room.id, e.target.value as any)}
+                    className="w-full text-[10px] py-1 px-1.5 rounded border border-[#E8DCD2] bg-[#FBF6EF] text-[#302421] focus:ring-1 focus:ring-[#4F0809] focus:outline-none"
+                  >
+                    <option value="available">Available</option>
+                    <option value="occupied">Occupied</option>
+                    <option value="cleaning">Cleaning</option>
+                    <option value="dirty">Dirty</option>
+                    <option value="maintenance">Maintenance</option>
+                  </select>
+                </div>
+              </div>
+            );
+          })
         )}
       </div>
 
-      {/* Rooms Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {filteredRooms.map((room) => {
-          const state = room.housekeeping_state;
-
-          const getBadgeVariant = () => {
-            if (state === 'available') return 'emerald';
-            if (state === 'occupied') return 'gold';
-            if (state === 'dirty') return 'rose';
-            if (state === 'cleaning') return 'amber';
-            return 'slate';
-          };
-
-          return (
-            <div
-              key={room.id}
-              className={`p-5 rounded-2xl flex flex-col justify-between border-2 transition-all shadow-sm ${
-                state === 'dirty'
-                  ? 'border-[#9B2226] bg-[#341618]'
-                  : state === 'cleaning'
-                  ? 'border-[#B08D57] bg-[#2E2419]'
-                  : 'border-[#3D352C] bg-[#241F1A]'
-              }`}
-            >
-              <div>
-                <div className="flex items-center justify-between mb-3 pb-2 border-b border-[#3D352C]">
-                  <div className="flex items-center space-x-2">
-                    <span className="font-mono text-xl font-bold text-[#FAF8F3]">
-                      Room {room.room_number}
-                    </span>
-                  </div>
-                  <Badge size="sm" variant={getBadgeVariant()}>
-                    {state}
-                  </Badge>
-                </div>
-
-                <div className="space-y-1 mb-4 text-xs text-[#D4CBBB]">
-                  <span className="text-[#FAF8F3] font-bold block">
-                    {room.room_type?.name || 'Deluxe Chamber'}
-                  </span>
-                  {room.notes ? (
-                    <span className="text-[#C9A96E] text-[11px] block bg-[#1C1814] p-2 rounded-lg border border-[#3D352C]">
-                      Staff Note: {room.notes}
-                    </span>
-                  ) : (
-                    <span className="text-[#9A8E7F] text-[11px] block italic">
-                      No maintenance notes.
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Quick Action Buttons for State Transitions */}
-              <div className="pt-3 border-t border-[#3D352C] flex flex-wrap gap-2">
-                {state !== 'available' && (
-                  <Button
-                    size="sm"
-                    className="bg-[#2D6A4F] hover:bg-[#1E4835] text-white text-[11px] px-2.5 py-1"
-                    onClick={() => handleStateChange(room.id, 'available')}
-                  >
-                    Mark Clean
-                  </Button>
-                )}
-
-                {state !== 'cleaning' && state !== 'occupied' && (
-                  <Button
-                    size="sm"
-                    variant="gold"
-                    className="text-[11px] px-2.5 py-1"
-                    onClick={() => handleStateChange(room.id, 'cleaning')}
-                  >
-                    Set Cleaning
-                  </Button>
-                )}
-
-                {state !== 'dirty' && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="text-[#9B2226] hover:bg-[#9B2226]/20 text-[11px] px-2.5 py-1"
-                    onClick={() => handleStateChange(room.id, 'dirty')}
-                  >
-                    Mark Dirty
-                  </Button>
-                )}
-
-                {state !== 'maintenance' && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="text-[#9A8E7F] hover:text-[#FAF8F3] text-[11px] px-2 py-1"
-                    onClick={() => handleStateChange(room.id, 'maintenance')}
-                  >
-                    Maintenance
-                  </Button>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* ── MODAL: ADD CHAMBER / ROOM ── */}
-      <Modal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        title="Add Physical Chamber / Room"
-      >
-        <form onSubmit={handleCreateRoom} className="space-y-4 text-left">
-          <p className="text-xs text-[#9A8E7F]">
-            Register a new physical room number and bind it to a heritage room suite type.
-          </p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-[#D4CBBB]">Room Number *</label>
-              <Input
-                required
-                placeholder="e.g. 107 or 204"
-                value={newRoomNumber}
-                onChange={(e) => setNewRoomNumber(e.target.value)}
-                className="bg-[#1C1814] border-[#3D352C] text-[#FAF8F3]"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-[#D4CBBB]">Heritage Suite Type *</label>
-              <select
-                required
-                value={newRoomTypeId}
-                onChange={(e) => setNewRoomTypeId(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-[#1C1814] text-[#FAF8F3] rounded-lg border border-[#3D352C] focus:outline-none focus:border-[#B08D57]"
-              >
-                {roomTypes.map((rt) => (
-                  <option key={rt.id} value={rt.id}>
-                    {rt.name} (Cap: {rt.capacity})
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-[#D4CBBB]">Initial Housekeeping Status</label>
-            <select
-              value={newRoomState}
-              onChange={(e) => setNewRoomState(e.target.value as HousekeepingState)}
-              className="w-full px-3 py-2 text-xs bg-[#1C1814] text-[#FAF8F3] rounded-lg border border-[#3D352C] focus:outline-none focus:border-[#B08D57]"
-            >
-              <option value="available">Available (Clean &amp; Inspected)</option>
-              <option value="cleaning">In Cleaning</option>
-              <option value="dirty">Dirty (Turnover Required)</option>
-              <option value="maintenance">Under Maintenance</option>
-            </select>
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-[#D4CBBB]">Housekeeping / Chamber Notes</label>
-            <Input
-              placeholder="e.g. Balcony facing Lake Pichola, fresh floral arrangement requested"
-              value={newRoomNotes}
-              onChange={(e) => setNewRoomNotes(e.target.value)}
-              className="bg-[#1C1814] border-[#3D352C] text-[#FAF8F3]"
-            />
-          </div>
-
-          <div className="pt-4 border-t border-[#3D352C] flex items-center justify-end space-x-2">
-            <Button
-              type="button"
-              variant="ghost"
+      {/* ── Add Room Modal ── */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white border border-[#E8DCD2] rounded-2xl max-w-md w-full p-5 shadow-2xl relative">
+            <button
               onClick={() => setIsAddModalOpen(false)}
-              className="text-xs text-[#9A8E7F]"
+              className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-[#FBF6EF] text-[#81736D]"
             >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              className="bg-[#670E10] hover:bg-[#821215] text-white text-xs font-bold px-4 py-2"
+              ✕
+            </button>
+            <h2
+              className="text-xl font-bold text-[#4F0809] mb-1"
+              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
             >
-              Save Chamber
-            </Button>
+              Add Palace Chamber
+            </h2>
+            <p className="text-xs text-[#81736D] mb-4">
+              Register a new room or royal suite in the inventory
+            </p>
+
+            <form onSubmit={handleCreateRoom} className="space-y-3 text-xs">
+              <div>
+                <label className="block text-[11px] font-semibold text-[#302421] mb-1">
+                  Chamber / Room Number *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newRoomNumber}
+                  onChange={(e) => setNewRoomNumber(e.target.value)}
+                  placeholder="e.g. 401"
+                  className="w-full px-3 py-2 rounded-lg border border-[#E8DCD2] text-xs focus:ring-1 focus:ring-[#4F0809] focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[11px] font-semibold text-[#302421] mb-1">
+                    Chamber Type *
+                  </label>
+                  <select
+                    value={newRoomTypeId}
+                    onChange={(e) => setNewRoomTypeId(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-[#E8DCD2] text-xs bg-white focus:ring-1 focus:ring-[#4F0809] focus:outline-none"
+                  >
+                    {roomTypes.map((rt) => (
+                      <option key={rt.id} value={rt.id}>
+                        {rt.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-[#302421] mb-1">
+                    Initial State
+                  </label>
+                  <select
+                    value={newRoomState}
+                    onChange={(e) => setNewRoomState(e.target.value as any)}
+                    className="w-full px-3 py-2 rounded-lg border border-[#E8DCD2] text-xs bg-white focus:ring-1 focus:ring-[#4F0809] focus:outline-none"
+                  >
+                    <option value="available">Available / Clean</option>
+                    <option value="occupied">Occupied</option>
+                    <option value="cleaning">Cleaning</option>
+                    <option value="dirty">Dirty</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-[#302421] mb-1">
+                  Chamber Amenities / Balcony Notes
+                </label>
+                <textarea
+                  rows={2}
+                  value={newRoomNotes}
+                  onChange={(e) => setNewRoomNotes(e.target.value)}
+                  placeholder="e.g. Aravalli view, marble bathtub, heritage jharokha..."
+                  className="w-full px-3 py-2 rounded-lg border border-[#E8DCD2] text-xs focus:ring-1 focus:ring-[#4F0809] focus:outline-none"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddModalOpen(false)}
+                  className="px-3 py-1.5 rounded-lg border border-[#E8DCD2] text-[#81736D] hover:bg-[#FBF6EF] text-xs transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 rounded-lg bg-[#4F0809] hover:bg-[#6B1518] text-white text-xs font-semibold shadow-sm transition"
+                >
+                  Save Chamber
+                </button>
+              </div>
+            </form>
           </div>
-        </form>
-      </Modal>
+        </div>
+      )}
     </div>
   );
 }

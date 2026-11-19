@@ -21,10 +21,10 @@ export default function HallPage() {
   const [contactName, setContactName] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [contactEmail, setContactEmail] = useState('');
-  const [eventType, setEventType] = useState('Royal Wedding / Reception');
-  const [expectedGuests, setExpectedGuests] = useState('150');
+  const [eventType, setEventType] = useState('Birthday Party');
+  const [expectedGuests, setExpectedGuests] = useState('35');
   const [eventDate, setEventDate] = useState('');
-  const [seatingLayout, setSeatingLayout] = useState('Traditional Rajasthani Baithak');
+  const [seatingLayout, setSeatingLayout] = useState('Intimate Banquet & Cluster Seating (25-50 Guests)');
   const [setupNeeds, setSetupNeeds] = useState('');
   const [notes, setNotes] = useState('');
 
@@ -43,10 +43,10 @@ export default function HallPage() {
   const [errorMsg, setErrorMsg] = useState('');
 
   const features = [
-    { label: 'Up to 300 Guests', icon: IconGuests300 },
-    { label: 'Custom Decor', icon: IconCustomDecor },
-    { label: 'Audio Visual', icon: IconAudioVisual },
-    { label: 'Catering Support', icon: IconCateringSupport },
+    { label: '25 – 50 Guests', icon: IconGuests300 },
+    { label: 'Customizable Décor', icon: IconCustomDecor },
+    { label: 'Audio Visual & Sound', icon: IconAudioVisual },
+    { label: 'Royal Catering', icon: IconCateringSupport },
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -69,7 +69,7 @@ export default function HallPage() {
           contactPhone,
           contactEmail,
           eventType,
-          expectedGuests: parseInt(expectedGuests, 10) || 50,
+          expectedGuests: parseInt(expectedGuests, 10) || 40,
           eventDate,
           seatingLayout,
           setupNeeds,
@@ -124,10 +124,10 @@ export default function HallPage() {
                 Party Hall
               </h1>
               <p className="text-base sm:text-xl font-medium text-[#C9A96E] mb-3">
-                For Celebrations That Matter
+                Celebrations Crafted for 25 – 50 Guests
               </p>
               <p className="text-xs sm:text-sm text-[#E0DCD3] max-w-xl mx-auto font-light leading-relaxed mb-8">
-                A spacious and elegant venue for weddings, corporate events, birthdays and special occasions.
+                An exclusive royal venue with customizable décor for birthday &amp; anniversary parties, romantic private dates, corporate events, and intimate social gatherings.
               </p>
 
               <div>

@@ -107,4 +107,61 @@ export const menuService = {
     }
     return dataRepository.toggleItemAvailability(itemId);
   },
+
+  async deleteMenuItem(itemId: string): Promise<boolean> {
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      try {
+        await supabase.from('menu_items').delete().eq('id', itemId);
+      } catch {
+        // Ignored
+      }
+    }
+    return dataRepository.deleteMenuItem(itemId);
+  },
+
+  async addCategory(data: { name: string; outlet_id?: string; image_url?: string }): Promise<MenuCategory> {
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      try {
+        const { data: dbCat } = await supabase
+          .from('menu_categories')
+          .insert({
+            name: data.name,
+            outlet_id: data.outlet_id || 'e0000000-0000-0000-0000-000000000001',
+            sort_order: 99,
+            is_available: true,
+          })
+          .select('*')
+          .maybeSingle();
+
+        if (dbCat) {
+          return {
+            id: dbCat.id,
+            outlet_id: dbCat.outlet_id,
+            name: dbCat.name,
+            sort_order: dbCat.sort_order,
+            is_available: dbCat.is_available,
+            items: [],
+          };
+        }
+      } catch {
+        // Fallback
+      }
+    }
+    return dataRepository.addCategory(data);
+  },
+
+  async deleteCategory(catId: string): Promise<boolean> {
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      try {
+        await supabase.from('menu_items').delete().eq('category_id', catId);
+        await supabase.from('menu_categories').delete().eq('id', catId);
+      } catch {
+        // Ignored
+      }
+    }
+    return dataRepository.deleteCategory(catId);
+  },
 };

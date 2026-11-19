@@ -13,7 +13,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { roomTypeId, checkIn, checkOut, partySize, guestName, guestPhone, guestEmail, notes } = body;
+    const { roomTypeId, checkIn, checkOut, partySize, guestName, guestPhone, guestEmail, notes, aadhaarDetails } = body;
 
     if (!roomTypeId || !checkIn || !checkOut || !guestName || !guestPhone) {
       return NextResponse.json({ success: false, error: 'Missing required reservation fields' }, { status: 400 });
@@ -28,6 +28,7 @@ export async function POST(request: Request) {
       guestPhone,
       guestEmail,
       notes,
+      aadhaarDetails,
     });
 
     return NextResponse.json({ success: true, reservation }, { status: 201 });

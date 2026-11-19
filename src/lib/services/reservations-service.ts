@@ -1,6 +1,6 @@
 import { getSupabaseClient } from './supabase-helper';
 import { dataRepository } from '@/lib/data/repository';
-import type { Reservation, ReservationStatus } from '@/lib/types';
+import type { Reservation, ReservationStatus, GuestAadhaarDetail } from '@/lib/types';
 
 export const reservationsService = {
   async getReservations(): Promise<Reservation[]> {
@@ -23,7 +23,7 @@ export const reservationsService = {
         .from('reservations')
         .select('*, guests(*), room_types(*), rooms(*)');
       
-      const { data, error } = isUuid
+      const { data, error } = isUuid 
         ? await query.eq('id', reference).maybeSingle()
         : await query.eq('reference_code', reference.toUpperCase()).maybeSingle();
 
@@ -44,6 +44,7 @@ export const reservationsService = {
     guestPhone: string;
     guestEmail?: string;
     notes?: string;
+    aadhaarDetails?: GuestAadhaarDetail[];
   }): Promise<Reservation> {
     const supabase = getSupabaseClient();
     if (supabase) {

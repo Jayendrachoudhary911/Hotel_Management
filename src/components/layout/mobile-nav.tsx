@@ -8,8 +8,8 @@ import { Home, BedDouble, Utensils, Coffee, Calendar } from 'lucide-react';
 export const MobileNav: React.FC = () => {
   const pathname = usePathname();
 
-  // Hide on staff dashboard
-  if (pathname.startsWith('/dashboard')) {
+  // Hide on staff dashboard and dedicated auth pages
+  if (pathname.startsWith('/dashboard') || pathname === '/login' || pathname === '/signup' || pathname.startsWith('/auth')) {
     return null;
   }
 

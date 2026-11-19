@@ -57,12 +57,16 @@ export interface Outlet {
   dine_in_enabled: boolean;
   pickup_enabled: boolean;
   delivery_enabled: boolean;
+  room_service_enabled?: boolean;
+  image_url?: string;
+  operating_days?: Record<string, boolean>;
   pickup_lead_minutes: number;
   delivery_lead_minutes: number;
   delivery_fee_minor: number;
   min_delivery_order_minor: number;
   delivery_estimate: string;
   is_paused: boolean;
+  is_active?: boolean;
   tax_rate_bps: number;
   service_charge_bps: number;
   created_at: string;
@@ -102,6 +106,14 @@ export interface Guest {
   created_at: string;
 }
 
+export interface GuestAadhaarDetail {
+  guest_index: number;
+  full_name: string;
+  aadhaar_number: string;
+  aadhaar_image_url?: string;
+  is_verified?: boolean;
+}
+
 // ── Reservation ──
 export interface Reservation {
   id: string;
@@ -121,6 +133,7 @@ export interface Reservation {
   guest?: Guest;
   room_type?: RoomType;
   room?: Room;
+  aadhaar_details?: GuestAadhaarDetail[];
 }
 
 // ── Hall ──
@@ -212,6 +225,9 @@ export interface Table {
   table_number: string;
   capacity: number;
   is_active: boolean;
+  status?: 'available' | 'occupied' | 'reserved' | 'cleaning';
+  location?: string;
+  code?: string;
 }
 
 // ── QR Token ──
@@ -232,6 +248,8 @@ export interface Order {
   order_number: string;
   channel: OrderChannel;
   fulfilment_mode: FulfilmentMode;
+  order_type?: 'dine_in' | 'room_service' | 'delivery' | 'pickup';
+  room_number?: string | null;
   pickup_name: string | null;
   pickup_phone: string | null;
   delivery_name: string | null;
@@ -244,11 +262,14 @@ export interface Order {
   service_charge_minor: number;
   discount_minor: number;
   total_minor: number;
+  total_amount_minor?: number;
   status: OrderStatus;
+  payment_status?: string;
   cancel_reason: string | null;
   created_by: string | null;
   assigned_delivery_staff: string | null;
   created_at: string;
+  items?: any[];
   order_lines?: OrderLine[];
   outlet?: Outlet;
   table?: Table;
@@ -367,3 +388,96 @@ export interface AvailabilityResult {
   totalPrice: number; // minor units for the full stay
   nightCount: number;
 }
+
+// ── Inventory Item ──
+export interface InventoryItem {
+  id: string;
+  sku: string;
+  name: string;
+  category: string;
+  unit: string;
+  current_stock: number;
+  min_stock: number;
+  cost_per_unit_minor: number;
+  supplier: string;
+  status: 'in_stock' | 'low_stock' | 'out_of_stock';
+  last_updated: string;
+}
+
+// ── Stock Movement ──
+export interface StockMovement {
+  id: string;
+  item_id: string;
+  item_name: string;
+  type: 'stock_in' | 'stock_out' | 'wastage' | 'adjustment';
+  quantity: number;
+  reason: string;
+  actor_name?: string;
+  recorded_by?: string;
+  created_at: string;
+}
+
+// ── Customer Directory ──
+export interface Customer {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  guest_type: string;
+  total_stays?: number;
+  stays_count?: number;
+  total_spend_minor: number;
+  last_visit: string;
+  city?: string;
+  created_at: string;
+}
+
+// ── Staff Member ──
+export interface StaffMember {
+  id: string;
+  name: string;
+  role: 'admin' | 'manager' | 'chef' | 'waiter' | 'housekeeper' | 'accountant' | 'kitchen' | 'housekeeping' | 'receptionist' | string;
+  email: string;
+  phone: string;
+  department?: string;
+  outlet_id?: string;
+  outlet_name?: string;
+  shift?: string;
+  status?: 'active' | 'on_leave';
+  is_active?: boolean;
+  created_at: string;
+  password?: string;
+}
+
+// ── Housekeeping Task ──
+export interface HousekeepingTask {
+  id: string;
+  room_id: string;
+  room_number: string;
+  task_type: 'checkout_cleaning' | 'stayover_cleaning' | 'inspection' | 'linen_replacement' | 'maintenance' | 'room_inspection';
+  priority: 'urgent' | 'high' | 'normal' | 'low' | 'medium';
+  assigned_to: string;
+  scheduled_time: string;
+  status: 'pending' | 'in_progress' | 'completed';
+  notes?: string | null;
+  completed_at?: string;
+}
+
+// ── Table Reservation ──
+export interface TableReservation {
+  id: string;
+  guest_name: string;
+  phone: string;
+  email?: string;
+  outlet_id: string;
+  outlet_name: string;
+  table_id?: string;
+  table_number: string;
+  reservation_time: string;
+  party_size: number;
+  status: 'confirmed' | 'seated' | 'completed' | 'cancelled';
+  special_requests?: string;
+  notes?: string;
+  created_at: string;
+}
+

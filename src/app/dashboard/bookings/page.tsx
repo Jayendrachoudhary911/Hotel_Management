@@ -1,0 +1,1159 @@
+'use client';
+
+import React, { useState, useEffect, useMemo } from 'react';
+import {
+  CalendarCheck,
+  Search,
+  Plus,
+  Download,
+  Filter,
+  CheckCircle2,
+  Clock,
+  LogOut as CheckOutIcon,
+  LogIn as CheckInIcon,
+  XCircle,
+  Eye,
+  AlertCircle,
+  Phone,
+  Mail,
+  User,
+  BedDouble,
+  Calendar,
+  Shield,
+  ShieldCheck,
+  Sparkles,
+  Upload,
+  FileCheck,
+  Check,
+  EyeOff,
+  Image as ImageIcon,
+  Trash2,
+  ZoomIn,
+} from 'lucide-react';
+import { dataRepository } from '@/lib/data/repository';
+import type { Reservation, RoomType, Room, GuestAadhaarDetail } from '@/lib/types';
+
+function generateSampleAadhaarSvg(name: string, aadhaarNum: string): string {
+  const safeName = (name || 'GUEST').toUpperCase().replace(/[^A-Z0-9 ]/g, '');
+  const safeNum = aadhaarNum || '5432 1098 7654';
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 300" width="480" height="300">
+    <rect width="480" height="300" rx="16" fill="#FFFFFF" stroke="#D1D5DB" stroke-width="2"/>
+    <rect x="0" y="0" width="480" height="12" rx="4" fill="#FF9933"/>
+    <rect x="0" y="288" width="480" height="12" rx="4" fill="#138808"/>
+    
+    <text x="240" y="38" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#B91C1C">भारत सरकार | GOVERNMENT OF INDIA</text>
+    <text x="240" y="55" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#4B5563">Unique Identification Authority of India</text>
+    
+    <rect x="30" y="75" width="100" height="125" rx="6" fill="#F3F4F6" stroke="#9CA3AF" stroke-width="1.5"/>
+    <circle cx="80" cy="120" r="28" fill="#D1D5DB"/>
+    <path d="M 45 185 Q 80 145 115 185 Z" fill="#9CA3AF"/>
+    <text x="80" y="215" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#047857">✓ VERIFIED</text>
+    
+    <text x="150" y="95" font-family="Arial, sans-serif" font-size="10" fill="#6B7280">Name / नाम</text>
+    <text x="150" y="115" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#111827">${safeName}</text>
+    
+    <text x="150" y="140" font-family="Arial, sans-serif" font-size="10" fill="#6B7280">DOB: 15/08/1990</text>
+    <text x="150" y="158" font-family="Arial, sans-serif" font-size="10" fill="#6B7280">Gender / लिंग: MALE / FEMALE</text>
+    <text x="150" y="176" font-family="Arial, sans-serif" font-size="9" fill="#059669">Verified by Rajmahal Palace Security</text>
+
+    <rect x="360" y="75" width="90" height="90" rx="4" fill="#1F2937"/>
+    <rect x="370" y="85" width="25" height="25" fill="#FFFFFF"/>
+    <rect x="415" y="85" width="25" height="25" fill="#FFFFFF"/>
+    <rect x="370" y="130" width="25" height="25" fill="#FFFFFF"/>
+    <rect x="405" y="120" width="15" height="15" fill="#FFFFFF"/>
+    <text x="405" y="180" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#6B7280">Secure QR</text>
+
+    <rect x="30" y="230" width="420" height="42" rx="8" fill="#FEF2F2" stroke="#FCA5A5" stroke-width="1"/>
+    <text x="240" y="258" text-anchor="middle" font-family="'Courier New', Courier, monospace" font-size="20" font-weight="bold" letter-spacing="3" fill="#DC2626">${safeNum}</text>
+    <text x="240" y="280" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#B91C1C">मेरा आधार, मेरी पहचान</text>
+  </svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
+
+interface FormGuestAadhaar {
+  fullName: string;
+  aadhaarNumber: string;
+  aadhaarImage: string;
+}
+
+export default function RoomBookingsPage() {
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [roomTypes, setRoomTypes] = useState<RoomType[]>([]);
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedBooking, setSelectedBooking] = useState<Reservation | null>(null);
+  const [isNewModalOpen, setIsNewModalOpen] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState<{ url: string; title: string } | null>(null);
+
+  // New Booking form state
+  const [formGuestName, setFormGuestName] = useState('');
+  const [formPhone, setFormPhone] = useState('');
+  const [formEmail, setFormEmail] = useState('');
+  const [formRoomTypeId, setFormRoomTypeId] = useState('');
+  const [formRoomId, setFormRoomId] = useState('');
+  const [formCheckIn, setFormCheckIn] = useState('2026-10-19');
+  const [formCheckOut, setFormCheckOut] = useState('2026-10-21');
+  const [formPartySize, setFormPartySize] = useState('2');
+  const [formNotes, setFormNotes] = useState('');
+  const [formError, setFormError] = useState('');
+
+  // Aadhaar details for each guest
+  const [formGuestAadhaars, setFormGuestAadhaars] = useState<FormGuestAadhaar[]>([
+    { fullName: '', aadhaarNumber: '', aadhaarImage: '' },
+    { fullName: '', aadhaarNumber: '', aadhaarImage: '' },
+  ]);
+
+  const loadData = () => {
+    const res = dataRepository.getReservations();
+    const rt = dataRepository.getRoomTypes();
+    const rms = dataRepository.getRooms();
+    setReservations(res);
+    setRoomTypes(rt);
+    setRooms(rms);
+    setFormCheckIn(new Date().toISOString().split('T')[0]);
+    setFormCheckOut(new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0]);
+    if (rt.length > 0 && !formRoomTypeId) {
+      setFormRoomTypeId(rt[0].id);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  // Filtered reservations
+  const filteredReservations = useMemo(() => {
+    return reservations.filter((r) => {
+      const q = searchQuery.toLowerCase();
+      const guestName = r.guest?.name?.toLowerCase() || '';
+      const ref = r.reference_code.toLowerCase();
+      const phone = r.guest?.phone?.toLowerCase() || '';
+      const matchesSearch = !q || guestName.includes(q) || ref.includes(q) || phone.includes(q);
+      const matchesStatus = statusFilter === 'all' || r.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [reservations, searchQuery, statusFilter]);
+
+  // Metrics
+  const totalCount = reservations.length;
+  const arrivalsToday = reservations.filter(
+    (r) => r.status === 'confirmed' || r.status === 'checked_in'
+  ).length;
+  const checkedInCount = reservations.filter((r) => r.status === 'checked_in').length;
+  const pendingCount = reservations.filter((r) => r.status === 'pending').length;
+
+  // Actions
+  const handleUpdateStatus = (id: string, newStatus: Reservation['status']) => {
+    dataRepository.updateReservationStatus(id, newStatus);
+    loadData();
+    if (selectedBooking && selectedBooking.id === id) {
+      setSelectedBooking({ ...selectedBooking, status: newStatus });
+    }
+  };
+
+  const handlePartySizeChange = (newSizeStr: string) => {
+    setFormPartySize(newSizeStr);
+    const count = parseInt(newSizeStr) || 2;
+    setFormGuestAadhaars((prev) => {
+      const updated: FormGuestAadhaar[] = [];
+      for (let i = 0; i < count; i++) {
+        if (prev[i]) {
+          updated.push(prev[i]);
+        } else {
+          updated.push({
+            fullName: i === 0 ? formGuestName : '',
+            aadhaarNumber: '',
+            aadhaarImage: '',
+          });
+        }
+      }
+      return updated;
+    });
+  };
+
+  const handleGuestNameChange = (val: string) => {
+    setFormGuestName(val);
+    setFormGuestAadhaars((prev) => {
+      const next = [...prev];
+      if (next.length > 0) {
+        next[0] = { ...next[0], fullName: val };
+      }
+      return next;
+    });
+  };
+
+  const handleAadhaarNumChange = (index: number, val: string) => {
+    const digitsOnly = val.replace(/\D/g, '').slice(0, 12);
+    const formatted = digitsOnly.match(/.{1,4}/g)?.join(' ') || digitsOnly;
+    setFormGuestAadhaars((prev) => {
+      const next = [...prev];
+      if (!next[index]) {
+        next[index] = { fullName: '', aadhaarNumber: '', aadhaarImage: '' };
+      }
+      next[index] = { ...next[index], aadhaarNumber: formatted };
+      return next;
+    });
+  };
+
+  const handleGuestSpecificNameChange = (index: number, val: string) => {
+    setFormGuestAadhaars((prev) => {
+      const next = [...prev];
+      if (!next[index]) {
+        next[index] = { fullName: '', aadhaarNumber: '', aadhaarImage: '' };
+      }
+      next[index] = { ...next[index], fullName: val };
+      return next;
+    });
+  };
+
+  const handleAadhaarFileUpload = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      setFormGuestAadhaars((prev) => {
+        const next = [...prev];
+        if (!next[index]) {
+          next[index] = { fullName: '', aadhaarNumber: '', aadhaarImage: '' };
+        }
+        next[index] = { ...next[index], aadhaarImage: base64 };
+        return next;
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleGenerateSampleAadhaar = (index: number) => {
+    const current = formGuestAadhaars[index] || { fullName: '', aadhaarNumber: '', aadhaarImage: '' };
+    const gName = current.fullName.trim() || (index === 0 ? formGuestName.trim() : `Guest ${index + 1}`) || `Palace Guest ${index + 1}`;
+    const cleanNum = current.aadhaarNumber.replace(/\D/g, '');
+    const randomAadhaar = cleanNum.length === 12
+      ? current.aadhaarNumber
+      : `${Math.floor(2000 + Math.random() * 7000)} ${Math.floor(1000 + Math.random() * 9000)} ${Math.floor(1000 + Math.random() * 9000)}`;
+    const sampleSvg = generateSampleAadhaarSvg(gName, randomAadhaar);
+
+    setFormGuestAadhaars((prev) => {
+      const next = [...prev];
+      next[index] = {
+        fullName: gName,
+        aadhaarNumber: randomAadhaar,
+        aadhaarImage: sampleSvg,
+      };
+      return next;
+    });
+  };
+
+  const handleRemoveAadhaarImage = (index: number) => {
+    setFormGuestAadhaars((prev) => {
+      const next = [...prev];
+      if (next[index]) {
+        next[index] = { ...next[index], aadhaarImage: '' };
+      }
+      return next;
+    });
+  };
+
+  const handleCreateBooking = (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError('');
+
+    if (!formGuestName.trim() || !formPhone.trim() || !formRoomTypeId) {
+      setFormError('Please fill in Primary Guest Name, Mobile Phone, and Room Category.');
+      return;
+    }
+
+    const partyCount = parseInt(formPartySize) || 2;
+    // Strict Verification: check all adult guests have valid Aadhaar Number and Aadhaar Image
+    for (let i = 0; i < partyCount; i++) {
+      const g = formGuestAadhaars[i];
+      const gName = (i === 0 ? formGuestName : g?.fullName)?.trim() || '';
+      const cleanAadhaar = (g?.aadhaarNumber || '').replace(/\D/g, '');
+
+      if (!gName) {
+        setFormError(`Adult ${i + 1}: Full Name is mandatory for Government ID verification.`);
+        return;
+      }
+      if (cleanAadhaar.length !== 12) {
+        setFormError(`Adult ${i + 1} (${gName}): Valid 12-digit Aadhaar Number is mandatory (Currently ${cleanAadhaar.length} digits).`);
+        return;
+      }
+      if (!g?.aadhaarImage) {
+        setFormError(`Adult ${i + 1} (${gName}): Aadhaar Card Photo/Document is mandatory for verification.`);
+        return;
+      }
+    }
+
+    const aadhaarDetailsPayload: GuestAadhaarDetail[] = formGuestAadhaars.slice(0, partyCount).map((g, idx) => ({
+      guest_index: idx + 1,
+      full_name: (idx === 0 ? formGuestName : g.fullName).trim(),
+      aadhaar_number: g.aadhaarNumber.trim(),
+      aadhaar_image_url: g.aadhaarImage,
+      is_verified: true,
+    }));
+
+    dataRepository.createReservation({
+      guestName: formGuestName.trim(),
+      phone: formPhone.trim(),
+      email: formEmail.trim(),
+      roomTypeId: formRoomTypeId,
+      roomId: formRoomId || undefined,
+      checkIn: formCheckIn,
+      checkOut: formCheckOut,
+      partySize: partyCount,
+      notes: formNotes.trim(),
+      aadhaarDetails: aadhaarDetailsPayload,
+    });
+
+    setIsNewModalOpen(false);
+    setFormGuestName('');
+    setFormPhone('');
+    setFormEmail('');
+    setFormNotes('');
+    setFormError('');
+    setFormGuestAadhaars([
+      { fullName: '', aadhaarNumber: '', aadhaarImage: '' },
+      { fullName: '', aadhaarNumber: '', aadhaarImage: '' },
+    ]);
+    loadData();
+  };
+
+  const handleExportCSV = () => {
+    const headers = ['Booking ID,Guest Name,Phone,Room Type,Room Number,Check-In,Check-Out,Guests,Status,Amount'];
+    const rows = filteredReservations.map((r) => [
+      `"${r.reference_code}"`,
+      `"${r.guest?.name || 'Walk-in'}"`,
+      `"${r.guest?.phone || ''}"`,
+      `"${r.room_type?.name || 'Heritage Suite'}"`,
+      `"${r.room?.room_number || 'TBD'}"`,
+      `"${new Date(r.check_in).toLocaleDateString()}"`,
+      `"${new Date(r.check_out).toLocaleDateString()}"`,
+      r.party_size,
+      r.status,
+      `"₹${(r.rate_snapshot_minor / 100).toLocaleString()}"`,
+    ].join(','));
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers, ...rows].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `rajmahal_bookings_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* ── Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[#E8DCD2]">
+        <div>
+          <h1
+            className="text-2xl font-bold text-[#4F0809]"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+          >
+            Room Bookings &amp; Royal Stays
+          </h1>
+          <p className="text-xs text-[#81736D] mt-0.5">
+            Manage palace reservations, check-ins, guest folios, and suite allocations
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleExportCSV}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#E8DCD2] bg-white text-[#4F0809] hover:bg-[#F6EAE0] text-xs font-medium shadow-sm transition"
+          >
+            <Download className="w-3.5 h-3.5" />
+            Export CSV
+          </button>
+          <button
+            onClick={() => setIsNewModalOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#4F0809] hover:bg-[#6B1518] text-white text-xs font-semibold shadow-sm transition"
+          >
+            <Plus className="w-3.5 h-3.5 text-[#D8AA67]" />
+            New Royal Booking
+          </button>
+        </div>
+      </div>
+
+      {/* ── 4 Metric Overview Cards ── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="bg-white border border-[#E8DCD2] rounded-xl p-3 shadow-xs flex items-center justify-between">
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-wider text-[#81736D]">
+              Total Bookings
+            </div>
+            <div className="text-xl font-bold text-[#302421] mt-0.5">{totalCount}</div>
+            <div className="text-[10px] text-[#2E7D32] font-medium mt-0.5">Active ledger</div>
+          </div>
+          <div className="w-9 h-9 rounded-lg bg-[#FBF6EF] border border-[#E8DCD2] flex items-center justify-center text-[#4F0809]">
+            <CalendarCheck className="w-4 h-4" />
+          </div>
+        </div>
+
+        <div className="bg-white border border-[#E8DCD2] rounded-xl p-3 shadow-xs flex items-center justify-between">
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-wider text-[#81736D]">
+              In-House Guests
+            </div>
+            <div className="text-xl font-bold text-[#4F0809] mt-0.5">{checkedInCount}</div>
+            <div className="text-[10px] text-[#81736D] mt-0.5">Currently checked in</div>
+          </div>
+          <div className="w-9 h-9 rounded-lg bg-[#FBF6EF] border border-[#E8DCD2] flex items-center justify-center text-[#4F0809]">
+            <CheckInIcon className="w-4 h-4 text-[#2E7D32]" />
+          </div>
+        </div>
+
+        <div className="bg-white border border-[#E8DCD2] rounded-xl p-3 shadow-xs flex items-center justify-between">
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-wider text-[#81736D]">
+              Arrivals Scheduled
+            </div>
+            <div className="text-xl font-bold text-[#302421] mt-0.5">{arrivalsToday}</div>
+            <div className="text-[10px] text-[#B78A48] font-medium mt-0.5">Confirmed suites</div>
+          </div>
+          <div className="w-9 h-9 rounded-lg bg-[#FBF6EF] border border-[#E8DCD2] flex items-center justify-center text-[#4F0809]">
+            <Clock className="w-4 h-4 text-[#B78A48]" />
+          </div>
+        </div>
+
+        <div className="bg-white border border-[#E8DCD2] rounded-xl p-3 shadow-xs flex items-center justify-between">
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-wider text-[#81736D]">
+              Pending Approval
+            </div>
+            <div className="text-xl font-bold text-[#D97706] mt-0.5">{pendingCount}</div>
+            <div className="text-[10px] text-[#81736D] mt-0.5">Awaiting deposit/ID</div>
+          </div>
+          <div className="w-9 h-9 rounded-lg bg-[#FBF6EF] border border-[#E8DCD2] flex items-center justify-center text-[#4F0809]">
+            <AlertCircle className="w-4 h-4 text-[#D97706]" />
+          </div>
+        </div>
+      </div>
+
+      {/* ── Search & Filter Bar ── */}
+      <div className="bg-white border border-[#E8DCD2] rounded-xl p-3 shadow-xs flex flex-col sm:flex-row gap-2.5 items-center justify-between">
+        <div className="relative w-full sm:w-80">
+          <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#81736D]" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search booking ID, guest, or phone..."
+            className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-[#E8DCD2] text-xs bg-[#FBF6EF]/50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#4F0809]"
+          />
+        </div>
+
+        <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+          {[
+            { label: 'All Bookings', value: 'all' },
+            { label: 'Confirmed', value: 'confirmed' },
+            { label: 'Checked In', value: 'checked_in' },
+            { label: 'Pending', value: 'pending' },
+            { label: 'Checked Out', value: 'checked_out' },
+            { label: 'Cancelled', value: 'cancelled' },
+          ].map((tab) => (
+            <button
+              key={tab.value}
+              onClick={() => setStatusFilter(tab.value)}
+              className={`px-2.5 py-1 rounded-md text-xs font-medium whitespace-nowrap transition ${
+                statusFilter === tab.value
+                  ? 'bg-[#4F0809] text-white shadow-xs'
+                  : 'bg-[#FBF6EF] text-[#81736D] hover:text-[#302421]'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Bookings Table ── */}
+      <div className="bg-white border border-[#E8DCD2] rounded-xl shadow-xs overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr className="border-b border-[#E8DCD2] bg-[#FBF6EF]/75 text-[10px] font-bold uppercase tracking-wider text-[#81736D]">
+                <th className="py-2.5 px-3">Booking ID</th>
+                <th className="py-2.5 px-3">Guest Details</th>
+                <th className="py-2.5 px-3">Allocated Room</th>
+                <th className="py-2.5 px-3">Dates (In / Out)</th>
+                <th className="py-2.5 px-3">Guests</th>
+                <th className="py-2.5 px-3">Govt ID (Aadhaar)</th>
+                <th className="py-2.5 px-3">Status</th>
+                <th className="py-2.5 px-3">Amount</th>
+                <th className="py-2.5 px-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#E8DCD2]/70 text-[#302421]">
+              {filteredReservations.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="py-8 text-center text-xs text-[#81736D]">
+                    No bookings found matching your search or filter criteria.
+                  </td>
+                </tr>
+              ) : (
+                filteredReservations.map((res) => {
+                  const checkInStr = new Date(res.check_in).toLocaleDateString('en-IN', {
+                    day: 'numeric',
+                    month: 'short',
+                  });
+                  const checkOutStr = new Date(res.check_out).toLocaleDateString('en-IN', {
+                    day: 'numeric',
+                    month: 'short',
+                  });
+                  const amount = (res.rate_snapshot_minor / 100).toLocaleString('en-IN');
+
+                  return (
+                    <tr key={res.id} className="hover:bg-[#FBF6EF]/50 transition-colors">
+                      <td className="py-2.5 px-3 font-semibold text-[#4F0809]">
+                        {res.reference_code}
+                      </td>
+                      <td className="py-2.5 px-3">
+                        <div className="font-medium text-[#302421]">{res.guest?.name || 'Walk-in Guest'}</div>
+                        <div className="text-[10px] text-[#81736D]">{res.guest?.phone || 'No phone'}</div>
+                      </td>
+                      <td className="py-2.5 px-3">
+                        <div className="font-medium text-[#302421]">
+                          {res.room?.room_number ? `Room ${res.room.room_number}` : 'Unassigned'}
+                        </div>
+                        <div className="text-[10px] text-[#81736D]">
+                          {res.room_type?.name || 'Heritage Suite'}
+                        </div>
+                      </td>
+                      <td className="py-2.5 px-3 text-[11px] text-[#302421]">
+                        {checkInStr} → {checkOutStr}
+                      </td>
+                      <td className="py-2.5 px-3">{res.party_size} Guests</td>
+                      <td className="py-2.5 px-3">
+                        {res.aadhaar_details && res.aadhaar_details.length > 0 ? (
+                          <div className="flex items-center gap-1">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#2E7D32]/15 text-[#2E7D32] border border-[#2E7D32]/30">
+                              <ShieldCheck className="w-3 h-3 text-[#2E7D32]" />
+                              {res.aadhaar_details.length}/{res.party_size} Aadhaar
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                            <AlertCircle className="w-3 h-3 text-amber-600" />
+                            ID Pending
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-2.5 px-3">
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider ${
+                            res.status === 'checked_in'
+                              ? 'bg-[#2E7D32]/15 text-[#2E7D32]'
+                              : res.status === 'confirmed'
+                              ? 'bg-[#B78A48]/15 text-[#8F6628]'
+                              : res.status === 'pending'
+                              ? 'bg-[#D97706]/15 text-[#D97706]'
+                              : res.status === 'checked_out'
+                              ? 'bg-[#81736D]/15 text-[#81736D]'
+                              : 'bg-red-100 text-red-700'
+                          }`}
+                        >
+                          {res.status.replace('_', ' ')}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3 font-semibold text-[#302421]">₹{amount}</td>
+                      <td className="py-2.5 px-3 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => setSelectedBooking(res)}
+                            className="px-2 py-1 rounded bg-[#FBF6EF] hover:bg-[#E8DCD2] text-[#4F0809] font-medium text-[11px] transition"
+                            title="View Details"
+                          >
+                            <Eye className="w-3.5 h-3.5 inline mr-1" />
+                            View
+                          </button>
+                          {res.status === 'confirmed' && (
+                            <button
+                              onClick={() => handleUpdateStatus(res.id, 'checked_in')}
+                              className="px-2 py-1 rounded bg-[#2E7D32] hover:bg-[#256629] text-white font-medium text-[11px] transition"
+                            >
+                              Check-In
+                            </button>
+                          )}
+                          {res.status === 'checked_in' && (
+                            <button
+                              onClick={() => handleUpdateStatus(res.id, 'checked_out')}
+                              className="px-2 py-1 rounded bg-[#81736D] hover:bg-[#5C514B] text-white font-medium text-[11px] transition"
+                            >
+                              Check-Out
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+        <div className="py-2 px-3 bg-[#FBF6EF]/50 border-t border-[#E8DCD2] text-[11px] text-[#81736D] flex justify-between items-center">
+          <span>Showing {filteredReservations.length} of {totalCount} reservations</span>
+          <span className="font-serif italic text-[#4F0809]">Rajmahal Palace Central Reservations</span>
+        </div>
+      </div>
+
+      {/* ── Booking Detail Modal ── */}
+      {selectedBooking && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white border border-[#E8DCD2] rounded-2xl max-w-lg w-full p-5 shadow-2xl relative">
+            <button
+              onClick={() => setSelectedBooking(null)}
+              className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-[#FBF6EF] text-[#81736D]"
+            >
+              ✕
+            </button>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="px-2 py-0.5 rounded bg-[#4F0809] text-white text-xs font-bold font-mono">
+                {selectedBooking.reference_code}
+              </span>
+              <span className="text-xs uppercase font-bold text-[#81736D]">
+                {selectedBooking.status.replace('_', ' ')}
+              </span>
+            </div>
+            <h2
+              className="text-xl font-bold text-[#4F0809] mb-4"
+              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+            >
+              Palace Stay Folio Details
+            </h2>
+
+            <div className="space-y-3 text-xs text-[#302421]">
+              <div className="p-3 bg-[#FBF6EF] rounded-xl border border-[#E8DCD2] space-y-1.5">
+                <div className="flex items-center gap-2 font-semibold text-sm text-[#4F0809]">
+                  <User className="w-4 h-4 text-[#D8AA67]" />
+                  {selectedBooking.guest?.name || 'Walk-in Guest'}
+                </div>
+                <div className="flex items-center gap-4 text-[#81736D]">
+                  <span className="flex items-center gap-1">
+                    <Phone className="w-3.5 h-3.5" />
+                    {selectedBooking.guest?.phone || 'N/A'}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Mail className="w-3.5 h-3.5" />
+                    {selectedBooking.guest?.email || 'N/A'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="p-2.5 bg-white border border-[#E8DCD2] rounded-lg">
+                  <div className="text-[10px] text-[#81736D] uppercase">Room Allocation</div>
+                  <div className="font-semibold text-sm mt-0.5 text-[#4F0809]">
+                    {selectedBooking.room?.room_number ? `Room ${selectedBooking.room.room_number}` : 'Room 101'}
+                  </div>
+                  <div className="text-[10px] text-[#81736D]">
+                    {selectedBooking.room_type?.name || 'Palace Heritage Suite'}
+                  </div>
+                </div>
+
+                <div className="p-2.5 bg-white border border-[#E8DCD2] rounded-lg">
+                  <div className="text-[10px] text-[#81736D] uppercase">Rate &amp; Folio</div>
+                  <div className="font-semibold text-sm mt-0.5 text-[#302421]">
+                    ₹{(selectedBooking.rate_snapshot_minor / 100).toLocaleString('en-IN')}
+                  </div>
+                  <div className="text-[10px] text-[#2E7D32]">Paid / Confirmed Guarantee</div>
+                </div>
+              </div>
+
+              <div className="p-2.5 bg-white border border-[#E8DCD2] rounded-lg space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-[#81736D]">Check-In:</span>
+                  <span className="font-medium">{new Date(selectedBooking.check_in).toLocaleDateString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#81736D]">Check-Out:</span>
+                  <span className="font-medium">{new Date(selectedBooking.check_out).toLocaleDateString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#81736D]">Party Size:</span>
+                  <span className="font-medium">{selectedBooking.party_size} Adults / Guests</span>
+                </div>
+                {selectedBooking.notes && (
+                  <div className="mt-2 pt-2 border-t border-[#E8DCD2] text-[11px] text-[#81736D]">
+                    <span className="font-semibold text-[#4F0809]">Special Request: </span>
+                    {selectedBooking.notes}
+                  </div>
+                )}
+              </div>
+
+              {/* Mandatory Aadhaar Identification Dossier */}
+              <div className="p-3 bg-[#FAF8F3] border border-[#E8DCD2] rounded-xl space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-[#4F0809]">
+                    <ShieldCheck className="w-4 h-4 text-[#2E7D32]" />
+                    <span>Government Aadhaar Dossier ({selectedBooking.aadhaar_details?.length || 0}/{selectedBooking.party_size} Verified)</span>
+                  </div>
+                  <span className="text-[10px] font-semibold text-[#2E7D32] bg-[#2E7D32]/10 px-2 py-0.5 rounded-full">
+                    Police Verification Compliant
+                  </span>
+                </div>
+
+                {(!selectedBooking.aadhaar_details || selectedBooking.aadhaar_details.length === 0) ? (
+                  <p className="text-[11px] text-[#81736D] italic">
+                    No Aadhaar documents registered for this booking.
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                    {selectedBooking.aadhaar_details.map((detail, idx) => (
+                      <div key={idx} className="p-2.5 bg-white rounded-lg border border-[#E8DCD2] shadow-2xs space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-[#81736D] uppercase">
+                            Adult {detail.guest_index || idx + 1}
+                          </span>
+                          <span className="text-[9px] font-bold text-[#2E7D32] bg-[#2E7D32]/10 px-1.5 py-0.5 rounded">
+                            Verified
+                          </span>
+                        </div>
+                        <div className="font-semibold text-xs text-[#302421] truncate">
+                          {detail.full_name}
+                        </div>
+                        <div className="font-mono text-[11px] text-[#4F0809] font-bold tracking-wider">
+                          {detail.aadhaar_number}
+                        </div>
+                        {detail.aadhaar_image_url && (
+                          <div className="pt-1">
+                            <button
+                              type="button"
+                              onClick={() => setLightboxImage({ url: detail.aadhaar_image_url!, title: `${detail.full_name} — Aadhaar Card (${detail.aadhaar_number})` })}
+                              className="group relative w-full h-24 rounded border border-[#E8DCD2] overflow-hidden bg-stone-50 flex items-center justify-center cursor-pointer hover:border-[#4F0809] transition"
+                            >
+                              <img
+                                src={detail.aadhaar_image_url}
+                                alt={`Aadhaar Card of ${detail.full_name}`}
+                                className="w-full h-full object-cover group-hover:scale-105 transition duration-200"
+                              />
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-1 text-white text-[10px] font-semibold transition">
+                                <ZoomIn className="w-3.5 h-3.5" />
+                                Inspect Card
+                              </div>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Status Actions */}
+              <div className="flex items-center justify-end gap-2 pt-2">
+                {selectedBooking.status === 'confirmed' && (
+                  <button
+                    onClick={() => handleUpdateStatus(selectedBooking.id, 'checked_in')}
+                    className="px-3 py-1.5 rounded-lg bg-[#2E7D32] text-white font-medium hover:bg-[#256629] transition"
+                  >
+                    Confirm Check-In
+                  </button>
+                )}
+                {selectedBooking.status === 'checked_in' && (
+                  <button
+                    onClick={() => handleUpdateStatus(selectedBooking.id, 'checked_out')}
+                    className="px-3 py-1.5 rounded-lg bg-[#4F0809] text-white font-medium hover:bg-[#6B1518] transition"
+                  >
+                    Process Check-Out
+                  </button>
+                )}
+                {selectedBooking.status !== 'cancelled' && selectedBooking.status !== 'checked_out' && (
+                  <button
+                    onClick={() => handleUpdateStatus(selectedBooking.id, 'cancelled')}
+                    className="px-3 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition"
+                  >
+                    Cancel Booking
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── New Royal Booking Modal ── */}
+      {isNewModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white border border-[#E8DCD2] rounded-2xl max-w-2xl w-full p-5 shadow-2xl relative max-h-[92vh] overflow-y-auto">
+            <button
+              onClick={() => setIsNewModalOpen(false)}
+              className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-[#FBF6EF] text-[#81736D]"
+            >
+              ✕
+            </button>
+            <h2
+              className="text-xl font-bold text-[#4F0809] mb-1"
+              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+            >
+              New Royal Suite Reservation
+            </h2>
+            <p className="text-xs text-[#81736D] mb-4">
+              Create an official room booking on Rajmahal Heritage PMS ledger with police-compliant Aadhaar verification
+            </p>
+
+            {formError && (
+              <div className="p-2.5 mb-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-xs flex items-center gap-1.5">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <span>{formError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleCreateBooking} className="space-y-3.5 text-xs">
+              <div>
+                <label className="block text-[11px] font-semibold text-[#302421] mb-1">
+                  Primary Guest Full Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formGuestName}
+                  onChange={(e) => handleGuestNameChange(e.target.value)}
+                  placeholder="e.g. Maharaja Vikramaditya Singh"
+                  className="w-full px-3 py-2 rounded-lg border border-[#E8DCD2] text-xs focus:ring-1 focus:ring-[#4F0809] focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[11px] font-semibold text-[#302421] mb-1">
+                    Mobile Phone *
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    value={formPhone}
+                    onChange={(e) => setFormPhone(e.target.value)}
+                    placeholder="+91 98765 43210"
+                    className="w-full px-3 py-2 rounded-lg border border-[#E8DCD2] text-xs focus:ring-1 focus:ring-[#4F0809] focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-[#302421] mb-1">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    value={formEmail}
+                    onChange={(e) => setFormEmail(e.target.value)}
+                    placeholder="guest@heritage.in"
+                    className="w-full px-3 py-2 rounded-lg border border-[#E8DCD2] text-xs focus:ring-1 focus:ring-[#4F0809] focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[11px] font-semibold text-[#302421] mb-1">
+                    Room Category *
+                  </label>
+                  <select
+                    value={formRoomTypeId}
+                    onChange={(e) => setFormRoomTypeId(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-[#E8DCD2] text-xs bg-white focus:ring-1 focus:ring-[#4F0809] focus:outline-none"
+                  >
+                    {roomTypes.map((rt) => (
+                      <option key={rt.id} value={rt.id}>
+                        {rt.name} (₹{(rt.base_rate_minor / 100).toLocaleString()})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-[#302421] mb-1">
+                    Guest Count (Adults) *
+                  </label>
+                  <select
+                    value={formPartySize}
+                    onChange={(e) => handlePartySizeChange(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-[#E8DCD2] text-xs bg-white font-semibold text-[#4F0809] focus:ring-1 focus:ring-[#4F0809] focus:outline-none"
+                  >
+                    <option value="1">1 Adult (1 Aadhaar required)</option>
+                    <option value="2">2 Adults (Both 2 Aadhaars required)</option>
+                    <option value="3">3 Adults (All 3 Aadhaars required)</option>
+                    <option value="4">4 Guests / Family (All 4 Aadhaars required)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[11px] font-semibold text-[#302421] mb-1">
+                    Check-In Date *
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={formCheckIn}
+                    onChange={(e) => setFormCheckIn(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-[#E8DCD2] text-xs focus:ring-1 focus:ring-[#4F0809] focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-[#302421] mb-1">
+                    Check-Out Date *
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={formCheckOut}
+                    onChange={(e) => setFormCheckOut(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-[#E8DCD2] text-xs focus:ring-1 focus:ring-[#4F0809] focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* ── Dynamic Mandatory Guest Aadhaar Identification Section ── */}
+              <div className="p-3.5 bg-[#FAF8F3] border-2 border-[#D8AA67]/40 rounded-xl space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-2 border-b border-[#E8DCD2]">
+                  <div>
+                    <div className="flex items-center gap-1.5 font-bold text-xs text-[#4F0809]">
+                      <Shield className="w-4 h-4 text-[#D8AA67]" />
+                      Mandatory Aadhaar Verification ({parseInt(formPartySize) || 2} Adults Staying)
+                    </div>
+                    <p className="text-[10px] text-[#81736D] mt-0.5">
+                      Both Aadhaar number &amp; card photo document are strictly required for each adult as per hospitality rules
+                    </p>
+                  </div>
+                  <span className="text-[10px] font-bold text-[#4F0809] bg-[#D8AA67]/20 border border-[#D8AA67]/40 px-2 py-0.5 rounded-full self-start sm:self-auto">
+                    UIDAI Regulated
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  {Array.from({ length: parseInt(formPartySize) || 2 }).map((_, idx) => {
+                    const g = formGuestAadhaars[idx] || { fullName: '', aadhaarNumber: '', aadhaarImage: '' };
+                    const isPrimary = idx === 0;
+                    const displayName = isPrimary ? (formGuestName || g.fullName) : g.fullName;
+                    const cleanNum = (g.aadhaarNumber || '').replace(/\D/g, '');
+
+                    return (
+                      <div
+                        key={idx}
+                        className="p-3 bg-white rounded-xl border border-[#E8DCD2] shadow-2xs space-y-2.5"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#FBF6EF] text-[#4F0809] border border-[#E8DCD2]">
+                            <User className="w-3 h-3 text-[#D8AA67]" />
+                            Adult {idx + 1} of {formPartySize} {isPrimary ? '(Primary Guest)' : '(Accompanying Adult)'}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleGenerateSampleAadhaar(idx)}
+                            className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#8F6628] hover:text-[#4F0809] bg-[#B78A48]/10 hover:bg-[#B78A48]/20 px-2 py-0.5 rounded transition cursor-pointer"
+                            title="Auto-fill with sample test Aadhaar card"
+                          >
+                            <Sparkles className="w-3 h-3" />
+                            Auto-Fill Sample Aadhaar
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-[10px] font-semibold text-[#302421] mb-1">
+                              Adult {idx + 1} Full Name *
+                            </label>
+                            <input
+                              type="text"
+                              required
+                              value={displayName}
+                              onChange={(e) => {
+                                if (isPrimary) {
+                                  handleGuestNameChange(e.target.value);
+                                } else {
+                                  handleGuestSpecificNameChange(idx, e.target.value);
+                                }
+                              }}
+                              placeholder={isPrimary ? 'Matches primary guest name' : `e.g. Maharani Gayatri Devi`}
+                              className="w-full px-2.5 py-1.5 rounded-lg border border-[#E8DCD2] text-xs focus:ring-1 focus:ring-[#4F0809] focus:outline-none"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-semibold text-[#302421] mb-1">
+                              12-Digit Aadhaar Number *
+                            </label>
+                            <input
+                              type="text"
+                              required
+                              maxLength={14}
+                              value={g.aadhaarNumber}
+                              onChange={(e) => handleAadhaarNumChange(idx, e.target.value)}
+                              placeholder="e.g. 5432 1098 7654"
+                              className="w-full px-2.5 py-1.5 rounded-lg border border-[#E8DCD2] font-mono text-xs focus:ring-1 focus:ring-[#4F0809] focus:outline-none"
+                            />
+                            <div className="flex items-center justify-between text-[9px] text-[#81736D] mt-0.5">
+                              <span>Format: #### #### ####</span>
+                              <span className={cleanNum.length === 12 ? 'text-[#2E7D32] font-bold' : 'text-amber-700'}>
+                                {cleanNum.length}/12 digits
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Aadhaar Photo / Document Upload */}
+                        <div>
+                          <label className="block text-[10px] font-semibold text-[#302421] mb-1">
+                            Aadhaar Card Front Photo / Document *
+                          </label>
+
+                          {g.aadhaarImage ? (
+                            <div className="flex items-center gap-3 p-2 bg-[#FBF6EF] border border-[#2E7D32]/40 rounded-lg">
+                              <div
+                                onClick={() => setLightboxImage({ url: g.aadhaarImage, title: `Adult ${idx + 1} (${displayName || 'Guest'}) Aadhaar Card` })}
+                                className="relative w-24 h-16 rounded border border-[#E8DCD2] overflow-hidden bg-white cursor-pointer group flex-shrink-0"
+                              >
+                                <img
+                                  src={g.aadhaarImage}
+                                  alt={`Aadhaar ${idx + 1}`}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition"
+                                />
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[9px] transition">
+                                  <ZoomIn className="w-3.5 h-3.5" />
+                                </div>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1 text-[11px] font-bold text-[#2E7D32]">
+                                  <Check className="w-3.5 h-3.5" />
+                                  Aadhaar Document Attached
+                                </div>
+                                <p className="text-[10px] text-[#81736D] truncate">
+                                  {cleanNum ? `Aadhaar: ${g.aadhaarNumber}` : 'Document uploaded'}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => setLightboxImage({ url: g.aadhaarImage, title: `Adult ${idx + 1} (${displayName || 'Guest'}) Aadhaar Card` })}
+                                  className="p-1.5 text-stone-600 hover:text-[#4F0809] hover:bg-stone-200/60 rounded transition cursor-pointer"
+                                  title="Inspect Full Image"
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveAadhaarImage(idx)}
+                                  className="p-1.5 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded transition cursor-pointer"
+                                  title="Remove Image"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="border border-dashed border-[#D8AA67] rounded-lg p-2.5 text-center bg-[#FAF8F3]/60 hover:bg-[#FAF8F3] transition">
+                              <input
+                                type="file"
+                                id={`aadhaar-file-${idx}`}
+                                accept="image/*"
+                                onChange={(e) => handleAadhaarFileUpload(idx, e)}
+                                className="hidden"
+                              />
+                              <label
+                                htmlFor={`aadhaar-file-${idx}`}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-[#E8DCD2] text-[#4F0809] hover:bg-[#FBF6EF] text-xs font-semibold shadow-2xs transition cursor-pointer"
+                              >
+                                <Upload className="w-3.5 h-3.5 text-[#D8AA67]" />
+                                Upload Aadhaar Image / Photo
+                              </label>
+                              <span className="block text-[9px] text-[#81736D] mt-1">
+                                Supports PNG, JPG, WebP photo or front scan of card
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-[#302421] mb-1">
+                  Specific Suite Assignment (Optional)
+                </label>
+                <select
+                  value={formRoomId}
+                  onChange={(e) => setFormRoomId(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-[#E8DCD2] text-xs bg-white focus:ring-1 focus:ring-[#4F0809] focus:outline-none"
+                >
+                  <option value="">Auto-assign best available suite</option>
+                  {rooms
+                    .filter((r) => r.housekeeping_state === 'available')
+                    .map((r) => (
+                      <option key={r.id} value={r.id}>
+                        Room {r.room_number} ({r.room_type?.name || 'Available'})
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-[#302421] mb-1">
+                  Special Requests / VIP Amenities
+                </label>
+                <textarea
+                  rows={2}
+                  value={formNotes}
+                  onChange={(e) => setFormNotes(e.target.value)}
+                  placeholder="e.g. Royal garland welcome, airport pickup, royal thali breakfast..."
+                  className="w-full px-3 py-2 rounded-lg border border-[#E8DCD2] text-xs focus:ring-1 focus:ring-[#4F0809] focus:outline-none"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsNewModalOpen(false)}
+                  className="px-3 py-1.5 rounded-lg border border-[#E8DCD2] text-[#81736D] hover:bg-[#FBF6EF] text-xs transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 rounded-lg bg-[#4F0809] hover:bg-[#6B1518] text-white text-xs font-semibold shadow-sm transition"
+                >
+                  Confirm &amp; Allocate Suite
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Lightbox Image Viewer Modal ── */}
+      {lightboxImage && (
+        <div className="fixed inset-0 z-60 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white border border-[#E8DCD2] rounded-2xl max-w-xl w-full p-4 shadow-2xl relative">
+            <button
+              onClick={() => setLightboxImage(null)}
+              className="absolute top-3 right-3 p-1.5 rounded-full bg-stone-100 hover:bg-stone-200 text-[#302421] transition cursor-pointer"
+            >
+              ✕
+            </button>
+            <h3 className="text-sm font-bold text-[#4F0809] mb-3 pr-8">
+              {lightboxImage.title}
+            </h3>
+            <div className="rounded-xl overflow-hidden border border-[#E8DCD2] bg-stone-100 max-h-[70vh] flex items-center justify-center p-2">
+              <img
+                src={lightboxImage.url}
+                alt="Enlarged Aadhaar Document"
+                className="w-full h-auto max-h-[65vh] object-contain rounded-lg"
+              />
+            </div>
+            <div className="mt-3 flex justify-end">
+              <button
+                onClick={() => setLightboxImage(null)}
+                className="px-4 py-1.5 rounded-lg bg-[#4F0809] text-white text-xs font-semibold hover:bg-[#6B1518] transition"
+              >
+                Close Viewer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

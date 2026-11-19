@@ -5,6 +5,7 @@
 // ── Reservation Statuses ──
 export const RESERVATION_STATUSES = {
   REQUESTED: 'requested',
+  PENDING: 'pending',
   CONFIRMED: 'confirmed',
   CHECKED_IN: 'checked_in',
   CHECKED_OUT: 'checked_out',
@@ -17,6 +18,7 @@ export type ReservationStatus = (typeof RESERVATION_STATUSES)[keyof typeof RESER
 // Valid transitions for reservation statuses
 export const RESERVATION_TRANSITIONS: Record<ReservationStatus, ReservationStatus[]> = {
   requested: ['confirmed', 'cancelled'],
+  pending: ['confirmed', 'cancelled'],
   confirmed: ['checked_in', 'cancelled', 'no_show'],
   checked_in: ['checked_out'],
   checked_out: [],
@@ -67,6 +69,7 @@ export const ORDER_STATUSES = {
   OUT_FOR_DELIVERY: 'out_for_delivery',
   DELIVERED: 'delivered',
   COLLECTED: 'collected',
+  COMPLETED: 'completed',
   CANCELLED: 'cancelled',
 } as const;
 
@@ -86,6 +89,8 @@ export const ORDER_CHANNELS = {
   QR: 'qr',
   POS: 'pos',
   WEB: 'web',
+  QR_DINE_IN: 'qr_dine_in',
+  ROOM_SERVICE: 'room_service',
 } as const;
 
 export type OrderChannel = (typeof ORDER_CHANNELS)[keyof typeof ORDER_CHANNELS];
@@ -129,6 +134,7 @@ export type AdjustmentType = (typeof ADJUSTMENT_TYPES)[keyof typeof ADJUSTMENT_T
 
 // ── User Roles ──
 export const USER_ROLES = {
+  OWNER: 'owner',
   ADMIN: 'admin',
   MANAGER: 'manager',
   FRONT_DESK: 'front_desk',
@@ -142,6 +148,7 @@ export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES];
 
 // ── Role Display Names ──
 export const ROLE_DISPLAY_NAMES: Record<UserRole, string> = {
+  owner: 'Palace Owner / Director',
   admin: 'Owner / Admin',
   manager: 'Manager / Front Desk',
   front_desk: 'Front Desk',

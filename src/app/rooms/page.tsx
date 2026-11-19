@@ -38,11 +38,14 @@ async function RoomsContent({ searchParams }: RoomsPageProps) {
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header matching image */}
         <div className="text-center max-w-2xl mx-auto mb-10">
+          <span className="text-xs uppercase font-bold tracking-[0.2em] text-[#B08D57] block mb-1">
+            Rajputana Luxury Accommodation
+          </span>
           <h1 className="font-heritage text-3xl sm:text-4xl lg:text-5xl font-bold text-[#670E10] mb-3">
-            Our Heritage Rooms
+            Our Heritage Deluxe Rooms
           </h1>
           <p className="text-sm sm:text-base text-[#6E6356] font-light">
-            Six unique Rajasthani experiences, each with its own story, architecture and charm.
+            All rooms are luxury Deluxe chambers with complimentary Wi-Fi, AC, 24x7 room service, in-room dining, and valet parking.
           </p>
         </div>
 

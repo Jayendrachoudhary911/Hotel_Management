@@ -1,460 +1,384 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
-  Utensils,
-  Bike,
-  Package,
-  QrCode,
+  ShoppingBag,
   Search,
   Filter,
   CheckCircle2,
   Clock,
-  AlertTriangle,
-  ChevronRight,
+  Download,
   Eye,
-  FileText,
   Printer,
   XCircle,
-  Phone,
-  MapPin,
-  Calendar,
+  UtensilsCrossed,
+  BedDouble,
+  Bike,
+  Package,
   Receipt,
   RotateCw,
+  ArrowRight,
+  Phone,
+  User,
+  MapPin,
+  Check,
 } from 'lucide-react';
-import { formatMoney } from '@/lib/utils/money';
-import type { Order, OrderStatus, FulfilmentMode, OrderLine, ModifierSnapshot } from '@/lib/types';
-import { Button } from '@/components/ui/button';
+import { dataRepository } from '@/lib/data/repository';
+import type { Order, Outlet } from '@/lib/types';
 
-export default function DashboardOrdersPage() {
+function OrdersContent() {
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab') || 'all';
+  const urlSearch = searchParams.get('search') || '';
+
   const [orders, setOrders] = useState<Order[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeModeTab, setActiveModeTab] = useState<'all' | 'dine_in' | 'pickup' | 'delivery' | 'pos'>('all');
-  const [activeStatus, setActiveStatus] = useState<'all' | OrderStatus>('all');
+  const [outlets, setOutlets] = useState<Outlet[]>([]);
+  const [activeTab, setActiveTab] = useState(tabParam);
+  const [searchQuery, setSearchQuery] = useState(urlSearch);
+  const [outletFilter, setOutletFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
-  const loadOrders = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const res = await fetch('/api/orders');
-      const data = await res.json();
-      if (data.success && Array.isArray(data.orders)) {
-        setOrders(data.orders);
-        if (selectedOrder) {
-          const fresh = data.orders.find(
-            (o: Order) => o.id === selectedOrder.id || o.order_number === selectedOrder.order_number
-          );
-          if (fresh) setSelectedOrder(fresh);
-        }
-      }
-    } catch (err) {
-      console.error('Failed to fetch orders:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [selectedOrder]);
+  const loadData = () => {
+    setOrders(dataRepository.getOrders());
+    setOutlets(dataRepository.getOutlets());
+  };
 
   useEffect(() => {
-    loadOrders();
+    loadData();
   }, []);
 
-  // Helper functions for order fields
-  const getGuestName = (order: Order) => {
-    if (order.pickup_name) return order.pickup_name;
-    if (order.delivery_name) return order.delivery_name;
-    if (order.table) return `Table ${order.table.table_number}`;
-    return 'Walk-in Guest';
-  };
+  useEffect(() => {
+    if (tabParam) setActiveTab(tabParam);
+  }, [tabParam]);
 
-  const getGuestPhone = (order: Order) => {
-    return order.pickup_phone || order.delivery_phone || '';
-  };
+  useEffect(() => {
+    if (urlSearch) setSearchQuery(urlSearch);
+  }, [urlSearch]);
 
-  // Counters
-  const totalCount = orders.length;
-  const qrCount = orders.filter((o) => o.fulfilment_mode === 'dine_in').length;
-  const pickupCount = orders.filter((o) => o.fulfilment_mode === 'pickup').length;
-  const deliveryCount = orders.filter((o) => o.fulfilment_mode === 'delivery').length;
-  const posCount = orders.filter((o) => o.channel === 'pos').length;
-  const activeCount = orders.filter((o) => ['new', 'accepted', 'preparing', 'ready'].includes(o.status)).length;
+  const handleUpdateStatus = (id: string, status: Order['status'], reason?: string) => {
+    dataRepository.updateOrderStatus(id, status, reason);
+    loadData();
+    if (selectedOrder && selectedOrder.id === id) {
+      setSelectedOrder({ ...selectedOrder, status, cancel_reason: reason || null });
+    }
+  };
 
   // Filtered orders
-  const filteredOrders = orders.filter((order) => {
-    if (activeModeTab === 'pos') {
-      if (order.channel !== 'pos') return false;
-    } else if (activeModeTab !== 'all') {
-      if (order.fulfilment_mode !== activeModeTab) return false;
-    }
+  const filteredOrders = useMemo(() => {
+    return orders.filter((o) => {
+      const oType = o.order_type || o.fulfilment_mode;
+      // 1. Tab matching
+      if (activeTab === 'dine_in' && oType !== 'dine_in') return false;
+      if (activeTab === 'room_service' && oType !== 'room_service') return false;
+      if (activeTab === 'delivery' && oType !== 'delivery') return false;
+      if (activeTab === 'pickup' && oType !== 'pickup') return false;
+      if (activeTab === 'completed' && o.status !== 'completed' && o.status !== 'served') return false;
 
-    if (activeStatus !== 'all' && order.status !== activeStatus) return false;
+      // 2. Outlet filter
+      if (outletFilter !== 'all' && o.outlet_id !== outletFilter) return false;
 
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      const num = (order.order_number || order.id).toLowerCase();
-      const guestName = getGuestName(order).toLowerCase();
-      const guestPhone = getGuestPhone(order).toLowerCase();
-      const table = (order.table?.table_number || '').toLowerCase();
-      if (!num.includes(q) && !guestName.includes(q) && !guestPhone.includes(q) && !table.includes(q)) {
-        return false;
+      // 3. Status filter
+      if (statusFilter !== 'all' && o.status !== statusFilter) return false;
+
+      // 4. Search query
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const num = o.order_number.toLowerCase();
+        const customer = (o.pickup_name || o.delivery_name || '').toLowerCase();
+        const table = (o.table?.table_number || '').toLowerCase();
+        const room = (o.room_number || '').toLowerCase();
+        const itemsList: any[] = o.items || o.order_lines || [];
+        const items = itemsList.map((i: any) => i.menu_item?.name?.toLowerCase() || i.item_name_snapshot?.toLowerCase() || '').join(' ');
+        if (
+          !num.includes(q) &&
+          !customer.includes(q) &&
+          !table.includes(q) &&
+          !room.includes(q) &&
+          !items.includes(q)
+        ) {
+          return false;
+        }
       }
-    }
-    return true;
-  });
 
-  const handleUpdateStatus = async (orderId: string, newStatus: OrderStatus) => {
-    try {
-      // Optimistic update
-      setOrders((prev) =>
-        prev.map((o) =>
-          o.id === orderId || o.order_number === orderId ? { ...o, status: newStatus } : o
-        )
-      );
-      if (selectedOrder && (selectedOrder.id === orderId || selectedOrder.order_number === orderId)) {
-        setSelectedOrder((prev) => (prev ? { ...prev, status: newStatus } : null));
-      }
+      return true;
+    });
+  }, [orders, activeTab, outletFilter, statusFilter, searchQuery]);
 
-      await fetch(`/api/orders/${orderId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
-      });
-      await loadOrders();
-    } catch (err) {
-      console.error('Failed to update order status:', err);
-      await loadOrders();
-    }
+  // Metrics
+  const totalCount = orders.length;
+  const activeCount = orders.filter((o) => ['new', 'accepted', 'preparing', 'ready'].includes(o.status)).length;
+  const dineInCount = orders.filter((o) => (o.order_type || o.fulfilment_mode) === 'dine_in').length;
+  const roomServiceCount = orders.filter((o) => (o.order_type || o.fulfilment_mode) === 'room_service').length;
+  const deliveryCount = orders.filter((o) => (o.order_type || o.fulfilment_mode) === 'delivery').length;
+  const pickupCount = orders.filter((o) => (o.order_type || o.fulfilment_mode) === 'pickup').length;
+
+  const handleExportCSV = () => {
+    const headers = ['Order ID,Source,Outlet,Table/Room,Items,Status,Payment,Time,Amount'];
+    const rows = filteredOrders.map((o) => {
+      const location = o.room_number ? `Room ${o.room_number}` : o.table?.table_number || 'Takeaway/Online';
+      const itemsList: any[] = o.items || o.order_lines || [];
+      const total = o.total_amount_minor || o.total_minor || 0;
+      return [
+        `"#${o.order_number}"`,
+        `"${o.order_type || o.fulfilment_mode}"`,
+        `"${o.outlet?.name || 'Restaurant'}"`,
+        `"${location}"`,
+        `"${itemsList.length} items"`,
+        o.status,
+        o.payment_status || 'Paid',
+        `"${new Date(o.created_at).toLocaleTimeString()}"`,
+        `"₹${(total / 100).toLocaleString()}"`,
+      ].join(',');
+    });
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers, ...rows].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `rajmahal_orders_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
-  const getStatusBadge = (status: OrderStatus) => {
-    switch (status) {
-      case 'new':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-950/80 text-rose-300 border border-rose-600/50">New Order</span>;
-      case 'accepted':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-950/80 text-amber-300 border border-amber-600/50">Accepted</span>;
-      case 'preparing':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-950/80 text-orange-300 border border-orange-600/50">In Kitchen</span>;
-      case 'ready':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-950/80 text-blue-300 border border-blue-600/50">Ready</span>;
-      case 'served':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-950/80 text-emerald-300 border border-emerald-600/50">Served</span>;
-      case 'out_for_delivery':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-950/80 text-purple-300 border border-purple-600/50">Out for Delivery</span>;
-      case 'delivered':
-      case 'collected':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-950/80 text-emerald-300 border border-emerald-600/50">Fulfilled</span>;
-      case 'cancelled':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-red-950/80 text-red-300 border border-red-600/40">Cancelled</span>;
-      default:
-        return <span className="px-2 py-0.5 rounded text-xs bg-gray-800 text-gray-300">{status}</span>;
-    }
-  };
-
-  const getModeBadge = (order: Order) => {
-    if (order.channel === 'pos') {
-      return <span className="flex items-center text-xs text-blue-300 font-medium"><Receipt className="w-3.5 h-3.5 mr-1" /> POS Cashier</span>;
-    }
-    switch (order.fulfilment_mode) {
+  const getSourceIcon = (source: Order['order_type']) => {
+    switch (source) {
       case 'dine_in':
-        return <span className="flex items-center text-xs text-[#E5C388] font-medium"><QrCode className="w-3.5 h-3.5 mr-1" /> Dine-In QR</span>;
-      case 'pickup':
-        return <span className="flex items-center text-xs text-amber-300 font-medium"><Package className="w-3.5 h-3.5 mr-1" /> Takeaway Pickup</span>;
+        return <UtensilsCrossed className="w-3.5 h-3.5 text-[#8F6628]" />;
+      case 'room_service':
+        return <BedDouble className="w-3.5 h-3.5 text-[#B78A48]" />;
       case 'delivery':
-        return <span className="flex items-center text-xs text-emerald-300 font-medium"><Bike className="w-3.5 h-3.5 mr-1" /> Doorstep Delivery</span>;
-      default:
-        return <span className="text-xs text-gray-300">{order.fulfilment_mode}</span>;
+        return <Bike className="w-3.5 h-3.5 text-[#4F0809]" />;
+      case 'pickup':
+        return <Package className="w-3.5 h-3.5 text-[#2E7D32]" />;
     }
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full">
-      {/* ── HEADER ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="space-y-4">
+      {/* ── Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[#E8DCD2]">
         <div>
-          <span className="text-xs uppercase font-bold tracking-widest text-[#B08D57]">
-            F&B Service Central
-          </span>
-          <h1 className="font-heritage text-2xl sm:text-3xl font-bold text-[#FAF8F3] mt-0.5">
-            Orders Management Hub
+          <h1
+            className="text-2xl font-bold text-[#4F0809]"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+          >
+            Palace Orders Management &amp; Fulfillment
           </h1>
-          <p className="text-xs sm:text-sm text-[#A89E92] mt-1">
-            Real-time fulfillment across Dine-in QR, Takeaway pickup, Doorstep delivery & POS counter.
+          <p className="text-xs text-[#81736D] mt-0.5">
+            Real-time multi-channel orders: Table Dine-in, In-suite Room Service, Takeaway pickup &amp; Online delivery
           </p>
         </div>
-
         <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={loadOrders}
-            disabled={isLoading}
-            className="border-[#3D352C] bg-[#241F1A] text-[#FAF8F3] hover:bg-[#3D352C] flex items-center gap-1.5"
+          <button
+            onClick={loadData}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#E8DCD2] bg-white text-[#4F0809] hover:bg-[#F6EAE0] text-xs font-medium shadow-xs transition"
           >
-            <RotateCw className={`w-4 h-4 text-[#B08D57] ${isLoading ? 'animate-spin' : ''}`} />
-            <span>Refresh</span>
-          </Button>
+            <RotateCw className="w-3.5 h-3.5" />
+            Refresh
+          </button>
+          <button
+            onClick={handleExportCSV}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#4F0809] hover:bg-[#6B1518] text-white text-xs font-semibold shadow-xs transition"
+          >
+            <Download className="w-3.5 h-3.5 text-[#D8AA67]" />
+            Export Orders CSV
+          </button>
         </div>
       </div>
 
-      {/* ── METRIC STAT CARDS ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        <div className="p-4 rounded-xl bg-[#241F1A] border border-[#3D352C] text-left">
-          <span className="text-xs text-[#A89E92] block">Total Orders</span>
-          <span className="text-xl sm:text-2xl font-bold font-mono text-[#FAF8F3] mt-1 block">
-            {totalCount}
-          </span>
-          <span className="text-[10px] text-emerald-400 mt-1 block font-medium">All channels</span>
+      {/* ── Metric Summary ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="bg-white border border-[#E8DCD2] rounded-xl p-3 shadow-xs">
+          <span className="text-[10px] text-[#81736D] uppercase font-bold tracking-wider block">Total Orders</span>
+          <span className="text-xl font-bold text-[#302421] mt-0.5 block">{totalCount}</span>
+          <span className="text-[10px] text-[#2E7D32]">All Channels</span>
         </div>
 
-        <div className="p-4 rounded-xl bg-[#241F1A] border border-[#3D352C] text-left">
-          <span className="text-xs text-[#A89E92] block">Active In-Kitchen</span>
-          <span className="text-xl sm:text-2xl font-bold font-mono text-amber-400 mt-1 block">
-            {activeCount}
-          </span>
-          <span className="text-[10px] text-amber-300 mt-1 block font-medium">Pending fulfillment</span>
+        <div className="bg-white border border-[#E8DCD2] rounded-xl p-3 shadow-xs">
+          <span className="text-[10px] text-[#4F0809] uppercase font-bold tracking-wider block">Active in KOT</span>
+          <span className="text-xl font-bold text-[#4F0809] mt-0.5 block">{activeCount}</span>
+          <span className="text-[10px] text-[#81736D]">Pending service</span>
         </div>
 
-        <div className="p-4 rounded-xl bg-[#241F1A] border border-[#3D352C] text-left">
-          <span className="text-xs text-[#A89E92] block">Dine-in QR</span>
-          <span className="text-xl sm:text-2xl font-bold font-mono text-[#E5C388] mt-1 block">
-            {qrCount}
-          </span>
-          <span className="text-[10px] text-[#B08D57] mt-1 block font-medium">Table orders</span>
+        <div className="bg-white border border-[#E8DCD2] rounded-xl p-3 shadow-xs">
+          <span className="text-[10px] text-[#8F6628] uppercase font-bold tracking-wider block">Dine-In</span>
+          <span className="text-xl font-bold text-[#8F6628] mt-0.5 block">{dineInCount}</span>
+          <span className="text-[10px] text-[#81736D]">Table service</span>
         </div>
 
-        <div className="p-4 rounded-xl bg-[#241F1A] border border-[#3D352C] text-left">
-          <span className="text-xs text-[#A89E92] block">Takeaway Pickup</span>
-          <span className="text-xl sm:text-2xl font-bold font-mono text-amber-300 mt-1 block">
-            {pickupCount}
-          </span>
-          <span className="text-[10px] text-amber-400 mt-1 block font-medium">Guest collection</span>
+        <div className="bg-white border border-[#E8DCD2] rounded-xl p-3 shadow-xs">
+          <span className="text-[10px] text-[#B78A48] uppercase font-bold tracking-wider block">Room Service</span>
+          <span className="text-xl font-bold text-[#B78A48] mt-0.5 block">{roomServiceCount}</span>
+          <span className="text-[10px] text-[#81736D]">Suite delivery</span>
         </div>
 
-        <div className="p-4 rounded-xl bg-[#241F1A] border border-[#3D352C] text-left">
-          <span className="text-xs text-[#A89E92] block">Delivery & POS</span>
-          <span className="text-xl sm:text-2xl font-bold font-mono text-emerald-400 mt-1 block">
-            {deliveryCount + posCount}
-          </span>
-          <span className="text-[10px] text-emerald-300 mt-1 block font-medium">Direct & external</span>
+        <div className="bg-white border border-[#E8DCD2] rounded-xl p-3 shadow-xs">
+          <span className="text-[10px] text-[#4F0809] uppercase font-bold tracking-wider block">Online Delivery</span>
+          <span className="text-xl font-bold text-[#4F0809] mt-0.5 block">{deliveryCount}</span>
+          <span className="text-[10px] text-[#81736D]">External courier</span>
+        </div>
+
+        <div className="bg-white border border-[#E8DCD2] rounded-xl p-3 shadow-xs">
+          <span className="text-[10px] text-[#2E7D32] uppercase font-bold tracking-wider block">Pickup</span>
+          <span className="text-xl font-bold text-[#2E7D32] mt-0.5 block">{pickupCount}</span>
+          <span className="text-[10px] text-[#81736D]">Counter takeaway</span>
         </div>
       </div>
 
-      {/* ── CHANNEL & FULFILMENT TABS ── */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#3D352C] pb-3">
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+      {/* ── Sub-Tabs & Filter Controls ── */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white border border-[#E8DCD2] rounded-xl p-3 shadow-xs">
+        <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
           {[
-            { id: 'all', label: 'All Orders', count: totalCount },
-            { id: 'dine_in', label: 'Dine-In QR', count: qrCount, icon: QrCode },
-            { id: 'pickup', label: 'Pickup', count: pickupCount, icon: Package },
-            { id: 'delivery', label: 'Delivery', count: deliveryCount, icon: Bike },
-            { id: 'pos', label: 'POS Counter', count: posCount, icon: Receipt },
-          ].map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeModeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveModeTab(tab.id as any)}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
-                  isActive
-                    ? 'bg-[#670E10] text-[#FAF8F3] border border-[#B08D57]/60 shadow-md'
-                    : 'bg-[#241F1A] text-[#A89E92] border border-transparent hover:border-[#3D352C] hover:text-[#FAF8F3]'
-                }`}
-              >
-                {Icon && <Icon className="w-3.5 h-3.5" />}
-                <span>{tab.label}</span>
-                <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${isActive ? 'bg-[#FAF8F3]/20 text-[#FAF8F3]' : 'bg-[#1C1814] text-[#A89E92]'}`}>
-                  {tab.count}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Status filter dropdown pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-          {(['all', 'new', 'accepted', 'preparing', 'ready', 'served', 'delivered'] as const).map((st) => (
+            { label: 'All Orders', value: 'all', count: totalCount },
+            { label: 'Dine-In', value: 'dine_in', count: dineInCount },
+            { label: 'Room Service', value: 'room_service', count: roomServiceCount },
+            { label: 'Online Delivery', value: 'delivery', count: deliveryCount },
+            { label: 'Takeaway Pickup', value: 'pickup', count: pickupCount },
+            { label: 'Completed', value: 'completed', count: orders.filter((o) => o.status === 'completed' || o.status === 'served').length },
+          ].map((tab) => (
             <button
-              key={st}
-              onClick={() => setActiveStatus(st as any)}
-              className={`px-2.5 py-1 rounded-md text-[11px] font-medium capitalize transition-all cursor-pointer ${
-                activeStatus === st
-                  ? 'bg-[#C59B63] text-[#4A0A0C] font-bold shadow'
-                  : 'bg-[#1C1814] text-[#A89E92] hover:text-[#FAF8F3]'
+              key={tab.value}
+              onClick={() => setActiveTab(tab.value)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 ${
+                activeTab === tab.value
+                  ? 'bg-[#4F0809] text-white shadow-xs'
+                  : 'bg-[#FBF6EF] text-[#81736D] hover:text-[#302421]'
               }`}
             >
-              {st}
+              <span>{tab.label}</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-black/10">
+                {tab.count}
+              </span>
             </button>
           ))}
         </div>
-      </div>
 
-      {/* ── SEARCH & ACTIVE CONTROLS ── */}
-      <div className="flex items-center gap-3 bg-[#241F1A] p-3 rounded-xl border border-[#3D352C]">
-        <div className="relative flex-1">
-          <Search className="w-4 h-4 text-[#A89E92] absolute left-3 top-2.5" />
-          <input
-            type="text"
-            placeholder="Search by order #, guest name, phone, or table number..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-[#1C1814] border border-[#3D352C] rounded-lg pl-9 pr-3 py-1.5 text-xs text-[#FAF8F3] placeholder-[#A89E92] focus:outline-none focus:border-[#B08D57]"
-          />
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="relative w-full sm:w-56">
+            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#81736D]" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search order #, table, suite..."
+              className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-[#E8DCD2] text-xs bg-[#FBF6EF]/50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#4F0809]"
+            />
+          </div>
+
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-2.5 py-1.5 rounded-lg border border-[#E8DCD2] text-xs bg-white focus:ring-1 focus:ring-[#4F0809] focus:outline-none"
+          >
+            <option value="all">All Statuses</option>
+            <option value="new">New</option>
+            <option value="accepted">Accepted</option>
+            <option value="preparing">Preparing</option>
+            <option value="ready">Ready</option>
+            <option value="served">Served</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
         </div>
       </div>
 
-      {/* ── ORDERS TABLE ── */}
-      <div className="rounded-2xl border border-[#3D352C] bg-[#241F1A] overflow-hidden shadow-xl">
+      {/* ── Working Orders Table ── */}
+      <div className="bg-white border border-[#E8DCD2] rounded-xl shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-[#1C1814] text-[#B08D57] uppercase font-bold tracking-wider border-b border-[#3D352C]">
-              <tr>
-                <th className="py-3 px-4">Order Ref</th>
-                <th className="py-3 px-4">Channel / Mode</th>
-                <th className="py-3 px-4">Guest Info</th>
-                <th className="py-3 px-4">Outlet</th>
-                <th className="py-3 px-4">Items Summary</th>
-                <th className="py-3 px-4">Amount &amp; Payment</th>
-                <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-4 text-right">Actions</th>
+          <table className="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr className="border-b border-[#E8DCD2] bg-[#FBF6EF]/75 text-[10px] font-bold uppercase tracking-wider text-[#81736D]">
+                <th className="py-2.5 px-3">Order ID</th>
+                <th className="py-2.5 px-3">Source Channel</th>
+                <th className="py-2.5 px-3">Outlet Venue</th>
+                <th className="py-2.5 px-3">Table / Room</th>
+                <th className="py-2.5 px-3">Items Ordered</th>
+                <th className="py-2.5 px-3">Kitchen Status</th>
+                <th className="py-2.5 px-3">Order Time</th>
+                <th className="py-2.5 px-3">Total Amount</th>
+                <th className="py-2.5 px-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#3D352C]">
+            <tbody className="divide-y divide-[#E8DCD2]/70 text-[#302421]">
               {filteredOrders.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-[#A89E92]">
-                    No orders match your filter criteria.
+                  <td colSpan={9} className="py-8 text-center text-xs text-[#81736D]">
+                    No orders found matching your search or filters.
                   </td>
                 </tr>
               ) : (
                 filteredOrders.map((order) => {
-                  const refCode = order.order_number || order.id.slice(0, 8);
-                  const lines = order.order_lines || [];
-                  const itemsCount = lines.reduce((sum, l) => sum + l.quantity, 0);
-                  const itemsSummary = lines.map((l) => `${l.quantity}x ${l.item_name_snapshot}`).join(', ');
+                  const locationBadge = order.room_number ? (
+                    <span className="px-2 py-0.5 rounded bg-[#F6EAE0] font-mono font-semibold text-[#4F0809] text-[11px]">
+                      Room {order.room_number}
+                    </span>
+                  ) : order.table?.table_number ? (
+                    <span className="px-2 py-0.5 rounded bg-[#F6EAE0] font-mono font-semibold text-[#4F0809] text-[11px]">
+                      {order.table.table_number}
+                    </span>
+                  ) : order.order_type === 'delivery' ? (
+                    <span className="px-2 py-0.5 rounded bg-[#F6EAE0] text-[#302421] text-[11px]">Online</span>
+                  ) : (
+                    <span className="px-2 py-0.5 rounded bg-[#F6EAE0] text-[#302421] text-[11px]">Counter</span>
+                  );
+
+                  const itemsList: any[] = order.items || order.order_lines || [];
+                  const itemsCount = itemsList.reduce((sum: number, it: any) => sum + (it.quantity || 1), 0);
+                  const orderSource = order.order_type || order.fulfilment_mode || 'dine_in';
+                  const total = order.total_amount_minor || order.total_minor || 0;
 
                   return (
-                    <tr
-                      key={order.id}
-                      className="hover:bg-[#2A2420] transition-colors cursor-pointer"
-                      onClick={() => setSelectedOrder(order)}
-                    >
-                      <td className="py-3.5 px-4">
-                        <span className="font-mono font-bold text-[#FAF8F3] block">
-                          {refCode}
-                        </span>
-                        <span className="text-[10px] text-[#A89E92]">
-                          {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
+                    <tr key={order.id} className="hover:bg-[#FBF6EF]/50 transition-colors">
+                      <td className="py-2.5 px-3 font-semibold text-[#4F0809] font-mono">
+                        #{order.order_number}
                       </td>
-
-                      <td className="py-3.5 px-4">
-                        <div className="space-y-0.5">
-                          {getModeBadge(order)}
-                          {order.table && (
-                            <span className="text-[11px] text-[#A89E92] block">
-                              Table #{order.table.table_number}
-                            </span>
-                          )}
-                          {order.delivery_address && (
-                            <span className="text-[11px] text-[#A89E92] truncate max-w-[140px] block" title={order.delivery_address}>
-                              {order.delivery_address}
-                            </span>
-                          )}
+                      <td className="py-2.5 px-3">
+                        <div className="flex items-center gap-1.5 capitalize font-medium text-[#302421]">
+                          {getSourceIcon(orderSource as any)}
+                          <span>{orderSource.replace('_', ' ')}</span>
                         </div>
                       </td>
-
-                      <td className="py-3.5 px-4">
-                        <span className="font-semibold text-[#FAF8F3] block truncate max-w-[130px]">
-                          {getGuestName(order)}
-                        </span>
-                        <span className="text-[10px] text-[#A89E92] block">
-                          {getGuestPhone(order) || '—'}
+                      <td className="py-2.5 px-3 text-[#302421]">{order.outlet?.name || 'Restaurant'}</td>
+                      <td className="py-2.5 px-3">{locationBadge}</td>
+                      <td className="py-2.5 px-3 font-medium">
+                        {itemsCount} {itemsCount === 1 ? 'item' : 'items'}
+                      </td>
+                      <td className="py-2.5 px-3">
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                            order.status === 'ready'
+                              ? 'bg-[#2E7D32]/15 text-[#2E7D32]'
+                              : order.status === 'preparing'
+                              ? 'bg-amber-100 text-amber-800'
+                              : order.status === 'accepted'
+                              ? 'bg-blue-100 text-blue-800'
+                              : order.status === 'completed' || order.status === 'served'
+                              ? 'bg-[#81736D]/15 text-[#81736D]'
+                              : 'bg-red-100 text-red-700'
+                          }`}
+                        >
+                          {order.status}
                         </span>
                       </td>
-
-                      <td className="py-3.5 px-4 text-[#D4CBBB]">
-                        <span className="capitalize">{order.outlet_id ? 'Restaurant' : 'Café'}</span>
+                      <td className="py-2.5 px-3 text-[#81736D]">
+                        {new Date(order.created_at).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
                       </td>
-
-                      <td className="py-3.5 px-4 max-w-[200px]">
-                        <span className="text-[11px] text-[#FAF8F3] line-clamp-1">
-                          {itemsSummary || `${itemsCount} item(s)`}
-                        </span>
-                        <span className="text-[10px] text-[#A89E92]">
-                          {itemsCount} item{itemsCount > 1 ? 's' : ''}
-                        </span>
+                      <td className="py-2.5 px-3 font-bold text-[#302421]">
+                        ₹{(total / 100).toLocaleString('en-IN')}
                       </td>
-
-                      <td className="py-3.5 px-4">
-                        <span className="font-bold text-[#E5C388] block font-mono">
-                          {formatMoney(order.total_minor)}
-                        </span>
-                        <span className="text-[10px] text-emerald-400 capitalize">
-                          {order.payments?.[0]?.payment_status || 'Paid via UPI'}
-                        </span>
-                      </td>
-
-                      <td className="py-3.5 px-4">
-                        {getStatusBadge(order.status)}
-                      </td>
-
-                      <td className="py-3.5 px-4 text-right" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-end gap-1.5">
-                          {order.status === 'new' && (
-                            <Button
-                              size="sm"
-                              onClick={() => handleUpdateStatus(order.id, 'accepted')}
-                              className="bg-amber-600 hover:bg-amber-700 text-white text-[11px] px-2.5 py-1"
-                            >
-                              Accept
-                            </Button>
-                          )}
-                          {order.status === 'accepted' && (
-                            <Button
-                              size="sm"
-                              onClick={() => handleUpdateStatus(order.id, 'preparing')}
-                              className="bg-orange-600 hover:bg-orange-700 text-white text-[11px] px-2.5 py-1"
-                            >
-                              Cook
-                            </Button>
-                          )}
-                          {order.status === 'preparing' && (
-                            <Button
-                              size="sm"
-                              onClick={() => handleUpdateStatus(order.id, 'ready')}
-                              className="bg-blue-600 hover:bg-blue-700 text-white text-[11px] px-2.5 py-1"
-                            >
-                              Ready
-                            </Button>
-                          )}
-                          {order.status === 'ready' && (
-                            <Button
-                              size="sm"
-                              onClick={() => handleUpdateStatus(order.id, order.fulfilment_mode === 'delivery' ? 'out_for_delivery' : 'served')}
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] px-2.5 py-1"
-                            >
-                              {order.fulfilment_mode === 'delivery' ? 'Dispatch' : 'Serve'}
-                            </Button>
-                          )}
-                          {order.status === 'out_for_delivery' && (
-                            <Button
-                              size="sm"
-                              onClick={() => handleUpdateStatus(order.id, 'delivered')}
-                              className="bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] px-2.5 py-1"
-                            >
-                              Deliver
-                            </Button>
-                          )}
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setSelectedOrder(order)}
-                            className="text-[#A89E92] hover:text-[#FAF8F3] p-1"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                        </div>
+                      <td className="py-2.5 px-3 text-right">
+                        <button
+                          onClick={() => setSelectedOrder(order)}
+                          className="px-2.5 py-1 rounded bg-[#FBF6EF] hover:bg-[#E8DCD2] text-[#4F0809] font-semibold text-[11px] transition flex items-center gap-1 ml-auto"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          View
+                        </button>
                       </td>
                     </tr>
                   );
@@ -465,208 +389,179 @@ export default function DashboardOrdersPage() {
         </div>
       </div>
 
-      {/* ── SLIDE-OVER / MODAL: ORDER INSPECTOR ── */}
+      {/* ── Order Detail Modal ── */}
       {selectedOrder && (
-        <div
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
-          onClick={() => setSelectedOrder(null)}
-        >
-          <div
-            className="w-full max-w-lg rounded-2xl bg-[#241F1A] border border-[#3D352C] p-6 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="flex items-start justify-between border-b border-[#3D352C] pb-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-xl font-bold text-[#FAF8F3]">
-                    {selectedOrder.order_number || selectedOrder.id}
-                  </span>
-                  {getStatusBadge(selectedOrder.status)}
-                </div>
-                <span className="text-xs text-[#A89E92] mt-1 block">
-                  Received on {new Date(selectedOrder.created_at).toLocaleString()}
-                </span>
-              </div>
-              <button
-                onClick={() => setSelectedOrder(null)}
-                className="p-1 rounded-lg text-[#A89E92] hover:text-white hover:bg-[#3D352C]"
-              >
-                <XCircle className="w-6 h-6" />
-              </button>
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white border border-[#E8DCD2] rounded-2xl max-w-lg w-full p-5 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => setSelectedOrder(null)}
+              className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-[#FBF6EF] text-[#81736D]"
+            >
+              ✕
+            </button>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="font-mono font-bold text-sm text-[#4F0809]">
+                #{selectedOrder.order_number}
+              </span>
+              <span className="px-2 py-0.5 rounded-full bg-[#4F0809]/10 text-[#4F0809] text-[10px] font-bold uppercase tracking-wider">
+                {selectedOrder.status}
+              </span>
             </div>
+            <h2
+              className="text-xl font-bold text-[#4F0809] mb-1"
+              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+            >
+              Palace KOT Order Folio
+            </h2>
+            <p className="text-xs text-[#81736D] mb-4">
+              Placed at {new Date(selectedOrder.created_at).toLocaleTimeString()} via {(selectedOrder.order_type || selectedOrder.fulfilment_mode || 'dine_in').replace('_', ' ')}
+            </p>
 
-            {/* Fulfilment & Guest Card */}
-            <div className="p-4 rounded-xl bg-[#1C1814] border border-[#3D352C] space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] text-[#A89E92] uppercase font-bold tracking-wider">Mode</span>
-                {getModeBadge(selectedOrder)}
-              </div>
-              {selectedOrder.table && (
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-[#A89E92]">Assigned Table:</span>
-                  <span className="font-semibold text-[#FAF8F3]">Table #{selectedOrder.table.table_number}</span>
-                </div>
-              )}
-              {selectedOrder.delivery_address && (
-                <div className="text-xs space-y-1">
-                  <span className="text-[#A89E92] block">Delivery Destination:</span>
-                  <p className="font-medium text-[#FAF8F3] bg-[#2A2420] p-2 rounded border border-[#3D352C]/60 flex items-start gap-1.5">
-                    <MapPin className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                    <span>{selectedOrder.delivery_address}</span>
-                  </p>
-                </div>
-              )}
-              <div className="pt-2 border-t border-[#2A2420] flex items-center justify-between text-xs">
+            <div className="space-y-3 text-xs">
+              {/* Location & Context */}
+              <div className="p-3 bg-[#FBF6EF] rounded-xl border border-[#E8DCD2] flex justify-between items-center">
                 <div>
-                  <span className="text-[#A89E92] block text-[10px]">Guest Name</span>
-                  <span className="font-semibold text-[#FAF8F3]">{getGuestName(selectedOrder)}</span>
-                </div>
-                {getGuestPhone(selectedOrder) && (
-                  <div className="text-right">
-                    <span className="text-[#A89E92] block text-[10px]">Contact</span>
-                    <a href={`tel:${getGuestPhone(selectedOrder)}`} className="text-[#B08D57] hover:underline flex items-center gap-1">
-                      <Phone className="w-3 h-3" />
-                      <span>{getGuestPhone(selectedOrder)}</span>
-                    </a>
+                  <div className="text-[10px] text-[#81736D] uppercase">Destination Location</div>
+                  <div className="font-semibold text-sm text-[#4F0809] mt-0.5">
+                    {selectedOrder.room_number
+                      ? `Suite Room ${selectedOrder.room_number}`
+                      : selectedOrder.table?.table_number
+                      ? `Table ${selectedOrder.table.table_number}`
+                      : 'Takeaway / Delivery Delivery'}
                   </div>
-                )}
+                </div>
+                <div className="text-right">
+                  <div className="text-[10px] text-[#81736D] uppercase">Outlet Venue</div>
+                  <div className="font-semibold text-[#302421] mt-0.5">
+                    {selectedOrder.outlet?.name || 'Rajasthani Restaurant'}
+                  </div>
+                </div>
               </div>
-            </div>
 
-            {/* Itemized Lines */}
-            <div className="space-y-3">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-[#B08D57]">
-                Order Items &amp; Modifiers
-              </h4>
-              <div className="divide-y divide-[#3D352C] border-y border-[#3D352C]">
-                {(selectedOrder.order_lines || []).map((line: OrderLine, idx: number) => (
-                  <div key={idx} className="py-2.5 flex items-start justify-between text-xs">
+              {/* Items Breakdown */}
+              <div className="border border-[#E8DCD2] rounded-xl p-3 bg-white space-y-2">
+                <div className="font-semibold text-[#4F0809] pb-1 border-b border-[#E8DCD2]">
+                  Order Items Breakdown
+                </div>
+                {(((selectedOrder.items || selectedOrder.order_lines || []) as any[])).map((it: any, idx: number) => (
+                  <div key={idx} className="flex justify-between items-center text-xs">
                     <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-[#FAF8F3]">{line.quantity}x</span>
-                        <span className="font-medium text-[#FAF8F3]">{line.item_name_snapshot}</span>
-                      </div>
-                      {line.modifiers_snapshot && line.modifiers_snapshot.length > 0 && (
-                        <div className="text-[11px] text-[#A89E92] pl-5 mt-0.5 space-y-0.5">
-                          {line.modifiers_snapshot.map((m: ModifierSnapshot, mIdx: number) => (
-                            <span key={mIdx} className="block">• {m.name} (+{formatMoney(m.price_minor)})</span>
-                          ))}
-                        </div>
-                      )}
-                      {line.notes && (
-                        <p className="text-[11px] text-amber-300 italic pl-5 mt-0.5">
-                          Note: {line.notes}
-                        </p>
-                      )}
+                      <span className="font-semibold text-[#302421]">{it.quantity || 1}x </span>
+                      <span>{it.menu_item?.name || it.item_name_snapshot || 'Palace Specialty'}</span>
+                      {it.notes && <div className="text-[10px] text-[#81736D] italic">Note: {it.notes}</div>}
                     </div>
-                    <span className="font-mono text-[#E5C388] font-semibold">
-                      {formatMoney(line.line_total_minor)}
+                    <span className="font-medium text-[#302421]">
+                      ₹{(((it.quantity || 1) * (it.unit_price_minor || it.unit_price_snapshot_minor || 0)) / 100).toLocaleString('en-IN')}
                     </span>
                   </div>
                 ))}
-              </div>
-            </div>
 
-            {/* Bill & Tax Breakdown */}
-            <div className="p-4 rounded-xl bg-[#1C1814] border border-[#3D352C] space-y-2 text-xs">
-              <div className="flex justify-between text-[#A89E92]">
-                <span>Subtotal</span>
-                <span className="font-mono text-[#FAF8F3]">{formatMoney(selectedOrder.subtotal_minor)}</span>
+                {(() => {
+                  const modalTotal = selectedOrder.total_amount_minor || selectedOrder.total_minor || 0;
+                  return (
+                    <div className="pt-2 border-t border-[#E8DCD2] space-y-1 text-[11px] text-[#81736D]">
+                      <div className="flex justify-between">
+                        <span>Subtotal:</span>
+                        <span>₹{((modalTotal * 0.95) / 100).toFixed(0)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Taxes &amp; Royal Service (5%):</span>
+                        <span>₹{((modalTotal * 0.05) / 100).toFixed(0)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm font-bold text-[#4F0809] pt-1 border-t border-[#E8DCD2]">
+                        <span>Total Amount:</span>
+                        <span>₹{(modalTotal / 100).toLocaleString('en-IN')}</span>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
-              <div className="flex justify-between text-[#A89E92]">
-                <span>Food GST (5%)</span>
-                <span className="font-mono text-[#FAF8F3]">{formatMoney(selectedOrder.tax_minor)}</span>
-              </div>
-              {selectedOrder.delivery_fee_minor ? (
-                <div className="flex justify-between text-[#A89E92]">
-                  <span>Doorstep Delivery Fee</span>
-                  <span className="font-mono text-[#FAF8F3]">{formatMoney(selectedOrder.delivery_fee_minor)}</span>
+
+              {/* Status Action Transitions */}
+              <div className="p-3 bg-[#FBF6EF] rounded-xl border border-[#E8DCD2]">
+                <div className="text-[10px] font-bold uppercase text-[#81736D] mb-2">
+                  Update KOT Progression Status
                 </div>
-              ) : null}
-              <div className="pt-2 border-t border-[#3D352C] flex justify-between text-sm font-bold text-[#E5C388]">
-                <span>Total Amount</span>
-                <span className="font-mono text-base">{formatMoney(selectedOrder.total_minor)}</span>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {selectedOrder.status === 'new' && (
+                    <button
+                      onClick={() => handleUpdateStatus(selectedOrder.id, 'accepted')}
+                      className="px-3 py-1.5 rounded-lg bg-[#4F0809] text-white text-xs font-semibold hover:bg-[#6B1518] transition"
+                    >
+                      Accept Order
+                    </button>
+                  )}
+                  {selectedOrder.status === 'accepted' && (
+                    <button
+                      onClick={() => handleUpdateStatus(selectedOrder.id, 'preparing')}
+                      className="px-3 py-1.5 rounded-lg bg-[#B78A48] text-white text-xs font-semibold hover:bg-[#8F6628] transition"
+                    >
+                      Start Preparing in Kitchen
+                    </button>
+                  )}
+                  {selectedOrder.status === 'preparing' && (
+                    <button
+                      onClick={() => handleUpdateStatus(selectedOrder.id, 'ready')}
+                      className="px-3 py-1.5 rounded-lg bg-[#2E7D32] text-white text-xs font-semibold hover:bg-[#256629] transition"
+                    >
+                      Mark Ready at Pass
+                    </button>
+                  )}
+                  {selectedOrder.status === 'ready' && (
+                    <button
+                      onClick={() => handleUpdateStatus(selectedOrder.id, 'served')}
+                      className="px-3 py-1.5 rounded-lg bg-[#2E7D32] text-white text-xs font-semibold hover:bg-[#256629] transition"
+                    >
+                      Mark Served to Guest
+                    </button>
+                  )}
+                  {selectedOrder.status === 'served' && (
+                    <button
+                      onClick={() => handleUpdateStatus(selectedOrder.id, 'completed')}
+                      className="px-3 py-1.5 rounded-lg bg-[#4F0809] text-white text-xs font-semibold hover:bg-[#6B1518] transition"
+                    >
+                      Complete &amp; Settle Folio
+                    </button>
+                  )}
+                  {selectedOrder.status !== 'cancelled' && selectedOrder.status !== 'completed' && (
+                    <button
+                      onClick={() => handleUpdateStatus(selectedOrder.id, 'cancelled', 'Guest cancelled')}
+                      className="px-3 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 text-xs transition"
+                    >
+                      Cancel Order
+                    </button>
+                  )}
+                </div>
               </div>
-              <div className="pt-1 flex items-center justify-between text-[11px] text-emerald-400">
-                <span>Payment Settlement:</span>
-                <span className="font-semibold uppercase">{selectedOrder.payments?.[0]?.payment_status || 'Paid via UPI'}</span>
-              </div>
-            </div>
 
-            {/* Actions in Modal */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => window.print()}
-                className="border-[#3D352C] text-[#FAF8F3] hover:bg-[#3D352C] flex items-center gap-1.5"
-              >
-                <Printer className="w-4 h-4 text-[#B08D57]" />
-                <span>Print Invoice</span>
-              </Button>
-
-              <div className="flex items-center gap-2">
-                {selectedOrder.status !== 'cancelled' && selectedOrder.status !== 'delivered' && selectedOrder.status !== 'served' && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleUpdateStatus(selectedOrder.id, 'cancelled')}
-                    className="text-rose-400 hover:bg-rose-950/60"
-                  >
-                    Cancel Order
-                  </Button>
-                )}
-                {selectedOrder.status === 'new' && (
-                  <Button
-                    size="sm"
-                    onClick={() => handleUpdateStatus(selectedOrder.id, 'accepted')}
-                    className="bg-amber-600 hover:bg-amber-700 text-white"
-                  >
-                    Accept Order
-                  </Button>
-                )}
-                {selectedOrder.status === 'accepted' && (
-                  <Button
-                    size="sm"
-                    onClick={() => handleUpdateStatus(selectedOrder.id, 'preparing')}
-                    className="bg-orange-600 hover:bg-orange-700 text-white"
-                  >
-                    Send to Kitchen
-                  </Button>
-                )}
-                {selectedOrder.status === 'preparing' && (
-                  <Button
-                    size="sm"
-                    onClick={() => handleUpdateStatus(selectedOrder.id, 'ready')}
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    Mark Ready
-                  </Button>
-                )}
-                {selectedOrder.status === 'ready' && (
-                  <Button
-                    size="sm"
-                    onClick={() => handleUpdateStatus(selectedOrder.id, selectedOrder.fulfilment_mode === 'delivery' ? 'out_for_delivery' : 'served')}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                  >
-                    {selectedOrder.fulfilment_mode === 'delivery' ? 'Out for Delivery' : 'Mark Served'}
-                  </Button>
-                )}
-                {selectedOrder.status === 'out_for_delivery' && (
-                  <Button
-                    size="sm"
-                    onClick={() => handleUpdateStatus(selectedOrder.id, 'delivered')}
-                    className="bg-emerald-700 hover:bg-emerald-800 text-white"
-                  >
-                    Mark Delivered
-                  </Button>
-                )}
+              {/* Actions Footer */}
+              <div className="pt-2 flex items-center justify-between">
+                <button
+                  onClick={() => window.print()}
+                  className="px-3 py-1.5 rounded-lg border border-[#E8DCD2] text-[#4F0809] hover:bg-[#FBF6EF] text-xs font-semibold flex items-center gap-1.5 transition"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  Print Receipt Bill
+                </button>
+                <button
+                  onClick={() => setSelectedOrder(null)}
+                  className="px-4 py-1.5 rounded-lg bg-[#4F0809] text-white text-xs font-semibold hover:bg-[#6B1518] transition"
+                >
+                  Close Drawer
+                </button>
               </div>
             </div>
           </div>
         </div>
       )}
     </div>
+  );
+}
+
+export default function DashboardOrdersPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-xs text-[#81736D]">Loading Palace Orders...</div>}>
+      <OrdersContent />
+    </Suspense>
   );
 }

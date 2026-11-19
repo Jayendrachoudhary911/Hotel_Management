@@ -44,11 +44,14 @@ export async function updateSession(request: NextRequest) {
 
   // Protected routes - redirect to login if not authenticated
   const isProtectedRoute = request.nextUrl.pathname.startsWith('/dashboard');
-  const isAuthRoute = request.nextUrl.pathname.startsWith('/auth');
+  const isAuthRoute =
+    request.nextUrl.pathname.startsWith('/auth') ||
+    request.nextUrl.pathname === '/login' ||
+    request.nextUrl.pathname === '/signup';
 
   if (isProtectedRoute && !user) {
     const url = request.nextUrl.clone();
-    url.pathname = '/auth/login';
+    url.pathname = '/login';
     url.searchParams.set('redirect', request.nextUrl.pathname);
     return NextResponse.redirect(url);
   }

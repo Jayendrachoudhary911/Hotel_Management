@@ -31,92 +31,7 @@ export default function DashboardAuditPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
-  const auditRecords: AuditRecord[] = [
-    {
-      id: 'aud-109',
-      timestamp: '2026-10-18 19:12:44',
-      actor: 'Ranveer Rathore',
-      actorRole: 'Duty Manager',
-      category: 'discount',
-      entity: 'Order / Bill',
-      reference: 'INV-202610-0041',
-      description: 'Applied 10% Royal Heritage Club Courtesy Discount (-₹157.50)',
-      reason: 'VIP guest loyalty privilege authorized by GM',
-      terminal: 'POS Terminal 1',
-    },
-    {
-      id: 'aud-108',
-      timestamp: '2026-10-18 17:45:10',
-      actor: 'Maharaja Vikram Singh',
-      actorRole: 'Owner / Admin',
-      category: 'price_override',
-      entity: 'Menu Item',
-      reference: 'Mewari Dal Baati Churma Thali',
-      description: 'Base price updated from ₹480 to ₹520 (+₹40.00)',
-      reason: 'Seasonal organic ghee procurement revision',
-      terminal: 'Admin Console (Desktop)',
-    },
-    {
-      id: 'aud-107',
-      timestamp: '2026-10-18 15:30:22',
-      actor: 'Ranveer Rathore',
-      actorRole: 'Duty Manager',
-      category: 'void_refund',
-      entity: 'Order Line',
-      reference: 'ORD-202610-0038',
-      description: 'Voided 1x Masala Chai (₹120) before preparation started',
-      reason: 'Guest changed mind for Cold Brew Coffee',
-      terminal: 'Café POS Station',
-    },
-    {
-      id: 'aud-106',
-      timestamp: '2026-10-18 14:10:05',
-      actor: 'Divya Shekhawat',
-      actorRole: 'Front Desk',
-      category: 'status_override',
-      entity: 'Chamber Room 102',
-      reference: 'Room 102 (Haveli Suite)',
-      description: 'Manually expedited housekeeping status from "Dirty" to "Cleaning"',
-      reason: 'Early guest arrival anticipated at 14:30',
-      terminal: 'Front Desk Terminal',
-    },
-    {
-      id: 'aud-105',
-      timestamp: '2026-10-18 11:20:18',
-      actor: 'Maharaja Vikram Singh',
-      actorRole: 'Owner / Admin',
-      category: 'role_change',
-      entity: 'Staff Account',
-      reference: 'User: Kishan Lal',
-      description: 'Promoted role from "Trainee" to "Cashier / POS Operator"',
-      reason: 'Probation completed with cashier certification',
-      terminal: 'Admin Console',
-    },
-    {
-      id: 'aud-104',
-      timestamp: '2026-10-17 21:05:30',
-      actor: 'Kishan Lal',
-      actorRole: 'Cashier',
-      category: 'void_refund',
-      entity: 'Invoice',
-      reference: 'INV-202610-0032',
-      description: 'Issued Full UPI Refund for cancelled delivery order (-₹840.00)',
-      reason: 'Address beyond active delivery radius; customer notified',
-      terminal: 'POS Terminal 2',
-    },
-    {
-      id: 'aud-103',
-      timestamp: '2026-10-17 14:15:00',
-      actor: 'System Automation',
-      actorRole: 'Cron Worker',
-      category: 'security',
-      entity: 'Database Backup',
-      reference: 'PG-DUMP-20261017',
-      description: 'Automated encrypted PostgreSQL database snapshot taken',
-      reason: 'Scheduled daily off-site snapshot backup',
-      terminal: 'Automated Server',
-    },
-  ];
+  const [auditRecords] = useState<AuditRecord[]>([]);
 
   const filteredRecords = auditRecords.filter((rec) => {
     if (selectedCategory !== 'all' && rec.category !== selectedCategory) return false;
@@ -227,7 +142,16 @@ export default function DashboardAuditPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#3D352C]">
-              {filteredRecords.map((rec) => (
+              {filteredRecords.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center text-[#A89E92]">
+                    <ShieldCheck className="w-8 h-8 text-[#A89E92]/50 mx-auto mb-2" />
+                    <p className="text-sm font-medium">No audit log records found</p>
+                    <p className="text-xs text-[#A89E92]/60 mt-0.5">Manager approvals and security actions will be recorded here automatically.</p>
+                  </td>
+                </tr>
+              ) : (
+                filteredRecords.map((rec) => (
                 <tr key={rec.id} className="hover:bg-[#2A2420] transition-colors">
                   <td className="py-3.5 px-4 font-mono text-[#A89E92] text-[11px] whitespace-nowrap">
                     {rec.timestamp}
@@ -258,7 +182,8 @@ export default function DashboardAuditPage() {
                     {rec.terminal}
                   </td>
                 </tr>
-              ))}
+              ))
+            )}
             </tbody>
           </table>
         </div>

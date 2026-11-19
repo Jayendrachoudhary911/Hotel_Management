@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./figma-heritage.css";
 
 /* ── Heritage Design Tokens ── */
 @layer base {
@@ -158,23 +159,28 @@ body {
   background: linear-gradient(90deg, transparent, var(--gold), transparent);
 }
 
-/* ── Custom Scrollbars (Heritage) ── */
+/* ── Hide Scrollbars (Clean viewport without side scroller) ── */
+html, body {
+  overflow-x: hidden;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
-::-webkit-scrollbar-track {
-  background: var(--ivory-dark);
+* {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
 }
 
-::-webkit-scrollbar-thumb {
-  background: var(--gold);
-  border-radius: 9999px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--gold-dark);
+*::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 /* Staff dashboard scrollbars */
