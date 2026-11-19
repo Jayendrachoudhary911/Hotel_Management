@@ -90,8 +90,7 @@ async function HomeContent() {
   const quickLinks: { label: string; href: string; icon: HeritageIconName }[] = [
     { label: 'Heritage Rooms', href: '/rooms', icon: 'arch' },
     { label: 'Hotel & Celebrations', href: '/hotel', icon: 'pavilion' },
-    { label: 'Rajasthani Restaurant', href: '/restaurant', icon: 'dining' },
-    { label: 'Café & Lounge', href: '/cafe', icon: 'cafe' },
+    { label: 'Restaurant & Café', href: '/restaurant', icon: 'dining' },
   ];
 
   return (
@@ -521,7 +520,7 @@ async function HomeContent() {
 
                 <div className="grid grid-cols-2 gap-3 mt-4">
                   <Link
-                    href="/cafe"
+                    href="/restaurant#cafe"
                     className="flex items-center justify-center space-x-2 h-11 rounded-[6px] text-xs sm:text-sm font-semibold transition-all"
                     style={{
                       backgroundColor: 'var(--antique-gold, #d8aa67)',

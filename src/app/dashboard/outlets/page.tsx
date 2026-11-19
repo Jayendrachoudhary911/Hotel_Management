@@ -1473,7 +1473,7 @@ export default function PalaceOutletsPage() {
               </Link>
 
               <Link
-                href="/cafe"
+                href="/restaurant#cafe"
                 target="_blank"
                 className="flex items-center justify-between p-3.5 rounded-xl border border-[#E9DCCE] bg-[#FBF6EF] hover:bg-[#F6EEE5] transition group"
               >

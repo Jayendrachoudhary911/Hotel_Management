@@ -159,8 +159,7 @@ export const Navbar: React.FC = () => {
   const navLinks = [
     { label: 'Home', href: '/' },
     { label: 'Hotel', href: '/hotel' },
-    { label: 'Restaurants', href: '/restaurant' },
-    { label: 'Café', href: '/cafe' },
+    { label: 'Restaurant & Café', href: '/restaurant' },
     { label: 'Contact', href: '/#contact' },
   ];
 
@@ -339,7 +338,7 @@ export const Navbar: React.FC = () => {
                     </Link>
 
                     <Link
-                      href="/cafe"
+                      href="/restaurant"
                       onClick={() => setProfileOpen(false)}
                       className="flex items-center space-x-3 px-4 py-2.5 text-[#380506] hover:bg-[#F5EFE6] transition-colors"
                     >

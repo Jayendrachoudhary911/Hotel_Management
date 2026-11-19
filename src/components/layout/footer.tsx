@@ -120,12 +120,7 @@ export const Footer: React.FC = () => {
               </li>
               <li>
                 <Link href="/restaurant" className="hover:text-[#d8aa67] transition-colors">
-                  Rajasthani Restaurant
-                </Link>
-              </li>
-              <li>
-                <Link href="/cafe" className="hover:text-[#d8aa67] transition-colors">
-                  Café &amp; Lounge
+                  Restaurant &amp; Café
                 </Link>
               </li>
               <li>

@@ -246,7 +246,7 @@ export default function AdminDashboardPage() {
           Housekeeping
         </Link>
         <Link
-          href="/cafe"
+          href="/restaurant"
           className="bg-white hover:bg-stone-50 text-stone-700 border border-[#E8DCD2] px-3.5 py-1 rounded-full text-xs font-medium shrink-0 transition-colors flex items-center space-x-1.5"
         >
           <QrCode className="w-3 h-3 text-[#B78A48]" />

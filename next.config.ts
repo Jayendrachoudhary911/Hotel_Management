@@ -31,6 +31,11 @@ const nextConfig: NextConfig = {
         destination: "/hotel#party-hall-enquiry",
         permanent: true,
       },
+      {
+        source: "/cafe",
+        destination: "/restaurant#cafe",
+        permanent: true,
+      },
     ];
   },
 };
