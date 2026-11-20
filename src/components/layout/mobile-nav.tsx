@@ -16,7 +16,8 @@ export const MobileNav: React.FC = () => {
   const items = [
     { label: 'Home', href: '/', icon: Home },
     { label: 'Hotel', href: '/hotel', icon: BedDouble },
-    { label: 'Dining', href: '/restaurant', icon: Utensils },
+    { label: 'Menu', href: '/menu', icon: Utensils },
+    { label: 'Dining', href: '/restaurant', icon: Coffee },
     { label: 'Book', href: '/book', icon: Calendar },
   ];
 

@@ -113,6 +113,7 @@ flowchart TD
 | **Instant Booking Engine** | `/book` | Stay date picker, guest party size counters, automated night & 5% GST tax calculation, instant booking confirmation, reference code generation, and direct Supabase database insertion. |
 | **Royal Darbar Banquet Hall** | `/hotel#party-hall-enquiry` | Palace wedding & banquet showcase, package breakdown (*Maharani*, *Rajwada*, *Royal Corporate*), interactive seating layout selector (*Rajasthani Baithak*, *Cluster Tables*, *Auditorium*, *U-Shape*), and quotation lead pipeline integrated into the Hotel page. |
 | **Darbar Dining & Jharokha Café** | `/restaurant` | Consolidated dining destination: royal Rajasthani thalis, Rajputana culinary specialties, dietary categorization (*Veg*, *Non-Veg*, *Jain*), table reservations, alongside artisanal single-origin coffees and pastries in Jharokha Café. |
+| **Interactive Palace Menu** | `/menu` | 3-step customer flow: choose ordering method (*Dine in, Pickup, Delivery*), select venue (*Restaurant or Café*), browse categorized dishes, add items, and checkout with live cart retention. |
 | **Contactless QR Table Ordering** | `/qr/[token]` | Table-side QR code ordering with dynamic cart drawer, special dietary notes, and direct dispatch to the kitchen. |
 | **Takeaway & Delivery Ordering** | `/order/pickup`, `/order/delivery` | Online ordering portal with customer contact inputs, delivery address check, delivery fees, and minimum order rules. |
 | **Live Order Progress Tracker** | `/order-status/[reference]` | Real-time multi-stage visual timeline (*Received ➔ Preparing ➔ Ready ➔ Delivered*). |
@@ -331,6 +332,7 @@ npm run start
 | **Instant Room Booking** | `/book` | Direct reservation engine with live stay calculations. |
 | **Royal Darbar Banquet** | `/hotel#party-hall-enquiry` | Wedding and event hall details, seating layouts & inquiries. |
 | **Darbar Dining & Café** | `/restaurant` | Heritage restaurant menu, artisan cafe brews, and table booking. |
+| **Interactive Menu** | `/menu` | 3-step order flow: method selection, venue selection, dish browsing, and live cart. |
 | **QR Table Ordering** | `/qr/t-101` | Sample dine-in digital menu for Table 101. |
 | **Staff Cockpit** | `/dashboard` | Executive overview and daily KPI operations. |
 | **Kitchen Display (KDS)** | `/dashboard/kitchen` | Chef ticket progression and preparation timers. |

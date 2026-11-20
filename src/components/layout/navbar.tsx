@@ -160,6 +160,7 @@ export const Navbar: React.FC = () => {
     { label: 'Home', href: '/' },
     { label: 'Hotel', href: '/hotel' },
     { label: 'Restaurant & Café', href: '/restaurant' },
+    { label: 'Menu', href: '/menu' },
     { label: 'Contact', href: '/#contact' },
   ];
 

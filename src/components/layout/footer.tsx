@@ -124,6 +124,11 @@ export const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
+                <Link href="/menu" className="hover:text-[#d8aa67] transition-colors">
+                  Palace Menu &amp; Order
+                </Link>
+              </li>
+              <li>
                 <Link href="/hotel" className="hover:text-[#d8aa67] transition-colors">
                   Hotel & Celebrations
                 </Link>
