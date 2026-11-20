@@ -16,7 +16,7 @@ export const metadata = {
     'Experience the royal heritage of Rajasthan at Rajmahal Heritage Hotel. Six authentic heritage suites, traditional Rajasthani restaurant, café & lounge, and grand party hall.',
 };
 
-type HeritageIconName = 'arch' | 'dining' | 'cafe' | 'pavilion' | 'wedding';
+type HeritageIconName = 'arch' | 'dining' | 'cafe' | 'pavilion' | 'wedding' | 'menu' | 'booking' | 'calendar';
 
 function HeritageQuickIcon({ name }: { name: HeritageIconName }) {
   const common = {
@@ -49,6 +49,32 @@ function HeritageQuickIcon({ name }: { name: HeritageIconName }) {
         <path d="M20 43v-8h12v9M22 35c0-4 8-4 8 0M40 44v-9h12v8M42 35c0-4 8-4 8 0" />
         <circle cx="36" cy="42" r="5" />
         <path d="M9 58h54M14 54c6 5 38 5 44 0M13 24v14M9 24v8c0 4 8 4 8 0v-8M58 24v14M63 24v14" />
+      </svg>
+    );
+  }
+
+  if (name === 'menu') {
+    return (
+      <svg {...common}>
+        <ellipse cx="36" cy="52" rx="26" ry="8" />
+        <path d="M12 52h48" />
+        <path d="M16 50c0-14 9-24 20-24s20 10 20 24" />
+        <path d="M22 47c2-9 7-16 14-16s12 7 14 16" strokeDasharray="3 3" />
+        <circle cx="36" cy="22" r="4" />
+        <path d="M36 18v-5M33 13h6" />
+        <path d="M26 18c-2-3 2-4 0-7M46 18c2-3-2-4 0-7" strokeWidth="1.1" />
+        <path d="M10 58h52" />
+      </svg>
+    );
+  }
+
+  if (name === 'booking' || name === 'calendar') {
+    return (
+      <svg {...common}>
+        <rect x="14" y="18" width="44" height="42" rx="5" />
+        <path d="M14 28h44M24 12v10M48 12v10" />
+        <path d="m36 34 2.5 5 5.5.8-4 3.9 1 5.5-5-2.6-5 2.6 1-5.5-4-3.9 5.5-.8 2.5-5Z" />
+        <path d="M20 54h32M10 64h52" />
       </svg>
     );
   }
@@ -91,6 +117,8 @@ async function HomeContent() {
     { label: 'Heritage Rooms', href: '/rooms', icon: 'arch' },
     { label: 'Hotel & Celebrations', href: '/hotel', icon: 'pavilion' },
     { label: 'Restaurant & Café', href: '/restaurant', icon: 'dining' },
+    { label: 'Palace Menu', href: '/menu', icon: 'menu' },
+    { label: 'Book Your Stay', href: '/book', icon: 'booking' },
   ];
 
   return (
@@ -132,22 +160,9 @@ async function HomeContent() {
               <br />
               Rajasthan
             </h1>
-            <p className="text-sm sm:text-base text-[#fff8eb]/90 mb-8 font-normal leading-relaxed max-w-md drop-shadow">
+            <p className="text-sm sm:text-base text-[#fff8eb]/90 mb-4 sm:mb-6 font-normal leading-relaxed max-w-md drop-shadow">
               Heritage rooms, authentic cuisine and unforgettable experiences in the heart of Udaipur.
             </p>
-            <Link
-              href="/rooms"
-              className="inline-flex items-center space-x-3 px-8 py-3.5 rounded-[6px] text-base font-semibold tracking-wide transition-all duration-200 shadow-xl hover:shadow-2xl hover:-translate-y-0.5 active:translate-y-0 cursor-pointer group"
-              style={{
-                backgroundColor: 'var(--antique-gold, #d8aa67)',
-                color: 'var(--forest-ink, #380506)',
-                fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
-                fontSize: '17px',
-              }}
-            >
-              <span>Check Availability</span>
-              <ArrowRight className="w-4 h-4 ml-1 stroke-[2] group-hover:translate-x-1 transition-transform" />
-            </Link>
           </div>
         </div>
 
