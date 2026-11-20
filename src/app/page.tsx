@@ -339,8 +339,9 @@ async function HomeContent() {
             {roomTypes.map((room) => {
               const roomImage = room.photos?.[0] || '/images/rooms/lakeview-palace-suite.png';
               return (
-                <article
+                <Link
                   key={room.id}
+                  href={`/rooms/${room.id}`}
                   className="group flex flex-col justify-between rounded-[10px] overflow-hidden bg-[#fffaf1] border border-[#c99554]/60 shadow-[0_8px_20px_rgba(67,42,19,0.07)] hover:border-[#d8aa67] hover:-translate-y-2 hover:shadow-[0_24px_45px_rgba(67,42,19,0.18)] transition-all duration-300 ease-out cursor-pointer"
                 >
                   <div className="relative h-60 w-full overflow-hidden">
@@ -396,28 +397,21 @@ async function HomeContent() {
                         </span>
                       </div>
 
-                      <div className="flex items-center space-x-2">
-                        <Link
-                          href={`/rooms/${room.id}`}
-                          className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-[6px] text-xs font-semibold text-[#4f0809] hover:bg-[#d8aa67] hover:text-[#380506] hover:border-[#d8aa67] border border-[#d8aa67]/60 transition-all duration-200 shadow-sm hover:shadow"
-                        >
-                          <span>Details</span>
-                          <ArrowRight className="w-3.5 h-3.5" />
-                        </Link>
-                        <Link
-                          href={`/book?roomTypeId=${room.id}`}
-                          className="px-4 py-2 rounded-[6px] text-xs font-semibold transition-all duration-200 shadow hover:shadow-md hover:bg-[#680b0c] hover:-translate-y-0.5 active:translate-y-0"
+                      <div className="flex items-center">
+                        <span
+                          className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-[6px] text-xs font-semibold transition-all duration-200 shadow group-hover:shadow-md group-hover:bg-[#680b0c] group-hover:-translate-y-0.5 active:translate-y-0"
                           style={{
                             backgroundColor: 'var(--forest-deep, #4f0809)',
                             color: 'var(--ivory, #fff8eb)',
                           }}
                         >
-                          Book
-                        </Link>
+                          <span>Book Now</span>
+                          <ArrowRight className="w-3.5 h-3.5 ml-0.5 stroke-[2] group-hover:translate-x-1 transition-transform" />
+                        </span>
                       </div>
                     </div>
                   </div>
-                </article>
+                </Link>
               );
             })}
           </div>
