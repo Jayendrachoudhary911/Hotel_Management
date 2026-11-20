@@ -341,28 +341,22 @@ async function HomeContent() {
               return (
                 <article
                   key={room.id}
-                  className="room-card group flex flex-col justify-between transition-all duration-300"
-                  style={{
-                    backgroundColor: '#fffaf1',
-                    border: '1px solid rgba(201, 149, 84, 0.58)',
-                    borderRadius: '8px',
-                    overflow: 'hidden',
-                    boxShadow: '0 8px 20px rgba(67, 42, 19, 0.06)',
-                  }}
+                  className="group flex flex-col justify-between rounded-[10px] overflow-hidden bg-[#fffaf1] border border-[#c99554]/60 shadow-[0_8px_20px_rgba(67,42,19,0.07)] hover:border-[#d8aa67] hover:-translate-y-2 hover:shadow-[0_24px_45px_rgba(67,42,19,0.18)] transition-all duration-300 ease-out cursor-pointer"
                 >
                   <div className="relative h-60 w-full overflow-hidden">
                     <Image
                       src={roomImage}
                       alt={room.name}
                       fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-700"
+                      className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </div>
 
                   <div className="p-5 flex-1 flex flex-col justify-between">
                     <div>
                       <h3
-                        className="text-2xl font-bold mb-2 text-[#781c1c] group-hover:text-[#d8aa67] transition-colors"
+                        className="text-2xl font-bold mb-2 text-[#781c1c] group-hover:text-[#d8aa67] transition-colors duration-200"
                         style={{
                           fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
                         }}
@@ -405,14 +399,14 @@ async function HomeContent() {
                       <div className="flex items-center space-x-2">
                         <Link
                           href={`/rooms/${room.id}`}
-                          className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-[6px] text-xs font-semibold text-[#4f0809] hover:bg-[#d8aa67]/20 border border-[#d8aa67]/60 transition-colors"
+                          className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-[6px] text-xs font-semibold text-[#4f0809] hover:bg-[#d8aa67] hover:text-[#380506] hover:border-[#d8aa67] border border-[#d8aa67]/60 transition-all duration-200 shadow-sm hover:shadow"
                         >
                           <span>Details</span>
                           <ArrowRight className="w-3.5 h-3.5" />
                         </Link>
                         <Link
                           href={`/book?roomTypeId=${room.id}`}
-                          className="px-4 py-2 rounded-[6px] text-xs font-semibold transition-all shadow"
+                          className="px-4 py-2 rounded-[6px] text-xs font-semibold transition-all duration-200 shadow hover:shadow-md hover:bg-[#680b0c] hover:-translate-y-0.5 active:translate-y-0"
                           style={{
                             backgroundColor: 'var(--forest-deep, #4f0809)',
                             color: 'var(--ivory, #fff8eb)',
@@ -449,15 +443,16 @@ async function HomeContent() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Feature 1: Rajasthani Restaurant */}
             <article
-              className="flex flex-col rounded-[6px] overflow-hidden shadow-lg border border-[#c99554]/60 transition-all hover:shadow-xl"
-              style={{ backgroundColor: '#fffaf1' }}
+              className="group flex flex-col rounded-[12px] overflow-hidden bg-[#fffaf1] border border-[#c99554]/60 shadow-[0_8px_22px_rgba(67,42,19,0.08)] hover:border-[#d8aa67] hover:-translate-y-2 hover:shadow-[0_24px_50px_rgba(67,42,19,0.18)] transition-all duration-300 ease-out"
             >
               <div className="relative h-64 sm:h-72 w-full p-3.5 pb-0">
-                <img
-                  src="/images/dining/rajasthani-restaurant.png"
-                  alt="Rajasthani restaurant dining room overlooking the lake"
-                  className="w-full h-full object-cover rounded-[10px]"
-                />
+                <div className="w-full h-full overflow-hidden rounded-[10px]">
+                  <img
+                    src="/images/dining/rajasthani-restaurant.png"
+                    alt="Rajasthani restaurant dining room overlooking the lake"
+                    className="w-full h-full object-cover rounded-[10px] group-hover:scale-105 transition-transform duration-700 ease-out"
+                  />
+                </div>
               </div>
               <div className="p-6 flex-1 flex flex-col justify-between">
                 <div>
@@ -465,7 +460,7 @@ async function HomeContent() {
                     Authentic Flavors
                   </span>
                   <h3
-                    className="text-3xl font-bold mb-3 text-[#781c1c]"
+                    className="text-3xl font-bold mb-3 text-[#781c1c] group-hover:text-[#d8aa67] transition-colors duration-200"
                     style={{
                       fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
                     }}
@@ -480,7 +475,7 @@ async function HomeContent() {
                 <div className="grid grid-cols-2 gap-3 mt-4">
                   <Link
                     href="/restaurant"
-                    className="flex items-center justify-center space-x-2 h-11 rounded-[6px] text-xs sm:text-sm font-semibold transition-all"
+                    className="flex items-center justify-center space-x-2 h-11 rounded-[6px] text-xs sm:text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:brightness-105 active:translate-y-0"
                     style={{
                       backgroundColor: 'var(--antique-gold, #d8aa67)',
                       color: 'var(--forest-ink, #380506)',
@@ -491,7 +486,7 @@ async function HomeContent() {
                   </Link>
                   <Link
                     href="/book"
-                    className="flex items-center justify-center h-11 rounded-[6px] text-xs sm:text-sm font-semibold transition-all"
+                    className="flex items-center justify-center h-11 rounded-[6px] text-xs sm:text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md hover:bg-[#680b0c] hover:-translate-y-0.5 active:translate-y-0"
                     style={{
                       backgroundColor: 'var(--forest-deep, #4f0809)',
                       color: 'var(--ivory, #fff8eb)',
@@ -505,15 +500,16 @@ async function HomeContent() {
 
             {/* Feature 2: Café & Lounge */}
             <article
-              className="flex flex-col rounded-[6px] overflow-hidden shadow-lg border border-[#c99554]/60 transition-all hover:shadow-xl"
-              style={{ backgroundColor: '#fffaf1' }}
+              className="group flex flex-col rounded-[12px] overflow-hidden bg-[#fffaf1] border border-[#c99554]/60 shadow-[0_8px_22px_rgba(67,42,19,0.08)] hover:border-[#d8aa67] hover:-translate-y-2 hover:shadow-[0_24px_50px_rgba(67,42,19,0.18)] transition-all duration-300 ease-out"
             >
               <div className="relative h-64 sm:h-72 w-full p-3.5 pb-0">
-                <img
-                  src="/images/dining/cafe-lounge.png"
-                  alt="Heritage café and lounge with lake views"
-                  className="w-full h-full object-cover rounded-[10px]"
-                />
+                <div className="w-full h-full overflow-hidden rounded-[10px]">
+                  <img
+                    src="/images/dining/cafe-lounge.png"
+                    alt="Heritage café and lounge with lake views"
+                    className="w-full h-full object-cover rounded-[10px] group-hover:scale-105 transition-transform duration-700 ease-out"
+                  />
+                </div>
               </div>
               <div className="p-6 flex-1 flex flex-col justify-between">
                 <div>
@@ -521,7 +517,7 @@ async function HomeContent() {
                     Relax, Sip & Unwind
                   </span>
                   <h3
-                    className="text-3xl font-bold mb-3 text-[#781c1c]"
+                    className="text-3xl font-bold mb-3 text-[#781c1c] group-hover:text-[#d8aa67] transition-colors duration-200"
                     style={{
                       fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
                     }}
@@ -536,7 +532,7 @@ async function HomeContent() {
                 <div className="grid grid-cols-2 gap-3 mt-4">
                   <Link
                     href="/restaurant#cafe"
-                    className="flex items-center justify-center space-x-2 h-11 rounded-[6px] text-xs sm:text-sm font-semibold transition-all"
+                    className="flex items-center justify-center space-x-2 h-11 rounded-[6px] text-xs sm:text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:brightness-105 active:translate-y-0"
                     style={{
                       backgroundColor: 'var(--antique-gold, #d8aa67)',
                       color: 'var(--forest-ink, #380506)',
@@ -547,7 +543,7 @@ async function HomeContent() {
                   </Link>
                   <Link
                     href="/restaurant"
-                    className="flex items-center justify-center h-11 rounded-[6px] text-xs sm:text-sm font-semibold transition-all"
+                    className="flex items-center justify-center h-11 rounded-[6px] text-xs sm:text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md hover:bg-[#680b0c] hover:-translate-y-0.5 active:translate-y-0"
                     style={{
                       backgroundColor: 'var(--forest-deep, #4f0809)',
                       color: 'var(--ivory, #fff8eb)',
