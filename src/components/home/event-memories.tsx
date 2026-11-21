@@ -108,61 +108,68 @@ export function EventMemories() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [selectedMemory, setSelectedMemory] = useState<EventMemory | null>(null);
 
+  // Smooth LERP (Linear Interpolation) motion state
+  const targetTranslateX = useRef(0);
+  const currentTranslateX = useRef(0);
+  const isRunningRef = useRef(false);
+  const animFrameId = useRef<number | null>(null);
+
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Update horizontal track translation and 3D perspective transforms driven by vertical scroll
-  const updateScrollDrivenAnimation = useCallback(() => {
+  // Compute target horizontal offset based on current scroll position
+  const updateTargetFromScroll = useCallback(() => {
     if (!sectionRef.current || !trackRef.current) return;
 
     const section = sectionRef.current;
-    const track = trackRef.current;
     const rect = section.getBoundingClientRect();
     const windowH = window.innerHeight;
     const windowW = window.innerWidth;
 
-    // Total vertical scrollable travel distance of this section
     const scrollableH = rect.height - windowH;
     if (scrollableH <= 0) return;
 
-    // Progress from 0 (section top hits viewport top) to 1 (section bottom hits viewport bottom)
     const rawProgress = -rect.top / scrollableH;
     const progress = Math.max(0, Math.min(1, rawProgress));
     setScrollProgress(progress);
 
-    // Get first card and last card
     const firstCard = cardRefs.current[0];
     const lastCard = cardRefs.current[EVENT_MEMORIES.length - 1];
-
     const screenCenter = windowW / 2;
 
     if (firstCard && lastCard) {
-      // Exact center coordinates of first card and last card relative to track
       const firstCardCenter = firstCard.offsetLeft + firstCard.offsetWidth / 2;
       const lastCardCenter = lastCard.offsetLeft + lastCard.offsetWidth / 2;
-
-      // Track translation when Card 0 is centered
       const startTranslate = firstCardCenter - screenCenter;
-
-      // Track translation when Card (N - 1) is centered
       const endTranslate = lastCardCenter - screenCenter;
-
-      // Total distance to travel so EVERY card from 0 to N-1 reaches the center
       const totalTravel = endTranslate - startTranslate;
 
-      // Progress mapping:
-      // 0.00 to 0.04: gentle lead-in on Card 0
-      // 0.04 to 0.88: smooth transition across all cards to Card (N - 1)
-      // 0.88 to 1.00: section stays locked with Card (N - 1) centered at the end!
       const travelProgress = Math.max(0, Math.min(1, (progress - 0.04) / 0.84));
-      const currentTranslateX = startTranslate + travelProgress * totalTravel;
+      targetTranslateX.current = startTranslate + travelProgress * totalTravel;
+    }
+  }, []);
 
-      // Apply horizontal translation to track
-      track.style.transform = `translate3d(${-currentTranslateX}px, 0, 0)`;
+  // 60–120 FPS continuous render frame with smooth interpolation & 3D perspective transforms
+  const renderFrame = useCallback(() => {
+    if (!trackRef.current) {
+      isRunningRef.current = false;
+      return;
     }
 
-    // Calculate real-time 3D perspective for each card based on its actual screen position
+    const diff = targetTranslateX.current - currentTranslateX.current;
+    // Damping factor 0.1 gives silky smooth inertia without lag
+    if (Math.abs(diff) > 0.08) {
+      currentTranslateX.current += diff * 0.1;
+    } else {
+      currentTranslateX.current = targetTranslateX.current;
+    }
+
+    trackRef.current.style.transform = `translate3d(${-currentTranslateX.current}px, 0, 0)`;
+
+    // Calculate real-time 3D perspective transforms for each card
+    const windowW = window.innerWidth;
+    const screenCenter = windowW / 2;
     let closestIndex = 0;
     let minDistance = Infinity;
 
@@ -178,46 +185,68 @@ export function EventMemories() {
       }
 
       // Normalized distance from center (-1 to +1 across visible area)
-      const normalized = distance / (windowW * 0.42);
+      const normalized = distance / (windowW * 0.38);
       const clamped = Math.max(-1.5, Math.min(1.5, normalized));
 
-      // 3D Perspective transforms:
-      // Cards curve in 3D: tilted towards horizon on edges, straight and popping forward at center
-      const rotateY = -clamped * 18; // Degrees
-      const scale = Math.max(0.85, 1.05 - Math.abs(clamped) * 0.12);
-      const translateZ = (1 - Math.min(1, Math.abs(clamped))) * 50; // Pop towards viewer
-      const opacity = Math.max(0.55, 1 - Math.abs(clamped) * 0.28);
-      const shadowX = -clamped * 18;
+      // Gentle, elegant 3D Perspective transforms (no vertical clipping)
+      const rotateY = -clamped * 15;
+      const scale = Math.max(0.88, 1.04 - Math.abs(clamped) * 0.10);
+      const translateZ = (1 - Math.min(1, Math.abs(clamped))) * 35;
+      const opacity = Math.max(0.65, 1 - Math.abs(clamped) * 0.22);
+      const shadowX = -clamped * 14;
 
       card.style.transform = `perspective(1200px) rotateY(${rotateY.toFixed(2)}deg) scale(${scale.toFixed(3)}) translateZ(${translateZ.toFixed(1)}px)`;
       card.style.opacity = `${opacity.toFixed(2)}`;
-      card.style.boxShadow = `${shadowX.toFixed(1)}px 24px 50px -10px rgba(35, 10, 14, ${(0.28 + (1 - Math.min(1, Math.abs(clamped))) * 0.18).toFixed(2)})`;
+      card.style.boxShadow = `${shadowX.toFixed(1)}px 18px 36px -10px rgba(35, 10, 14, ${(0.22 + (1 - Math.min(1, Math.abs(clamped))) * 0.14).toFixed(2)})`;
     });
 
     setActiveIndex(closestIndex);
+
+    // Keep loop active until difference settles to sub-pixel accuracy
+    if (Math.abs(diff) > 0.08) {
+      animFrameId.current = requestAnimationFrame(renderFrame);
+    } else {
+      isRunningRef.current = false;
+    }
   }, []);
+
+  const triggerSmoothUpdate = useCallback(() => {
+    updateTargetFromScroll();
+    if (!isRunningRef.current) {
+      isRunningRef.current = true;
+      animFrameId.current = requestAnimationFrame(renderFrame);
+    }
+  }, [updateTargetFromScroll, renderFrame]);
 
   // Listen to window scroll and resize
   useEffect(() => {
     // Initial calculations across render lifecycle
-    updateScrollDrivenAnimation();
-    const timer1 = setTimeout(updateScrollDrivenAnimation, 60);
-    const timer2 = setTimeout(updateScrollDrivenAnimation, 300);
+    updateTargetFromScroll();
+    currentTranslateX.current = targetTranslateX.current;
+    renderFrame();
 
-    const handleScroll = () => {
-      window.requestAnimationFrame(updateScrollDrivenAnimation);
-    };
+    const timer1 = setTimeout(() => {
+      updateTargetFromScroll();
+      currentTranslateX.current = targetTranslateX.current;
+      renderFrame();
+    }, 60);
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', handleScroll, { passive: true });
+    const timer2 = setTimeout(() => {
+      updateTargetFromScroll();
+      renderFrame();
+    }, 300);
+
+    window.addEventListener('scroll', triggerSmoothUpdate, { passive: true });
+    window.addEventListener('resize', triggerSmoothUpdate, { passive: true });
 
     return () => {
       clearTimeout(timer1);
       clearTimeout(timer2);
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', handleScroll);
+      if (animFrameId.current) cancelAnimationFrame(animFrameId.current);
+      window.removeEventListener('scroll', triggerSmoothUpdate);
+      window.removeEventListener('resize', triggerSmoothUpdate);
     };
-  }, [updateScrollDrivenAnimation]);
+  }, [updateTargetFromScroll, renderFrame, triggerSmoothUpdate]);
 
   // Jump to specific memory card by scrolling page to that progress
   const jumpToMemory = (idx: number) => {
@@ -248,7 +277,7 @@ export function EventMemories() {
       aria-label="Event Memories — Sticky Scroll Perspective Gallery"
     >
       {/* ── STICKY PINNED VIEWPORT CONTAINER (LOCKS ON SCREEN WHILE SCROLLING) ── */}
-      <div className="sticky top-0 h-screen h-[100dvh] max-h-screen w-full overflow-hidden flex flex-col justify-between pt-[74px] sm:pt-[82px] lg:pt-[88px] pb-5 sm:pb-7 lg:pb-9 z-10">
+      <div className="sticky top-0 h-screen h-[100dvh] max-h-screen w-full overflow-hidden flex flex-col justify-between pt-[68px] sm:pt-[72px] lg:pt-[76px] pb-3 sm:pb-4 lg:pb-5 z-10">
         {/* Architectural Line Art Flanking in Background */}
         <div className="absolute left-[-40px] sm:left-[-20px] lg:left-0 top-1/2 -translate-y-1/2 pointer-events-none z-0 w-64 sm:w-80 lg:w-[420px] opacity-25">
           <img
@@ -269,13 +298,13 @@ export function EventMemories() {
 
         {/* ── SECTION HEADER AT TOP OF PINNED VIEWPORT ── */}
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full shrink-0">
-          <div className="flex flex-col md:flex-row md:items-end justify-between">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-1 sm:gap-2">
             <div className="text-center md:text-left max-w-2xl">
               {/* Eyebrow */}
-              <div className="inline-flex items-center space-x-3 mb-1.5">
+              <div className="inline-flex items-center space-x-3 mb-1">
                 <span className="w-8 sm:w-10 h-[1px] bg-[#d8aa67]/80" />
                 <span
-                  className="text-[11px] sm:text-xs font-semibold tracking-[0.24em] uppercase"
+                  className="text-[10px] sm:text-xs font-semibold tracking-[0.22em] uppercase"
                   style={{ color: 'var(--antique-gold, #d8aa67)' }}
                 >
                   Celebrations That Matter
@@ -285,7 +314,7 @@ export function EventMemories() {
 
               {/* Main Heading */}
               <h2
-                className="text-2xl sm:text-4xl lg:text-5xl font-bold mb-1.5 leading-tight"
+                className="text-2xl sm:text-3xl lg:text-[34px] font-bold leading-tight"
                 style={{
                   fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
                   color: 'var(--burgundy, #781c1c)',
@@ -296,7 +325,7 @@ export function EventMemories() {
 
               {/* Subtitle */}
               <p
-                className="text-xs sm:text-sm font-normal max-w-xl leading-relaxed hidden sm:block"
+                className="text-xs sm:text-[13px] font-normal max-w-xl leading-relaxed hidden sm:block mt-0.5"
                 style={{ color: 'var(--forest, #4f0809)' }}
               >
                 Scroll page to journey through royal weddings, lakeside galas, and magnificent celebrations.
@@ -305,14 +334,14 @@ export function EventMemories() {
 
             {/* Active Celebration Indicator (Shows current memory and scroll hint) */}
             <div className="hidden md:flex flex-col items-end text-right">
-              <span className="text-xs font-bold text-[#670E10] tracking-wider uppercase flex items-center space-x-1.5 mb-1">
-                <Sparkles className="w-3.5 h-3.5 text-[#D8AA67]" />
+              <span className="text-[11px] font-bold text-[#670E10] tracking-wider uppercase flex items-center space-x-1.5 mb-0.5">
+                <Sparkles className="w-3 h-3 text-[#D8AA67]" />
                 <span>
                   0{activeIndex + 1} / 0{EVENT_MEMORIES.length}
                 </span>
               </span>
               <span
-                className="text-base lg:text-lg font-bold text-[#241F1A]"
+                className="text-base font-bold text-[#241F1A]"
                 style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)" }}
               >
                 {EVENT_MEMORIES[activeIndex].title}
@@ -321,8 +350,8 @@ export function EventMemories() {
           </div>
         </div>
 
-        {/* ── HORIZONTAL PERSPECTIVE STAGE WITH DUAL EDGE VIGNETTES ── */}
-        <div className="relative w-full overflow-hidden my-auto py-2">
+        {/* ── HORIZONTAL PERSPECTIVE STAGE WITH DUAL EDGE VIGNETTES (OVERFLOW VISIBLE TO PREVENT CLIPPING) ── */}
+        <div className="relative w-full overflow-visible my-auto py-4 sm:py-6 lg:py-8">
           {/* Ambient Left & Right Edge Vignette Fades */}
           <div
             className="absolute left-0 top-0 bottom-0 w-16 sm:w-28 md:w-44 z-20 pointer-events-none"
@@ -337,10 +366,10 @@ export function EventMemories() {
             }}
           />
 
-          {/* Perspective Track (Translated Horizontally as Page Scrolls Vertically) */}
+          {/* Perspective Track (Translated Horizontally with Smooth LERP as Page Scrolls Vertically) */}
           <div
             ref={trackRef}
-            className="flex items-center space-x-6 sm:space-x-8 md:space-x-10 pl-[10vw] sm:pl-[20vw] md:pl-[25vw] pr-[25vw]"
+            className="flex items-center space-x-5 sm:space-x-7 md:space-x-9 pl-[10vw] sm:pl-[20vw] md:pl-[25vw] pr-[25vw]"
             style={{
               perspective: '1200px',
               perspectiveOrigin: 'center center',
@@ -358,7 +387,7 @@ export function EventMemories() {
                     cardRefs.current[index] = el;
                   }}
                   onClick={() => setSelectedMemory(memory)}
-                  className="group relative shrink-0 w-[265px] sm:w-[320px] md:w-[360px] lg:w-[390px] h-[340px] sm:h-[400px] md:h-[440px] lg:h-[475px] rounded-[22px] sm:rounded-[28px] overflow-hidden border-2 transition-all duration-300 ease-out cursor-pointer"
+                  className="group relative shrink-0 w-[240px] sm:w-[275px] md:w-[310px] lg:w-[335px] xl:w-[360px] h-[300px] sm:h-[340px] md:h-[370px] lg:h-[395px] xl:h-[420px] rounded-[20px] sm:rounded-[26px] overflow-hidden border-2 transition-colors duration-200 cursor-pointer"
                   style={{
                     backgroundColor: '#FFFDF9',
                     borderColor: isCenter ? '#D8AA67' : 'rgba(216, 170, 103, 0.6)',
@@ -371,7 +400,7 @@ export function EventMemories() {
                     src={memory.image}
                     alt={memory.alt}
                     fill
-                    sizes="(max-width: 640px) 265px, (max-width: 1024px) 360px, 390px"
+                    sizes="(max-width: 640px) 240px, (max-width: 1024px) 335px, 360px"
                     className="object-cover group-hover:scale-108 transition-transform duration-700 ease-out pointer-events-none"
                     priority={index < 3}
                   />
@@ -380,21 +409,21 @@ export function EventMemories() {
                   <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-transparent pointer-events-none opacity-40 group-hover:opacity-75 transition-opacity" />
 
                   {/* Top Category Badge */}
-                  <div className="absolute top-4 left-4 z-10 flex items-center space-x-1.5 px-3 py-1 rounded-full bg-black/45 backdrop-blur-md border border-[#D8AA67]/60 text-[#FFF8EB] text-[11px] font-semibold tracking-wide shadow-md">
-                    <Sparkles className="w-3 h-3 text-[#D8AA67]" />
+                  <div className="absolute top-3.5 left-3.5 z-10 flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-black/45 backdrop-blur-md border border-[#D8AA67]/60 text-[#FFF8EB] text-[10px] font-semibold tracking-wide shadow-md">
+                    <Sparkles className="w-2.5 h-2.5 text-[#D8AA67]" />
                     <span>{memory.category}</span>
                   </div>
 
                   {/* Top-Right Expand Icon on Hover */}
-                  <div className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white/80 group-hover:text-[#FFF8EB] group-hover:scale-110 transition-all opacity-0 group-hover:opacity-100 shadow-sm">
-                    <Maximize2 className="w-3.5 h-3.5" />
+                  <div className="absolute top-3.5 right-3.5 z-10 w-7 h-7 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white/80 group-hover:text-[#FFF8EB] group-hover:scale-110 transition-all opacity-0 group-hover:opacity-100 shadow-sm">
+                    <Maximize2 className="w-3 h-3" />
                   </div>
 
                   {/* Bottom Dark Gradient Card Deck */}
-                  <div className="absolute inset-x-0 bottom-0 z-10 p-5 sm:p-6 bg-gradient-to-t from-black/92 via-black/60 to-transparent flex flex-col justify-end text-left pointer-events-none">
+                  <div className="absolute inset-x-0 bottom-0 z-10 p-4 sm:p-5 bg-gradient-to-t from-black/95 via-black/65 to-transparent flex flex-col justify-end text-left pointer-events-none">
                     {/* Subtitle / Location */}
                     <span
-                      className="text-[11px] sm:text-xs font-semibold tracking-[0.16em] uppercase text-[#E1B46F] mb-1 drop-shadow"
+                      className="text-[10px] sm:text-[11px] font-semibold tracking-[0.16em] uppercase text-[#E1B46F] mb-0.5 drop-shadow"
                       style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)" }}
                     >
                       {memory.subtitle}
@@ -402,26 +431,26 @@ export function EventMemories() {
 
                     {/* Title */}
                     <h3
-                      className="text-2xl sm:text-3xl font-bold text-[#FFF8EB] leading-tight mb-2 group-hover:text-[#E1B46F] transition-colors drop-shadow-md"
+                      className="text-lg sm:text-xl lg:text-2xl font-bold text-[#FFF8EB] leading-tight mb-1 group-hover:text-[#E1B46F] transition-colors drop-shadow-md"
                       style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)" }}
                     >
                       {memory.title}
                     </h3>
 
                     {/* 1-Line Description */}
-                    <p className="text-xs text-[#EAE4D9]/90 font-light leading-relaxed line-clamp-2 mb-3 drop-shadow">
+                    <p className="text-[11px] sm:text-xs text-[#EAE4D9]/90 font-light leading-relaxed line-clamp-2 mb-2 drop-shadow">
                       {memory.description}
                     </p>
 
                     {/* Action Link Row */}
-                    <div className="flex items-center justify-between pt-2 border-t border-white/15 text-[11px] sm:text-xs font-medium text-[#FAF7F2]">
+                    <div className="flex items-center justify-between pt-1.5 border-t border-white/15 text-[10px] sm:text-[11px] font-medium text-[#FAF7F2]">
                       <span className="flex items-center space-x-1.5 text-[#E1B46F]">
-                        <Users className="w-3.5 h-3.5" />
+                        <Users className="w-3 h-3" />
                         <span>{memory.capacity}</span>
                       </span>
                       <span className="inline-flex items-center space-x-1 text-[#FFF8EB] font-semibold group-hover:translate-x-1 transition-transform">
                         <span>Explore</span>
-                        <ArrowRight className="w-3.5 h-3.5 text-[#D8AA67]" />
+                        <ArrowRight className="w-3 h-3 text-[#D8AA67]" />
                       </span>
                     </div>
                   </div>
