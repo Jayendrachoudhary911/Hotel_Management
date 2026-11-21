@@ -39,16 +39,45 @@ function PalaceMark() {
   );
 }
 
-export const Navbar: React.FC = () => {
+export interface NavbarProps {
+  /**
+   * Optional manual override for the scrolled state.
+   * If omitted, Navbar automatically listens to window scroll and updates `isScrolled`.
+   */
+  isScrolled?: boolean;
+  className?: string;
+}
+
+export const Navbar: React.FC<NavbarProps> = ({
+  isScrolled: propIsScrolled,
+  className = '',
+}) => {
   const router = useRouter();
   const pathname = usePathname();
 
+  const [internalScrolled, setInternalScrolled] = useState(false);
+  const isScrolled = propIsScrolled !== undefined ? propIsScrolled : internalScrolled;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [language, setLanguage] = useState<'Eng' | 'हिन्दी'>('Eng');
   const [user, setUser] = useState<User | null>(null);
   const [isStaff, setIsStaff] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Window scroll event listener to track scrolled status
+  useEffect(() => {
+    if (propIsScrolled !== undefined) return;
+
+    const handleScroll = () => {
+      setInternalScrolled(window.scrollY > 20);
+    };
+
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [propIsScrolled]);
 
   // Subscribe to auth state
   useEffect(() => {
@@ -57,6 +86,9 @@ export const Navbar: React.FC = () => {
     // Initial check
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user ?? null);
+      if (!data.user) {
+        setIsStaff(false);
+      }
     });
 
     // Listen for realtime auth changes (login, logout, token refresh)
@@ -64,6 +96,9 @@ export const Navbar: React.FC = () => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      if (!session?.user) {
+        setIsStaff(false);
+      }
     });
 
     return () => {
@@ -74,10 +109,10 @@ export const Navbar: React.FC = () => {
   // Check if authenticated user is registered staff
   useEffect(() => {
     if (!user || !user.email) {
-      setIsStaff(false);
       return;
     }
 
+    let isMounted = true;
     const verifyStaffRole = async () => {
       const metaRole = (user.user_metadata?.role || '').toLowerCase();
       const metaIsStaff = Boolean(user.user_metadata?.is_staff);
@@ -94,12 +129,12 @@ export const Navbar: React.FC = () => {
       ];
 
       if (metaIsStaff || staffRoles.includes(metaRole)) {
-        setIsStaff(true);
+        if (isMounted) setIsStaff(true);
       }
 
       try {
         const res = await fetch(`/api/staff/check?email=${encodeURIComponent(user.email!)}`);
-        if (res.ok) {
+        if (res.ok && isMounted) {
           const data = await res.json();
           if (data.isStaff) {
             setIsStaff(true);
@@ -113,6 +148,9 @@ export const Navbar: React.FC = () => {
     };
 
     verifyStaffRole();
+    return () => {
+      isMounted = false;
+    };
   }, [user]);
 
   // Close dropdown on outside click
@@ -166,11 +204,22 @@ export const Navbar: React.FC = () => {
 
   return (
     <header
-      className="sticky top-0 z-50 w-full h-[80px] sm:h-[86px] px-4 sm:px-8 md:px-12 lg:px-16 shadow-2xl transition-all flex items-center"
+      data-scrolled={isScrolled}
+      className={`sticky top-0 z-50 w-full transition-all duration-300 ease-in-out flex items-center ${
+        isScrolled
+          ? 'h-[68px] sm:h-[72px] shadow-[0_10px_30px_rgba(20,3,4,0.7)] backdrop-blur-md'
+          : 'h-[80px] sm:h-[86px] shadow-2xl backdrop-blur-sm'
+      } px-4 sm:px-8 md:px-12 lg:px-16 ${className}`}
       style={{
-        backgroundColor: 'var(--forest-deep, #4f0809)',
-        boxShadow: '0 4px 24px rgba(40, 5, 6, 0.4)',
-        borderBottom: '1px solid rgba(216, 170, 103, 0.25)',
+        backgroundColor: isScrolled
+          ? 'rgba(56, 5, 6, 0.96)'
+          : 'var(--forest-deep, #4f0809)',
+        boxShadow: isScrolled
+          ? '0 10px 30px rgba(20, 3, 4, 0.7)'
+          : '0 4px 24px rgba(40, 5, 6, 0.4)',
+        borderBottom: isScrolled
+          ? '1px solid rgba(216, 170, 103, 0.45)'
+          : '1px solid rgba(216, 170, 103, 0.25)',
       }}
     >
       <div className="w-full flex items-center justify-between">
@@ -179,7 +228,9 @@ export const Navbar: React.FC = () => {
           <PalaceMark />
           <div className="flex flex-col text-left">
             <span
-              className="text-xl sm:text-2xl font-bold tracking-[0.11em] uppercase leading-none"
+              className={`font-bold tracking-[0.11em] uppercase leading-none transition-all duration-300 ${
+                isScrolled ? 'text-lg sm:text-xl' : 'text-xl sm:text-2xl'
+              }`}
               style={{
                 fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
                 color: 'var(--gold-bright, #e1b46f)',
@@ -188,7 +239,7 @@ export const Navbar: React.FC = () => {
               Rajmahal
             </span>
             <span
-              className="text-[8px] sm:text-[9px] font-semibold tracking-[0.34em] uppercase mt-1"
+              className="text-[8px] sm:text-[9px] font-semibold tracking-[0.34em] uppercase mt-1 transition-opacity duration-300"
               style={{ color: 'var(--gold-bright, #e1b46f)' }}
             >
               Heritage Hotel.
