@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, BedDouble, Utensils, Coffee, Calendar } from 'lucide-react';
+import { Home, BedDouble, Coffee, Calendar, Menu as MenuIcon } from 'lucide-react';
 
 export const MobileNav: React.FC = () => {
   const pathname = usePathname();
@@ -16,10 +16,13 @@ export const MobileNav: React.FC = () => {
   const items = [
     { label: 'Home', href: '/', icon: Home },
     { label: 'Hotel', href: '/hotel', icon: BedDouble },
-    { label: 'Menu', href: '/menu', icon: Utensils },
     { label: 'Dining', href: '/restaurant', icon: Coffee },
-    { label: 'Book', href: '/book', icon: Calendar },
+    { label: 'Book', href: '/rooms', icon: Calendar },
   ];
+
+  const handleOpenDrawer = () => {
+    window.dispatchEvent(new CustomEvent('open-mobile-nav'));
+  };
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#FAF8F3] border-t border-[#D4CBBB] shadow-lg px-2 py-1.5 flex items-center justify-around">
@@ -39,6 +42,17 @@ export const MobileNav: React.FC = () => {
           </Link>
         );
       })}
+
+      {/* Trigger to open the swipeable bottom floating nav drawer */}
+      <button
+        type="button"
+        onClick={handleOpenDrawer}
+        className="flex flex-col items-center justify-center py-1 px-2 text-[10px] font-medium text-[#7A6F62] hover:text-[#13251E] cursor-pointer transition-colors focus:outline-none"
+        aria-label="Open navigation menu drawer"
+      >
+        <MenuIcon className="w-5 h-5 mb-0.5 text-[#C59B63]" />
+        <span>Menu</span>
+      </button>
     </nav>
   );
 };

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -58,11 +59,77 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [internalScrolled, setInternalScrolled] = useState(false);
   const isScrolled = propIsScrolled !== undefined ? propIsScrolled : internalScrolled;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isDrawerClosing, setIsDrawerClosing] = useState(false);
+  const [dragY, setDragY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const touchStartY = useRef(0);
+  const touchCurrentY = useRef(0);
   const [language, setLanguage] = useState<'Eng' | 'हिन्दी'>('Eng');
   const [user, setUser] = useState<User | null>(null);
   const [isStaff, setIsStaff] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const openMobileMenu = () => {
+    setIsDrawerClosing(false);
+    setDragY(0);
+    setMobileMenuOpen(true);
+  };
+
+  const closeMobileMenu = () => {
+    setIsDrawerClosing(true);
+    setTimeout(() => {
+      setMobileMenuOpen(false);
+      setIsDrawerClosing(false);
+      setDragY(0);
+    }, 200);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+    touchCurrentY.current = e.touches[0].clientY;
+    setIsDragging(true);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging) return;
+    touchCurrentY.current = e.touches[0].clientY;
+    const deltaY = touchCurrentY.current - touchStartY.current;
+    if (deltaY > 0) {
+      setDragY(deltaY);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    const deltaY = touchCurrentY.current - touchStartY.current;
+    if (deltaY > 70) {
+      closeMobileMenu();
+    } else {
+      setDragY(0);
+    }
+  };
+
+  // Global listeners so other triggers can toggle the bottom mobile nav drawer
+  useEffect(() => {
+    const handleOpen = () => openMobileMenu();
+    const handleToggle = () => {
+      if (mobileMenuOpen) closeMobileMenu();
+      else openMobileMenu();
+    };
+    window.addEventListener('open-mobile-nav', handleOpen);
+    window.addEventListener('toggle-mobile-nav', handleToggle);
+    return () => {
+      window.removeEventListener('open-mobile-nav', handleOpen);
+      window.removeEventListener('toggle-mobile-nav', handleToggle);
+    };
+  }, [mobileMenuOpen]);
 
   // Window scroll event listener to track scrolled status
   useEffect(() => {
@@ -470,7 +537,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             </Link>
           )}
           <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            onClick={() => {
+              if (mobileMenuOpen) closeMobileMenu();
+              else openMobileMenu();
+            }}
             className="p-1.5 rounded-md text-[#FFF8EB] hover:text-[#D8AA67] focus:outline-none cursor-pointer"
             aria-label="Toggle menu"
           >
@@ -479,95 +549,179 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </div>
 
-      {/* Mobile Menu Drawer */}
-      {mobileMenuOpen && (
-        <div
-          className="absolute top-full left-0 right-0 w-full p-4 sm:hidden shadow-2xl border-b transition-all z-50 animate-fade-in-up"
-          style={{
-            backgroundColor: 'var(--forest-deep, #4f0809)',
-            borderColor: 'rgba(216, 170, 103, 0.4)',
-          }}
-        >
-          {user && isStaff && (
-            <div className="mb-3 px-2">
-              <Link
-                href="/dashboard"
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-[#D8AA67] via-[#E1B46F] to-[#B78A48] text-[#380506] font-bold text-xs shadow-md transition group"
-              >
-                <div className="flex items-center space-x-2">
-                  <ShieldCheck className="w-4 h-4 text-[#380506]" />
-                  <span className="uppercase tracking-wider">Access Admin Panel</span>
-                </div>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </div>
-          )}
+      {/* ── Mobile Nav Menu: Bottom Swipeable Floating Drawer ── */}
+      {mobileMenuOpen &&
+        mounted &&
+        createPortal(
+          <div
+            onClick={(e) => {
+              if (e.target === e.currentTarget) closeMobileMenu();
+            }}
+            className={`fixed inset-0 z-[150] bg-black/65 backdrop-blur-xs flex items-end justify-center p-0 transition-opacity duration-200 ${
+              isDrawerClosing ? 'opacity-0' : 'opacity-100'
+            }`}
+          >
+            <div
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              style={{
+                transform: `translateY(${dragY}px)`,
+                transition: isDragging ? 'none' : 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
+              }}
+              className={`w-full max-w-lg mx-auto rounded-t-[32px] border-t-2 border-x-2 border-[#D8AA67] bg-gradient-to-b from-[#4F0809] via-[#3E0608] to-[#2B0405] text-[#FFF8EB] shadow-[0_-20px_60px_rgba(20,3,4,0.85)] flex flex-col max-h-[85vh] overflow-hidden ${
+                isDrawerClosing ? 'animate-slide-down-modal' : 'animate-slide-up-modal'
+              }`}
+            >
+              {/* Swipe Drag Handle */}
+              <div className="w-full pt-3 pb-1 flex flex-col items-center justify-center cursor-grab active:cursor-grabbing select-none">
+                <div className="w-12 h-1.5 rounded-full bg-[#D8AA67]/60 hover:bg-[#D8AA67] transition-colors" />
+                <span className="text-[9px] uppercase tracking-widest text-[#D8AA67]/75 font-semibold mt-1">
+                  Swipe down to close
+                </span>
+              </div>
 
-          {user && (
-            <div className="mb-3 pb-3 border-b border-[#D8AA67]/25 flex items-center justify-between px-2">
-              <div className="flex items-center space-x-2.5">
-                <div className="w-8 h-8 rounded-full bg-[#D8AA67] text-[#380506] font-bold text-xs flex items-center justify-center">
-                  {initial}
+              {/* Drawer Header */}
+              <div className="px-5 py-3 border-b border-[#D8AA67]/25 flex items-center justify-between">
+                <div className="flex items-center space-x-2.5">
+                  <PalaceMark />
+                  <div className="flex flex-col text-left">
+                    <span
+                      className="text-lg font-bold text-[#E1B46F] tracking-wide leading-none"
+                      style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)" }}
+                    >
+                      Rajmahal
+                    </span>
+                    <span className="text-[8px] uppercase tracking-[0.28em] text-[#D8AA67] mt-0.5 font-semibold">
+                      Heritage Hotel
+                    </span>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs font-bold text-[#FFF8EB] leading-tight">{displayName}</p>
-                  <p className="text-[10px] text-[#D8AA67]">{user.email}</p>
+
+                <button
+                  type="button"
+                  onClick={closeMobileMenu}
+                  className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-[#FFF8EB] transition-colors cursor-pointer"
+                  aria-label="Close menu"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Drawer Scrollable Content */}
+              <div className="p-4 sm:p-5 overflow-y-auto space-y-3.5 max-h-[68vh]">
+                {/* Admin Panel Quick Banner for Staff */}
+                {user && isStaff && (
+                  <Link
+                    href="/dashboard"
+                    onClick={closeMobileMenu}
+                    className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-[#D8AA67] via-[#E1B46F] to-[#B78A48] text-[#380506] font-bold text-xs shadow-md transition group"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <ShieldCheck className="w-4 h-4 text-[#380506]" />
+                      <span className="uppercase tracking-wider">Access Admin Panel</span>
+                    </div>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                )}
+
+                {/* Profile Banner */}
+                {user && (
+                  <div className="p-3 rounded-2xl bg-[#3D0607]/80 border border-[#D8AA67]/30 flex items-center justify-between">
+                    <div className="flex items-center space-x-2.5">
+                      <div className="w-9 h-9 rounded-full bg-[#D8AA67] text-[#380506] font-bold text-sm flex items-center justify-center shadow-inner">
+                        {initial}
+                      </div>
+                      <div className="flex flex-col text-left">
+                        <p className="text-xs font-bold text-[#FFF8EB] leading-tight">{displayName}</p>
+                        <p className="text-[10px] text-[#D8AA67]">{user.email}</p>
+                      </div>
+                    </div>
+                    <Link
+                      href="/profile"
+                      onClick={closeMobileMenu}
+                      className="text-xs text-[#D8AA67] underline font-semibold px-2 py-1"
+                    >
+                      Account
+                    </Link>
+                  </div>
+                )}
+
+                {/* Navigation Links */}
+                <div className="space-y-1">
+                  {navLinks.map((link) => {
+                    const isActive =
+                      pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href));
+                    return (
+                      <Link
+                        key={link.label}
+                        href={link.href}
+                        onClick={closeMobileMenu}
+                        className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                          isActive
+                            ? 'bg-[#680B0C] text-[#FFF8EB] border border-[#D8AA67]/50 font-bold'
+                            : 'text-[#FFF8EB]/90 hover:bg-[#5E0A0B] hover:text-[#D8AA67]'
+                        }`}
+                      >
+                        <span>{link.label}</span>
+                        <ArrowRight className="w-3.5 h-3.5 text-[#D8AA67] opacity-60" />
+                      </Link>
+                    );
+                  })}
+                </div>
+
+                {/* Quick Reservation Action */}
+                <div className="pt-2 border-t border-[#D8AA67]/20">
+                  <Link
+                    href="/rooms"
+                    onClick={closeMobileMenu}
+                    className="w-full py-3 rounded-xl bg-gradient-to-r from-[#D8AA67] via-[#E1B46F] to-[#B78A48] text-[#380506] font-bold text-xs uppercase tracking-wider flex items-center justify-center space-x-2 shadow-md hover:shadow-lg transition"
+                    style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)", fontSize: '15px' }}
+                  >
+                    <BedDouble className="w-4 h-4 text-[#380506]" />
+                    <span>Reserve a Royal Suite</span>
+                  </Link>
+                </div>
+
+                {/* Language & Auth Footer */}
+                <div className="pt-2 flex items-center justify-between text-xs px-1 text-[#FFF8EB]/80">
+                  <button
+                    type="button"
+                    onClick={() => setLanguage(language === 'Eng' ? 'हिन्दी' : 'Eng')}
+                    className="flex items-center space-x-1.5 py-1 text-xs hover:text-[#D8AA67] cursor-pointer"
+                  >
+                    <Globe className="w-3.5 h-3.5 text-[#D8AA67]" />
+                    <span>Language: {language}</span>
+                  </button>
+
+                  {user ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        closeMobileMenu();
+                        handleSignOut();
+                      }}
+                      className="text-red-300 hover:text-red-200 font-semibold flex items-center py-1 cursor-pointer"
+                    >
+                      <LogOut className="w-3.5 h-3.5 mr-1" />
+                      <span>Sign Out</span>
+                    </button>
+                  ) : (
+                    <Link
+                      href="/login"
+                      onClick={closeMobileMenu}
+                      className="text-[#D8AA67] font-semibold flex items-center py-1 hover:underline"
+                    >
+                      <span>Sign Up / Login</span>
+                      <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                    </Link>
+                  )}
                 </div>
               </div>
-              <Link
-                href="/profile"
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-xs text-[#D8AA67] underline font-semibold"
-              >
-                View
-              </Link>
             </div>
-          )}
-
-          <div className="space-y-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.label}
-                href={link.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2.5 rounded-lg text-sm text-[#FFF8EB] hover:bg-[#680b0c] hover:text-[#D8AA67] font-medium transition-colors"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
-
-          <div className="mt-3 pt-3 border-t border-[#D8AA67]/20 flex items-center justify-between text-xs px-2">
-            <button
-              onClick={() => setLanguage(language === 'Eng' ? 'हिन्दी' : 'Eng')}
-              className="flex items-center space-x-1.5 text-[#FFF8EB]/90 py-1"
-            >
-              <Globe className="w-3.5 h-3.5 text-[#D8AA67]" />
-              <span>Language: {language}</span>
-            </button>
-            {user ? (
-              <button
-                type="button"
-                onClick={handleSignOut}
-                className="text-red-300 hover:text-red-200 font-semibold flex items-center py-1 cursor-pointer"
-              >
-                <LogOut className="w-3.5 h-3.5 mr-1" />
-                <span>Sign Out</span>
-              </button>
-            ) : (
-              <Link
-                href="/login"
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-[#D8AA67] font-semibold flex items-center py-1"
-              >
-                <span>Sign Up / Login</span>
-                <ArrowRight className="w-3.5 h-3.5 ml-1" />
-              </Link>
-            )}
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </header>
     {/* Structural spacer so non-hero pages are never covered by the fixed floating header */}
     <div className="h-[80px] sm:h-[86px] w-full shrink-0 pointer-events-none" aria-hidden="true" />
