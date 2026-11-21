@@ -278,3 +278,32 @@ body {
     transparent 100%
   );
 }
+
+/* ── Mobile Dialog & Pop-out Animations ── */
+@keyframes slideUpModal {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up-modal {
+  animation: slideUpModal 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeInBackdrop {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in-backdrop {
+  animation: fadeInBackdrop 0.25s ease-out forwards;
+}
