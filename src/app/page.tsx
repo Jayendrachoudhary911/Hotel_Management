@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { BookingBar } from '@/components/home/booking-bar';
+import { HeroSection } from '@/components/home/hero-section';
 import { roomsService } from '@/lib/services/rooms-service';
 import { formatMoney } from '@/lib/utils/money';
 import { ArrowRight, BedDouble, Users } from 'lucide-react';
@@ -124,55 +124,8 @@ async function HomeContent() {
 
   return (
     <div className="flex flex-col w-full text-[#151c1a]" style={{ backgroundColor: 'var(--cream, #fbf5e9)' }}>
-      {/* ── 1. HERO SECTION (FIGMA SPEC) ── */}
-      <section className="relative z-20 min-h-[620px] lg:min-h-[700px] flex flex-col justify-between -mt-[72px] sm:-mt-[78px]">
-        {/* Background Palace Image with Corner Radius & Framing Inset */}
-        <div className="absolute inset-x-2.5 sm:inset-x-4 lg:inset-x-6 top-2 sm:top-3.5 bottom-0 z-0 overflow-hidden rounded-[24px] sm:rounded-[36px] lg:rounded-[42px] border border-[#D8AA67]/40 shadow-[0_24px_60px_-10px_rgba(20,8,10,0.22)]">
-          <Image
-            src="/images/palace-interior.jpg"
-            alt="Rajmahal Heritage Hotel Grand Palace Interior"
-            fill
-            priority
-            className="object-cover object-center scale-105"
-            style={{ filter: 'saturate(1.08) sepia(0.08)' }}
-          />
-          {/* Hero Warmth overlay */}
-          <div className="hero-warmth pointer-events-none" />
-          {/* Hero Shade overlay */}
-          <div className="hero-shade pointer-events-none" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/25 pointer-events-none" />
-        </div>
-
-        {/* Hero Content Left Aligned */}
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 pt-36 sm:pt-44 md:pt-48 pb-16 sm:pb-20 w-full">
-          <div className="max-w-xl text-left">
-            <span
-              className="text-[#eee1cc] text-xs sm:text-sm font-semibold tracking-[0.25em] uppercase block mb-3 drop-shadow"
-              style={{ letterSpacing: '0.22em' }}
-            >
-              A Royal Stay
-            </span>
-            <h1
-              className="text-4xl sm:text-6xl lg:text-7xl font-semibold tracking-tight text-[#fff8eb] mb-5 leading-[0.92] drop-shadow-2xl"
-              style={{
-                fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
-              }}
-            >
-              Rooted in
-              <br />
-              Rajasthan
-            </h1>
-            <p className="text-sm sm:text-base text-[#fff8eb]/90 mb-4 sm:mb-6 font-normal leading-relaxed max-w-md drop-shadow">
-              Heritage rooms, authentic cuisine and unforgettable experiences in the heart of Udaipur.
-            </p>
-          </div>
-        </div>
-
-        {/* Overlapping Floating Booking Widget (High z-index to sit cleanly above sections) */}
-        <div className="relative z-30 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full -mb-10 sm:-mb-12">
-          <BookingBar />
-        </div>
-      </section>
+      {/* ── 1. HERO SECTION (SCROLL-AWARE FULL-SCREEN & SHRINKING FRAME) ── */}
+      <HeroSection />
 
       {/* ── 2. QUICK LINKS WITH HERITAGE ORNAMENTS ── */}
       <section className="relative z-10 pt-20 sm:pt-24 pb-16 overflow-hidden border-b border-[#dfcdb1]/60" style={{ backgroundColor: 'var(--cream, #fbf5e9)' }}>

@@ -261,23 +261,10 @@ export const Navbar: React.FC<NavbarProps> = ({
     {
       label: 'HOTEL',
       href: '/hotel',
-      hasDropdown: true,
-      dropdownItems: [
-        { label: 'Rooms & Chambers', href: '/rooms', desc: 'Luxury heritage suites with lake views' },
-        { label: 'Party Hall (25–50 Pax)', href: '/hotel#party-hall-enquiry', desc: 'Royal banquet, gatherings & celebrations' },
-        { label: 'Heritage & Palace Grounds', href: '/hotel', desc: 'Architecture, royal courtyards & history' },
-      ],
     },
     {
       label: 'RESTAURANT & CAFÉ',
       href: '/restaurant',
-      hasDropdown: true,
-      dropdownItems: [
-        { label: 'Royal Dining Courtyard', href: '/restaurant', desc: 'Authentic Rajasthani fine dining' },
-        { label: 'Jharokha Café & Lounge', href: '/restaurant#cafe', desc: 'Artisanal coffee, tea & lake sunset' },
-        { label: 'Palace Menu & Thali', href: '/menu', desc: 'Curated royal culinary delicacies' },
-        { label: 'Reserve A Table', href: '/restaurant#reserve', desc: 'Book your private dining experience' },
-      ],
     },
     { label: 'MENU', href: '/menu' },
     { label: 'CONTACT', href: '/#contact' },
@@ -293,32 +280,28 @@ export const Navbar: React.FC<NavbarProps> = ({
             : 'h-[62px] sm:h-[100px] bg-[#EFEBE3]/00'
         } px-3.5 sm:px-6 lg:px-8 xl:px-10 ${className}`}
       >
-        <div className="w-full max-w-7xl mx-auto flex items-center justify-between">
-          {/* ── 1. Left: Brand Capsule Pill (Matches reference [BunkMates] capsule) ── */}
+<div className="w-full max-w-xxl mx-auto flex items-center justify-between px-4 py-2.5 rounded-full">
+          {/* ── 1. Left: Brand Capsule Pill ── */}
           <Link
             href="/"
-            className={`inline-flex items-center space-x-2.5 px-3.5 sm:px-4 py-1 sm:py-1.5 rounded-full ${
-              isScrolled
-                ? 'bg-[#4F0809] text-[#FFF8EB]'
-                : 'bg-[#EFEBE3] text-[#4F0809]'
-            } border border-white/10 hover:border-[#D8AA67]/10 backdrop-blur-md transition-all shadow-sm group shrink-0 active:scale-95`}
+            className="inline-flex items-center space-x-2.5 px-3.5 sm:px-4 py-1 sm:py-1.5 rounded-full bg-white text-[#4F0809] border border-[#4F0809]/15 hover:border-[#D8AA67] transition-all shadow-xs group shrink-0 active:scale-95"
           >
             {/* <PalaceMark /> */}
             <div className="flex flex-col text-left">
               <span
-                className={`font-bold tracking-[0.1em] sm:text-[15px] uppercase text-xs sm:text-base ${isScrolled ? 'text-[#FFF8EB]' : 'text-[#4F0809]'} group-hover:text-[#D8AA67] transition-colors leading-none`}
+                className="font-bold tracking-[0.1em] sm:text-[15px] uppercase text-xs sm:text-base text-[#4F0809] group-hover:text-[#D8AA67] transition-colors leading-none"
                 style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)" }}
               >
                 Rajmahal
               </span>
-              <span className={`text-[5.5px] sm:text-[7px] font-semibold tracking-[0.28em] uppercase ${isScrolled ? 'text-[#D8AA67]' : 'text-[#4F0809]'} leading-none mt-0.5`}>
+              <span className="text-[5.5px] sm:text-[7px] font-semibold tracking-[0.28em] uppercase text-[#4F0809]/80 leading-none mt-0.5">
                 Heritage Hotel
               </span>
             </div>
           </Link>
 
-          {/* ── 2. Center: Nav Island Capsule (Matches reference pill island with [HOME] active pill) ── */}
-          <nav className={`hidden lg:inline-flex items-center p-1 rounded-full ${isScrolled ? 'bg-[#4F0809]' : 'bg-[#EFEBE3]'} border border-white/10 backdrop-blur-md shadow-inner space-x-1`}>
+          {/* ── 2. Center: Nav Island Capsule ── */}
+          <nav className="hidden lg:inline-flex items-center p-1 rounded-full bg-white border border-[#4F0809]/15 shadow-xs space-x-1 transition-colors">
             {navLinks.map((link) => {
               const isActive =
                 link.href === '/'
@@ -331,31 +314,37 @@ export const Navbar: React.FC<NavbarProps> = ({
                     href={link.href}
                     className={`flex items-center space-x-1 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
                       isActive
-                        ? 'bg-white/15 text-[#FFF8EB] shadow-xs ring-1 ring-white/15'
-                        : 'text-[#FFF8EB]/75 hover:text-[#FFF8EB] hover:bg-white/5'
+                        ? 'bg-[#4F0809] text-[#FFF8EB] shadow-xs'
+                        : 'text-[#4F0809]/80 hover:text-[#4F0809] hover:bg-[#4F0809]/10'
                     }`}
                   >
                     <span>{link.label}</span>
                     {link.hasDropdown && (
-                      <ChevronDown className="w-3 h-3 text-[#FFF8EB]/60 group-hover:text-[#D8AA67] transition-transform group-hover:rotate-180 duration-200 ml-0.5" />
+                      <ChevronDown
+                        className={`w-3 h-3 transition-transform group-hover:rotate-180 duration-200 ml-0.5 ${
+                          isActive
+                            ? 'text-[#D8AA67]'
+                            : 'text-[#4F0809]/60 group-hover:text-[#4F0809]'
+                        }`}
+                      />
                     )}
                   </Link>
 
                   {/* Dropdown Menu on Hover */}
                   {link.hasDropdown && link.dropdownItems && (
-                    <div className="absolute top-full left-0 mt-2.5 w-64 rounded-2xl bg-[#140304]/98 backdrop-blur-md border border-[#D8AA67]/30 shadow-[0_16px_40px_rgba(0,0,0,0.6)] p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none group-hover:pointer-events-auto z-50">
+                    <div className="absolute top-full left-0 mt-2.5 w-64 rounded-2xl bg-white border border-[#4F0809]/15 shadow-[0_16px_40px_rgba(0,0,0,0.12)] p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none group-hover:pointer-events-auto z-50">
                       {link.dropdownItems.map((item) => (
                         <Link
                           key={item.label}
                           href={item.href}
-                          className="flex flex-col p-2.5 rounded-xl hover:bg-white/5 text-left transition-colors group/item"
+                          className="flex flex-col p-2.5 rounded-xl hover:bg-[#4F0809]/5 text-left transition-colors group/item"
                         >
-                          <span className="text-xs font-bold text-[#FFF8EB] group-hover/item:text-[#D8AA67] transition-colors flex items-center justify-between">
+                          <span className="text-xs font-bold text-[#4F0809] group-hover/item:text-[#9C7A45] transition-colors flex items-center justify-between">
                             <span>{item.label}</span>
-                            <ArrowRight className="w-3 h-3 opacity-0 group-hover/item:opacity-100 -translate-x-1 group-hover/item:translate-x-0 transition-all text-[#D8AA67]" />
+                            <ArrowRight className="w-3 h-3 opacity-0 group-hover/item:opacity-100 -translate-x-1 group-hover/item:translate-x-0 transition-all text-[#9C7A45]" />
                           </span>
                           {item.desc && (
-                            <span className="text-[10px] text-[#C5B8A5]/80 mt-0.5 line-clamp-1">
+                            <span className="text-[10px] text-[#6B5E51] mt-0.5 line-clamp-1">
                               {item.desc}
                             </span>
                           )}
@@ -368,7 +357,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             })}
           </nav>
 
-          {/* ── 3. Right: Desktop Action Pills (Matches reference [DOWNLOAD APP] & [SIGN IN]) ── */}
+          {/* ── 3. Right: Desktop Action Pills ── */}
           <div className="hidden sm:flex items-center space-x-2.5 md:space-x-3 shrink-0">
             {/* Primary Accent CTA Pill: Book A Stay */}
             <Link
@@ -383,10 +372,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               type="button"
               onClick={() => setLanguage(language === 'Eng' ? 'हिन्दी' : 'Eng')}
-              className="hidden xl:inline-flex items-center space-x-1 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-[#FFF8EB]/80 hover:text-[#D8AA67] transition cursor-pointer"
+              className="hidden xl:inline-flex items-center space-x-1 px-3 py-1.5 rounded-full bg-white hover:bg-[#cccccc]/95 border border-[#4F0809]/15 text-xs font-semibold text-[#4F0809] transition cursor-pointer"
               title="Toggle Language"
             >
-              <Globe className="w-3 h-3 text-[#D8AA67]" />
+              <Globe className="w-3 h-3 text-[#4F0809]" />
               <span>{language}</span>
             </button>
 
@@ -409,18 +398,18 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   type="button"
                   onClick={() => setProfileOpen(!profileOpen)}
-                  className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/15 hover:border-[#D8AA67]/60 text-xs font-bold uppercase tracking-wider text-[#FFF8EB] transition cursor-pointer"
+                  className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-white hover:bg-[#4F0809]/5 border border-[#4F0809]/15 hover:border-[#D8AA67] text-xs font-bold uppercase tracking-wider text-[#4F0809] transition cursor-pointer"
                   aria-label="User profile menu"
                   aria-expanded={profileOpen}
                 >
                   <div className="w-5 h-5 rounded-full bg-[#D8AA67] text-[#2B0507] font-bold text-[10px] flex items-center justify-center">
                     {initial}
                   </div>
-                  <span className="max-w-[85px] truncate text-[11px] font-medium text-[#FFF8EB] capitalize">
+                  <span className="max-w-[85px] truncate text-[11px] font-medium capitalize text-[#4F0809]">
                     {displayName}
                   </span>
                   <ChevronDown
-                    className={`w-3 h-3 text-[#D8AA67] transition-transform duration-200 ${
+                    className={`w-3 h-3 text-[#4F0809] transition-transform duration-200 ${
                       profileOpen ? 'rotate-180' : ''
                     }`}
                   />
@@ -428,7 +417,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                 {/* Profile Dropdown Menu */}
                 {profileOpen && (
-                  <div className="absolute right-0 mt-2 w-64 bg-[#FFFBF4] rounded-2xl shadow-[0_12px_40px_rgba(20,5,5,0.35)] border border-[#E8DFCE] py-2 z-50 animate-fade-in-up divide-y divide-[#EFE7D8]">
+                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-[0_12px_40px_rgba(20,5,5,0.15)] border border-[#E8DFCE] py-2 z-50 animate-fade-in-up divide-y divide-[#EFE7D8]">
                     <div className="px-4 py-3">
                       <p className="text-[10px] uppercase tracking-widest text-[#9C7A45] font-semibold">
                         {isStaff ? 'Rajmahal Staff Member' : 'Rajmahal Guest'}
@@ -502,9 +491,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             ) : (
               <Link
                 href="/login"
-                className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/15 text-[#FFF8EB] font-bold text-xs uppercase tracking-wider transition-all hover:border-[#D8AA67]/60 active:scale-95 cursor-pointer shrink-0"
+                className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-full bg-white hover:bg-[#cccccc]/95 border border-[#4F0809]/15 text-[#4F0809] font-bold text-xs uppercase tracking-wider transition-all hover:border-[#D8AA67] active:scale-95 cursor-pointer shrink-0"
               >
-                <UserIcon className="w-3.5 h-3.5 text-[#D8AA67]" />
+                <UserIcon className="w-3.5 h-3.5 text-[#4F0809]" />
                 <span>Sign In</span>
               </Link>
             )}
@@ -516,23 +505,25 @@ export const Navbar: React.FC<NavbarProps> = ({
             {user ? (
               <Link
                 href="/profile"
-                className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/15 text-[11px] font-bold text-[#FFF8EB] active:scale-95 transition"
+                className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-white hover:bg-[#cccccc]/95 border border-[#4F0809]/15 text-[11px] font-bold text-[#4F0809] active:scale-95 transition"
               >
                 <div className="w-4 h-4 rounded-full bg-[#D8AA67] text-[#2B0507] font-bold text-[9px] flex items-center justify-center">
                   {initial}
                 </div>
-                <span className="text-[10px] uppercase font-bold text-[#D8AA67]">Profile</span>
+                <span className="text-[10px] uppercase font-bold text-[#4F0809]">
+                  Profile
+                </span>
               </Link>
             ) : (
               <Link
                 href="/login"
-                className="inline-flex items-center px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/15 text-[11px] font-bold uppercase tracking-wider text-[#FFF8EB] active:scale-95 transition cursor-pointer"
+                className="inline-flex items-center px-3 py-1.5 rounded-full bg-white hover:bg-[#cccccc]/95 border border-[#4F0809]/15 text-[11px] font-bold uppercase tracking-wider text-[#4F0809] active:scale-95 transition cursor-pointer"
               >
                 <span>Sign In</span>
               </Link>
             )}
 
-            {/* Mobile Menu Button with Menu Icon Capsule (Matches Reference Image 2) */}
+            {/* Mobile Menu Button with Menu Icon Capsule */}
             <button
               type="button"
               onClick={() => {
@@ -542,19 +533,17 @@ export const Navbar: React.FC<NavbarProps> = ({
                   setMobileMenuOpen(true);
                 }
               }}
-              className="inline-flex items-center space-x-1 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/15 text-[11px] font-bold uppercase tracking-wider text-[#FFF8EB] active:scale-95 transition cursor-pointer focus:outline-none"
+              className="inline-flex items-center space-x-1 px-3 py-1.5 rounded-full bg-white hover:bg-[#cccccc]/95 border border-[#4F0809]/15 text-[11px] font-bold uppercase tracking-wider text-[#4F0809] active:scale-95 transition cursor-pointer focus:outline-none"
               aria-label="Toggle navigation menu"
               aria-expanded={mobileMenuOpen}
             >
               {mobileMenuOpen ? (
                 <>
-                  <X className="w-3.5 h-3.5 text-[#D8AA67]" />
-                  <span>Close</span>
+                  <X className="w-3.5 h-3.5 text-[#4F0809]" />
                 </>
               ) : (
                 <>
-                  <Menu className="w-3.5 h-3.5 text-[#D8AA67]" />
-                  <span>Menu</span>
+                  <Menu className="w-3.5 h-3.5 text-[#4F0809]" />
                 </>
               )}
             </button>
@@ -563,14 +552,14 @@ export const Navbar: React.FC<NavbarProps> = ({
       </header>
 
       {/* ── 5. Mobile Swipeable Bottom Floating Drawer ── */}
-      {mounted &&
+{mounted &&
         mobileMenuOpen &&
         createPortal(
           <div
             onClick={(e) => {
               if (e.target === e.currentTarget) closeMobileMenu();
             }}
-            className={`fixed inset-0 z-[150] sm:hidden bg-black/70 backdrop-blur-xs flex items-end justify-center p-0 transition-opacity ${
+            className={`fixed inset-0 z-[150] sm:hidden bg-black/50 backdrop-blur-xs flex items-end justify-center p-3 transition-opacity ${
               isMenuClosing ? 'animate-fade-out-backdrop' : 'animate-fade-in-backdrop'
             }`}
           >
@@ -582,22 +571,22 @@ export const Navbar: React.FC<NavbarProps> = ({
                 transform: touchDeltaY > 0 ? `translateY(${touchDeltaY}px)` : undefined,
                 transition: touchStartY !== null ? 'none' : 'transform 0.2s ease-out',
               }}
-              className={`relative w-full max-h-[85vh] rounded-t-[28px] border-t-2 border-x-2 border-[#D8AA67] bg-[#0E0304]/98 backdrop-blur-2xl shadow-[0_-15px_50px_rgba(0,0,0,0.85)] flex flex-col overflow-hidden ${
+              className={`relative w-full max-h-[85vh] rounded-[28px] border-t-2 border-x border-[#4F0809]/15 bg-white shadow-[0_-15px_50px_rgba(79,8,9,0.18)] flex flex-col overflow-hidden ${
                 isMenuClosing ? 'animate-slide-down-modal' : 'animate-slide-up-modal'
               }`}
             >
               {/* Top Drag Handle Bar (Swipe down affordance) */}
               <div className="pt-3 pb-2 cursor-grab active:cursor-grabbing flex justify-center items-center">
-                <div className="w-12 h-1.5 bg-[#D8AA67]/60 rounded-full" />
+                <div className="w-12 h-1.5 bg-[#4F0809]/25 rounded-full" />
               </div>
 
               {/* Drawer Header */}
-              <div className="px-5 py-2.5 border-b border-[#D8AA67]/20 flex items-center justify-between">
+              <div className="px-5 py-2.5 border-b border-[#4F0809]/10 flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 rounded-full bg-[#D8AA67] animate-pulse" />
                   <span
-                    className="font-bold uppercase tracking-wider text-[#D8AA67]"
-                    style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)", fontSize: '17px' }}
+                    className="font-bold uppercase tracking-wider text-[#4F0809]"
+                    style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)", fontSize: '18px' }}
                   >
                     Palace Navigation
                   </span>
@@ -605,10 +594,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   type="button"
                   onClick={closeMobileMenu}
-                  className="p-1.5 rounded-full bg-white/5 hover:bg-white/10 text-[#FFF8EB] transition cursor-pointer"
+                  className="p-1.5 rounded-full bg-[#4F0809]/5 hover:bg-[#4F0809]/10 text-[#4F0809] transition cursor-pointer"
                   aria-label="Close menu"
                 >
-                  <X className="w-4 h-4 text-[#D8AA67]" />
+                  <X className="w-4 h-4 text-[#4F0809]" />
                 </button>
               </div>
 
@@ -633,20 +622,20 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                 {/* User Profile Quick Info */}
                 {user && (
-                  <div className="p-3 rounded-2xl bg-white/5 border border-[#D8AA67]/20 flex items-center justify-between">
+                  <div className="p-3 rounded-2xl bg-[#FAF7F2] border border-[#4F0809]/10 flex items-center justify-between">
                     <div className="flex items-center space-x-2.5">
-                      <div className="w-9 h-9 rounded-full bg-[#D8AA67] text-[#2B0507] font-bold text-xs flex items-center justify-center">
+                      <div className="w-9 h-9 rounded-full bg-[#4F0809] text-[#FFF8EB] font-bold text-xs flex items-center justify-center">
                         {initial}
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-[#FFF8EB] leading-tight">{displayName}</p>
-                        <p className="text-[10px] text-[#D8AA67] truncate max-w-[190px]">{user.email}</p>
+                        <p className="text-xs font-bold text-[#4F0809] leading-tight">{displayName}</p>
+                        <p className="text-[10px] text-[#6B5E51] truncate max-w-[190px]">{user.email}</p>
                       </div>
                     </div>
                     <Link
                       href="/profile"
                       onClick={closeMobileMenu}
-                      className="text-xs text-[#D8AA67] underline font-semibold"
+                      className="text-xs text-[#9C7A45] hover:text-[#4F0809] underline font-semibold transition-colors"
                     >
                       Profile
                     </Link>
@@ -658,7 +647,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <Link
                     href="/rooms"
                     onClick={closeMobileMenu}
-                    className="w-full py-3 rounded-xl bg-gradient-to-r from-[#D8AA67] to-[#C89B55] text-[#2B0507] font-bold text-xs uppercase tracking-wider flex items-center justify-center space-x-2 shadow-md active:scale-98 transition"
+                    className="w-full py-3 rounded-xl bg-gradient-to-r from-[#D8AA67] via-[#E1B46F] to-[#C89B55] text-[#2B0507] font-bold text-xs uppercase tracking-wider flex items-center justify-center space-x-2 shadow-md active:scale-98 transition"
                   >
                     <BedDouble className="w-4 h-4 text-[#2B0507]" />
                     <span>Book A Stay &bull; Suites &amp; Rooms</span>
@@ -680,12 +669,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                           onClick={closeMobileMenu}
                           className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors ${
                             isActive
-                              ? 'bg-white/15 text-[#D8AA67] font-bold'
-                              : 'text-[#FFF8EB]/80 hover:bg-white/5 hover:text-[#FFF8EB]'
+                              ? 'bg-[#4F0809] text-[#FFF8EB] shadow-xs'
+                              : 'text-[#4F0809]/85 hover:bg-[#4F0809]/5 hover:text-[#4F0809]'
                           }`}
                         >
                           <span>{link.label}</span>
-                          <ArrowRight className="w-3.5 h-3.5 opacity-60" />
+                          <ArrowRight
+                            className={`w-3.5 h-3.5 ${
+                              isActive ? 'text-[#D8AA67]' : 'text-[#4F0809]/50'
+                            }`}
+                          />
                         </Link>
                         {link.hasDropdown && link.dropdownItems && (
                           <div className="pl-4 pr-1 py-1 space-y-1">
@@ -694,7 +687,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                                 key={sub.label}
                                 href={sub.href}
                                 onClick={closeMobileMenu}
-                                className="block px-3 py-1.5 rounded-lg text-[11px] text-[#C5B8A5] hover:text-[#FFF8EB] hover:bg-white/5 transition"
+                                className="block px-3 py-1.5 rounded-lg text-[11px] font-medium text-[#6B5E51] hover:text-[#4F0809] hover:bg-[#4F0809]/5 transition"
                               >
                                 {sub.label}
                               </Link>
@@ -707,13 +700,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </div>
 
                 {/* Footer in Mobile Menu */}
-                <div className="mt-3.5 pt-3.5 border-t border-[#D8AA67]/20 flex items-center justify-between text-xs px-2">
+                <div className="mt-3.5 pt-3.5 border-t border-[#4F0809]/10 flex items-center justify-between text-xs px-2">
                   <button
                     type="button"
                     onClick={() => setLanguage(language === 'Eng' ? 'हिन्दी' : 'Eng')}
-                    className="flex items-center space-x-1.5 text-[#FFF8EB]/80 py-1"
+                    className="flex items-center space-x-1.5 text-[#4F0809]/80 hover:text-[#4F0809] font-medium py-1 cursor-pointer transition-colors"
                   >
-                    <Globe className="w-3.5 h-3.5 text-[#D8AA67]" />
+                    <Globe className="w-3.5 h-3.5 text-[#4F0809]" />
                     <span>Language: {language}</span>
                   </button>
 
@@ -721,7 +714,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <button
                       type="button"
                       onClick={handleSignOut}
-                      className="text-red-400 hover:text-red-300 font-semibold flex items-center py-1 cursor-pointer"
+                      className="text-red-700 hover:text-red-800 font-semibold flex items-center py-1 cursor-pointer transition-colors"
                     >
                       <LogOut className="w-3.5 h-3.5 mr-1" />
                       <span>Sign Out</span>
@@ -730,10 +723,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <Link
                       href="/login"
                       onClick={closeMobileMenu}
-                      className="text-[#D8AA67] font-semibold flex items-center py-1"
+                      className="text-[#4F0809] hover:text-[#9C7A45] font-bold flex items-center py-1 transition-colors"
                     >
                       <span>Sign Up / Login</span>
-                      <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                      <ArrowRight className="w-3.5 h-3.5 ml-1 text-[#9C7A45]" />
                     </Link>
                   )}
                 </div>
