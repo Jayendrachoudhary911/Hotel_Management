@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   UtensilsCrossed,
   Coffee,
@@ -41,6 +42,7 @@ export const TableReservationModal: React.FC<TableReservationModalProps> = ({
   onClose,
   defaultVenue = 'restaurant',
 }) => {
+  const [mounted, setMounted] = useState(false);
   const [venue, setVenue] = useState<'restaurant' | 'cafe'>(defaultVenue);
   const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [timeSlot, setTimeSlot] = useState(TIME_SLOTS[4]); // 7:00 PM
@@ -62,7 +64,46 @@ export const TableReservationModal: React.FC<TableReservationModalProps> = ({
     partySize: string;
   } | null>(null);
 
-  if (!isOpen) return null;
+  // Mount check for client-side portal rendering
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Sync venue and reset state whenever modal is opened
+  useEffect(() => {
+    if (isOpen) {
+      setVenue(defaultVenue);
+      setErrorMsg('');
+      setConfirmedReservation(null);
+    }
+  }, [isOpen, defaultVenue]);
+
+  // Lock background body scroll when open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
+  // Close on Escape key press
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    if (isOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,9 +168,18 @@ export const TableReservationModal: React.FC<TableReservationModalProps> = ({
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-xl max-h-[92vh] overflow-y-auto bg-[#FFFDF9] rounded-3xl border border-[#D8AA67]/60 shadow-[0_20px_50px_rgba(40,5,6,0.5)] p-5 sm:p-7 text-[#241F1A]">
+  if (!isOpen || !mounted) return null;
+
+  return createPortal(
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 bg-black/70 backdrop-blur-md animate-fade-in"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div className="relative w-full max-w-xl max-h-[92vh] overflow-y-auto bg-[#FFFDF9] rounded-3xl border border-[#D8AA67]/60 shadow-[0_25px_60px_rgba(40,5,6,0.6)] p-5 sm:p-7 text-[#241F1A]">
         {/* Close Button */}
         <button
           type="button"
@@ -411,6 +461,7 @@ export const TableReservationModal: React.FC<TableReservationModalProps> = ({
           </form>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

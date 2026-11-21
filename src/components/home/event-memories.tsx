@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -99,12 +100,17 @@ const EVENT_MEMORIES: EventMemory[] = [
 ];
 
 export function EventMemories() {
+  const [mounted, setMounted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
   const [selectedMemory, setSelectedMemory] = useState<EventMemory | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Mouse drag to scroll state
   const isDraggingRef = useRef(false);
@@ -516,8 +522,13 @@ export function EventMemories() {
       </div>
 
       {/* ── FULLSCREEN IMMERSIVE LIGHTBOX MODAL ── */}
-      {selectedMemory && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md animate-fade-in">
+      {selectedMemory && mounted && createPortal(
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSelectedMemory(null);
+          }}
+          className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md animate-fade-in"
+        >
           <div className="relative w-full max-w-4xl max-h-[92vh] overflow-hidden rounded-[24px] bg-[#FFFDF9] border border-[#D8AA67]/60 shadow-[0_25px_60px_rgba(40,5,8,0.6)] flex flex-col md:flex-row">
             {/* Close Button */}
             <button
@@ -594,7 +605,8 @@ export function EventMemories() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </section>
   );
