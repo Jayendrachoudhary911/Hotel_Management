@@ -5,6 +5,7 @@ import { BookingBar } from '@/components/home/booking-bar';
 import { roomsService } from '@/lib/services/rooms-service';
 import { formatMoney } from '@/lib/utils/money';
 import { ArrowRight, BedDouble, Users } from 'lucide-react';
+import { InstaLookbook } from '@/components/home/insta-lookbook';
 import { EventMemories } from '@/components/home/event-memories';
 import { Testimonials } from '@/components/home/testimonials';
 import { Promotions } from '@/components/home/promotions';
@@ -548,13 +549,16 @@ async function HomeContent() {
         </div>
       </section>
 
-      {/* ── 6. COMBINED PALACE CANVAS: EVENT MEMORIES & REELS ── */}
+      {/* ── 6. EVENT MEMORIES GALLERY (FIGMA EXACT RECREATION) ── */}
       <EventMemories />
 
       {/* ── 6.5 PROMOTIONS — CURRENT OFFERS ── */}
       <Promotions />
 
-      {/* ── 7. GUEST EXPERIENCES — WHAT OUR GUESTS SAY ── */}
+      {/* ── 7. INSTA LOOKBOOK & REELS SECTION ── */}
+      <InstaLookbook />
+
+      {/* ── 8. GUEST EXPERIENCES — WHAT OUR GUESTS SAY ── */}
       <Testimonials />
     </div>
   );
