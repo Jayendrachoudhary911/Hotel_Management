@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Calendar as CalendarIcon,
@@ -21,7 +21,7 @@ import {
 import { useRouter } from 'next/navigation';
 
 type TabType = 'rooms' | 'hall';
-type TooltipPanelType = 'calendar' | 'guests' | 'hallCalendar' | 'hallCapacity';
+type TooltipPanelType = 'calendar' | 'guests' | 'hallOccasion' | 'hallCalendar' | 'hallCapacity';
 
 interface StaySuggestion {
   label: string;
@@ -36,6 +36,66 @@ const STAY_SUGGESTIONS: StaySuggestion[] = [
   { label: '3 Nights', sublabel: 'Royal Retreat (Popular)', nights: 3 },
   { label: '5 Nights', sublabel: 'Heritage Exploration', nights: 5 },
   { label: '7 Nights', sublabel: 'Full Imperial Week', nights: 7 },
+];
+
+interface EventOccasionOption {
+  id: string;
+  title: string;
+  badge: string;
+  subtext: string;
+  icon: string;
+}
+
+const EVENT_OCCASION_OPTIONS: EventOccasionOption[] = [
+  {
+    id: 'birthday',
+    title: 'Birthday Celebration',
+    badge: 'Popular',
+    subtext: 'Royal courtyard celebration, candle illumination, cake ceremony & live flute/folk music.',
+    icon: '🎂',
+  },
+  {
+    id: 'anniversary',
+    title: 'Anniversary & Milestone Party',
+    badge: 'Romantic',
+    subtext: 'Silver & golden milestone soiree with candlelit lakefront dining and champagne toast.',
+    icon: '💍',
+  },
+  {
+    id: 'date',
+    title: 'Romantic Candlelight Dinner',
+    badge: 'Private',
+    subtext: 'Exclusive Jharokha alcove table, bespoke royal degustation menu & private butler.',
+    icon: '🕯️',
+  },
+  {
+    id: 'corporate',
+    title: 'Corporate Retreat & Conference',
+    badge: 'Executive',
+    subtext: 'High-definition AV projection, executive royal dining & cocktail networking lounge.',
+    icon: '💼',
+  },
+  {
+    id: 'sangeet',
+    title: 'Pre-Wedding & Sangeet Gathering',
+    badge: 'Festive',
+    subtext: 'Traditional marigold floral decor, vibrant Ghoomar performance & multi-course Rajasthani feast.',
+    icon: '🪕',
+  },
+  {
+    id: 'family',
+    title: 'Royal Family Reunion & Gathering',
+    badge: 'Heritage',
+    subtext: 'Private palace courtyard reserved for multigenerational family dinners & memories.',
+    icon: '👑',
+  },
+  {
+    id: 'hightea',
+    title: 'Sunset High Tea & Soirée',
+    badge: 'Afternoon',
+    subtext: 'Palace terrace gathering with Rajasthani savories, herbal infusions & panoramic lake sunset.',
+    icon: '🫖',
+  },
 ];
 
 interface HallCapacityOption {
@@ -121,7 +181,7 @@ export function BookingBar() {
   const [userHasCustomizedRooms, setUserHasCustomizedRooms] = useState(false);
 
   // Party Hall Booking State
-  const [hallEventType, setHallEventType] = useState('Birthday Party');
+  const [hallEventType, setHallEventType] = useState('Birthday Celebration');
   const [hallDate, setHallDate] = useState('');
   const [hallCapacity, setHallCapacity] = useState('35 – 50 Guests (Most Popular)');
 
@@ -131,17 +191,22 @@ export function BookingBar() {
   const [activeTooltipTab, setActiveTooltipTab] = useState<TooltipPanelType>('calendar');
   const [beakLeftPercent, setBeakLeftPercent] = useState<number>(20);
 
+  // Display Awareness & Collision Detection State
+  const [placement, setPlacement] = useState<'bottom' | 'top'>('bottom');
+  const [maxContentHeight, setMaxContentHeight] = useState<number>(440);
+
   // Calendar Navigation Month State
   const [calendarMonth, setCalendarMonth] = useState<Date>(new Date());
   // Date selection mode: 'in' = selecting checkin, 'out' = selecting checkout
   const [selectingField, setSelectingField] = useState<'in' | 'out'>('in');
   const [isCustomMode, setIsCustomMode] = useState(false);
 
-  // Refs for calculating tooltip beak / arrowhead positions
+  // Refs for calculating tooltip beak / arrowhead positions & collision detection
   const barRootRef = useRef<HTMLDivElement>(null);
   const checkInTileRef = useRef<HTMLDivElement>(null);
   const checkOutTileRef = useRef<HTMLDivElement>(null);
   const guestsTileRef = useRef<HTMLDivElement>(null);
+  const hallOccasionTileRef = useRef<HTMLDivElement>(null);
   const hallDateTileRef = useRef<HTMLDivElement>(null);
   const hallCapacityTileRef = useRef<HTMLDivElement>(null);
 
@@ -206,7 +271,42 @@ export function BookingBar() {
     pets > 0 ? ` • ${pets} ${pets === 1 ? 'Pet' : 'Pets'}` : ''
   }`;
 
-  // ── Open Tooltip Dialog with Beak Calibration & Animation ──
+  // ── Display Awareness Calculation ──
+  const updateDisplayAwareness = useCallback(() => {
+    if (!barRootRef.current) return;
+    const barRect = barRootRef.current.getBoundingClientRect();
+    const windowH = window.innerHeight;
+    const spaceBelow = windowH - barRect.bottom;
+    const spaceAbove = barRect.top;
+
+    // If space below is tighter than 370px and space above has more room, flip above
+    const flipToTop = spaceBelow < 370 && spaceAbove > spaceBelow;
+    setPlacement(flipToTop ? 'top' : 'bottom');
+
+    const availableH = flipToTop
+      ? Math.max(260, Math.min(480, spaceAbove - 28))
+      : Math.max(260, Math.min(480, spaceBelow - 28));
+
+    setMaxContentHeight(availableH);
+  }, []);
+
+  // ── Calibrate Beak / Arrow Position ──
+  const calibrateBeak = useCallback(
+    (targetTileRef: React.RefObject<HTMLDivElement | null>, defaultPct: number) => {
+      if (targetTileRef.current && barRootRef.current) {
+        const tileRect = targetTileRef.current.getBoundingClientRect();
+        const barRect = barRootRef.current.getBoundingClientRect();
+        const relativeX = tileRect.left - barRect.left + tileRect.width / 2;
+        const pct = Math.max(8, Math.min(92, (relativeX / barRect.width) * 100));
+        setBeakLeftPercent(pct);
+      } else {
+        setBeakLeftPercent(defaultPct);
+      }
+    },
+    []
+  );
+
+  // ── Open Tooltip Dialog with Display Awareness & Beak Calibration ──
   const openTooltip = (
     panel: TooltipPanelType,
     targetTileRef: React.RefObject<HTMLDivElement | null>,
@@ -218,19 +318,22 @@ export function BookingBar() {
       setSelectingField(targetDateField);
     }
 
-    // Calibrate arrow beak position
-    if (targetTileRef.current && barRootRef.current) {
-      const tileRect = targetTileRef.current.getBoundingClientRect();
-      const barRect = barRootRef.current.getBoundingClientRect();
-      const relativeX = tileRect.left - barRect.left + tileRect.width / 2;
-      const pct = Math.max(8, Math.min(92, (relativeX / barRect.width) * 100));
-      setBeakLeftPercent(pct);
-    } else {
-      setBeakLeftPercent(defaultBeakPct);
-    }
-
+    calibrateBeak(targetTileRef, defaultBeakPct);
+    updateDisplayAwareness();
     setIsClosing(false);
     setTooltipOpen(true);
+
+    // Display awareness: Smooth scroll into view if bar is pushed near viewport edges
+    setTimeout(() => {
+      if (barRootRef.current) {
+        const barRect = barRootRef.current.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - barRect.bottom;
+        if (spaceBelow < 350 && barRect.top > 120) {
+          const needed = 350 - spaceBelow + 18;
+          window.scrollBy({ top: needed, behavior: 'smooth' });
+        }
+      }
+    }, 40);
   };
 
   const closeTooltipWithAnimation = () => {
@@ -238,8 +341,32 @@ export function BookingBar() {
     setTimeout(() => {
       setTooltipOpen(false);
       setIsClosing(false);
-    }, 180); // Matches tooltip collapse animation
+    }, 180);
   };
+
+  // Keep tooltip aligned & check scroll bounds
+  useEffect(() => {
+    if (!tooltipOpen) return;
+
+    const handleScrollOrResize = () => {
+      if (!barRootRef.current) return;
+      const barRect = barRootRef.current.getBoundingClientRect();
+      // If booking bar scrolls completely out of viewport, dismiss tooltip cleanly
+      if (barRect.bottom < 40 || barRect.top > window.innerHeight - 40) {
+        setTooltipOpen(false);
+        return;
+      }
+      updateDisplayAwareness();
+    };
+
+    window.addEventListener('scroll', handleScrollOrResize, { passive: true });
+    window.addEventListener('resize', handleScrollOrResize);
+
+    return () => {
+      window.removeEventListener('scroll', handleScrollOrResize);
+      window.removeEventListener('resize', handleScrollOrResize);
+    };
+  }, [tooltipOpen, updateDisplayAwareness]);
 
   // ── Adults & Rooms Logic ──
   const handleAdultsChange = (newAdults: number) => {
@@ -256,7 +383,6 @@ export function BookingBar() {
         setRooms(2);
       }
     } else {
-      // User has customized rooms, ensure rooms does not exceed adults
       setRooms((prev) => Math.min(prev, newAdults));
     }
   };
@@ -273,9 +399,9 @@ export function BookingBar() {
   // ── Stay Suggestions Handler ──
   const applyStaySuggestion = (nights: number) => {
     if (nights === 0) {
-      // Custom dates mode
       setIsCustomMode(true);
       setSelectingField('in');
+      calibrateBeak(checkInTileRef, 15);
       return;
     }
 
@@ -285,10 +411,12 @@ export function BookingBar() {
     const newCheckOut = toYMD(addDays(baseDate, nights));
     setCheckIn(newCheckIn);
     setCheckOut(newCheckOut);
-    setSelectingField('in');
+    // Auto switch focus to Check-Out in the bar
+    setSelectingField('out');
+    calibrateBeak(checkOutTileRef, 38);
   };
 
-  // ── Date Picking State Machine ──
+  // ── Date Picking State Machine with Bar Auto-Switching ──
   const handleDateClick = (dateStr: string) => {
     const todayStr = toYMD(new Date());
     if (dateStr < todayStr) return; // No past dates
@@ -298,24 +426,31 @@ export function BookingBar() {
       return;
     }
 
-    // Rooms mode
+    // Rooms mode:
     if (selectingField === 'in') {
       setCheckIn(dateStr);
+      setIsCustomMode(true);
       if (checkOut && dateStr >= checkOut) {
-        setCheckOut('');
+        const nextDay = toYMD(addDays(parseYMD(dateStr), 1));
+        setCheckOut(nextDay);
       }
-      setSelectingField('out'); // Auto-switch to checkout date
+      // Auto-switch to Check-Out selection IN THE BAR
+      setSelectingField('out');
+      calibrateBeak(checkOutTileRef, 38);
     } else {
-      // Selecting Check-Out
+      // Selecting Check-Out:
       if (dateStr > checkIn) {
         setCheckOut(dateStr);
-        setSelectingField('in'); // Range completed, ready for fresh pick
+        setIsCustomMode(true);
       } else {
-        // Clicked date is before or same as check-in:
-        // Set it as new check-in date, and auto-switch to check-out mode
+        // Clicked date is earlier than or equal to check-in:
+        // Set it as new Check-In, and auto-switch back to Check-Out in the bar
         setCheckIn(dateStr);
-        setCheckOut('');
-        setSelectingField('out'); // Auto-switch to checkout date
+        const nextDay = toYMD(addDays(parseYMD(dateStr), 1));
+        setCheckOut(nextDay);
+        setIsCustomMode(true);
+        setSelectingField('out');
+        calibrateBeak(checkOutTileRef, 38);
       }
     }
   };
@@ -371,80 +506,84 @@ export function BookingBar() {
   const nextMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1);
   const todayStr = toYMD(new Date());
 
-  // ── Render Shared Calendar Content ──
+  // ── Header Details for the Active Panel ──
+  const getPanelHeader = () => {
+    switch (activeTooltipTab) {
+      case 'calendar':
+        return {
+          icon: <CalendarIcon className="w-4 h-4 text-[#670E10]" />,
+          title: selectingField === 'in' ? 'Select Check-In Date' : 'Select Check-Out Date',
+          subtitle:
+            selectingField === 'in'
+              ? 'Click your arrival date in the calendar'
+              : `${formattedCheckIn.day} ${formattedCheckIn.monthYear} selected • Choose departure date`,
+        };
+      case 'guests':
+        return {
+          icon: <Users className="w-4 h-4 text-[#670E10]" />,
+          title: 'Guests & Chambers',
+          subtitle: 'Tailor adults, children, pets & room allocation',
+        };
+      case 'hallOccasion':
+        return {
+          icon: <PartyPopper className="w-4 h-4 text-[#670E10]" />,
+          title: 'Select Event Occasion',
+          subtitle: 'Choose celebration atmosphere & palace setup',
+        };
+      case 'hallCalendar':
+        return {
+          icon: <CalendarIcon className="w-4 h-4 text-[#670E10]" />,
+          title: 'Celebration Date',
+          subtitle: 'Select the royal gathering date',
+        };
+      case 'hallCapacity':
+        return {
+          icon: <Users className="w-4 h-4 text-[#670E10]" />,
+          title: 'Hall Guest Capacity',
+          subtitle: 'Choose banquet seating & guest size',
+        };
+      default:
+        return {
+          icon: <Sparkles className="w-4 h-4 text-[#670E10]" />,
+          title: 'Select Details',
+          subtitle: 'Rajmahal Palace Booking',
+        };
+    }
+  };
+
+  // ── Render Clean Calendar Content (Without redundant attached tabs/banners) ──
   const renderCalendarContent = () => {
     const monthsToDisplay = isMobile ? [calendarMonth] : [calendarMonth, nextMonth];
 
     return (
-      <div className="flex flex-col space-y-4">
-        {/* Quick Stay Suggestions & Custom Dates Pills */}
+      <div className="flex flex-col space-y-3.5">
+        {/* Quick Stay Suggestions Pills (Rooms Mode Only) */}
         {activeTab === 'rooms' && (
-          <div className="flex flex-col space-y-1.5 pb-2.5 border-b border-[#DFD3C3]">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#8F7245]">
-                Stay Suggestions &bull; Or Select Custom Dates
-              </span>
-              <span className="text-xs text-[#670E10] font-semibold">
-                {checkIn && checkOut
-                  ? `${nightsCount} ${nightsCount === 1 ? 'Night' : 'Nights'} Selected`
-                  : 'Select Check-Out Date'}
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-              {STAY_SUGGESTIONS.map((sug) => {
-                const isSelected = sug.nights === 0 ? isCustomMode : !isCustomMode && nightsCount === sug.nights;
-                return (
-                  <button
-                    key={sug.label}
-                    type="button"
-                    onClick={() => applyStaySuggestion(sug.nights)}
-                    className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold tracking-wide transition-all border cursor-pointer ${
-                      isSelected
-                        ? 'bg-[#670E10] text-[#FFF8EB] border-[#D8AA67] shadow-sm'
-                        : 'bg-[#FFF8EB] text-[#4A0A0C] border-[#DFD3C3] hover:border-[#D8AA67] hover:bg-[#F5F0E6]'
-                    }`}
-                  >
-                    <span>{sug.label}</span>
-                    <span className="opacity-75 text-[10px] ml-1 hidden sm:inline">({sug.sublabel})</span>
-                  </button>
-                );
-              })}
-            </div>
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+            {STAY_SUGGESTIONS.map((sug) => {
+              const isSelected =
+                sug.nights === 0 ? isCustomMode : !isCustomMode && nightsCount === sug.nights;
+              return (
+                <button
+                  key={sug.label}
+                  type="button"
+                  onClick={() => applyStaySuggestion(sug.nights)}
+                  className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold tracking-wide transition-all border cursor-pointer ${
+                    isSelected
+                      ? 'bg-[#670E10] text-[#FFF8EB] border-[#D8AA67] shadow-xs'
+                      : 'bg-[#FFF8EB] text-[#4A0A0C] border-[#DFD3C3] hover:border-[#D8AA67] hover:bg-[#F5F0E6]'
+                  }`}
+                >
+                  <span>{sug.label}</span>
+                  <span className="opacity-75 text-[10px] ml-1 hidden sm:inline">({sug.sublabel})</span>
+                </button>
+              );
+            })}
           </div>
         )}
 
-        {/* Date Selection Interactive Helper Banner */}
-        {activeTab === 'rooms' && (
-          <div className="p-2.5 rounded-xl bg-[#FFF8EB] border border-[#D8AA67]/60 flex items-center justify-between text-xs text-[#241F1A]">
-            <div className="flex items-center space-x-2">
-              <span
-                className={`px-2 py-0.5 rounded-md font-bold text-[11px] transition-colors ${
-                  selectingField === 'in'
-                    ? 'bg-[#670E10] text-[#FFF8EB] ring-1 ring-[#D8AA67]'
-                    : 'bg-[#EFE8DD] text-[#7A6F62]'
-                }`}
-              >
-                1. Check-In: {checkIn ? formattedCheckIn.day + ' ' + formattedCheckIn.monthYear : 'Select'}
-              </span>
-              <span className="text-[#8F7245]">&rarr;</span>
-              <span
-                className={`px-2 py-0.5 rounded-md font-bold text-[11px] transition-colors ${
-                  selectingField === 'out'
-                    ? 'bg-[#670E10] text-[#FFF8EB] ring-1 ring-[#D8AA67] animate-pulse'
-                    : 'bg-[#EFE8DD] text-[#7A6F62]'
-                }`}
-              >
-                2. Check-Out: {checkOut ? formattedCheckOut.day + ' ' + formattedCheckOut.monthYear : 'Choose Date'}
-              </span>
-            </div>
-            <span className="hidden sm:inline text-[11px] text-[#7A6F62] italic">
-              {selectingField === 'in' ? 'Click check-in date' : 'Now click check-out date'}
-            </span>
-          </div>
-        )}
-
-        {/* Calendar Months Display */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+        {/* Dual Calendar Months Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
           {monthsToDisplay.map((mDate, mIdx) => {
             const days = getMonthDays(mDate);
             const monthName = mDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
@@ -452,7 +591,7 @@ export function BookingBar() {
             return (
               <div key={monthName} className="flex flex-col">
                 {/* Month Navigation Header */}
-                <div className="flex items-center justify-between mb-3 px-1">
+                <div className="flex items-center justify-between mb-2.5 px-1">
                   {mIdx === 0 ? (
                     <button
                       type="button"
@@ -503,49 +642,43 @@ export function BookingBar() {
                 </div>
 
                 {/* Days Grid */}
-                <div className="grid grid-cols-7 gap-y-1 gap-x-0.5 text-center">
+                <div className="grid grid-cols-7 gap-1 text-center">
                   {days.map((d, dIdx) => {
                     const isPast = d.dateStr < todayStr;
-                    const isCurrentMonth = d.isCurrentMonth;
-
-                    if (!isCurrentMonth) {
-                      return <div key={`${d.dateStr}-${dIdx}`} className="h-8" />;
-                    }
-
                     const isCheckInDay = activeTab === 'rooms' && d.dateStr === checkIn;
                     const isCheckOutDay = activeTab === 'rooms' && d.dateStr === checkOut;
-                    const isBetween =
-                      activeTab === 'rooms' && checkIn && checkOut && d.dateStr > checkIn && d.dateStr < checkOut;
-                    const isHallSelected =
-                      (activeTab === 'hall' || activeTooltipTab === 'hallCalendar') && d.dateStr === hallDate;
+                    const isHallDay =
+                      (activeTab === 'hall' || activeTooltipTab === 'hallCalendar') &&
+                      d.dateStr === hallDate;
+                    const isInRange =
+                      activeTab === 'rooms' &&
+                      checkIn &&
+                      checkOut &&
+                      d.dateStr > checkIn &&
+                      d.dateStr < checkOut;
 
-                    let bgClass = 'bg-transparent text-[#241F1A] hover:bg-[#D8AA67]/25';
-                    if (isCheckInDay || isCheckOutDay || isHallSelected) {
-                      bgClass = 'bg-[#670E10] text-[#FFF8EB] font-bold shadow-xs';
-                    } else if (isBetween) {
-                      bgClass = 'bg-[#670E10]/15 text-[#670E10] font-semibold';
+                    let btnClasses =
+                      'h-8 w-8 mx-auto rounded-full text-xs font-semibold flex items-center justify-center transition-all cursor-pointer ';
+
+                    if (isPast) {
+                      btnClasses += 'text-[#C5B8A5] opacity-40 cursor-not-allowed ';
+                    } else if (isCheckInDay || isCheckOutDay || isHallDay) {
+                      btnClasses += 'bg-[#670E10] text-[#FFF8EB] font-bold shadow-xs scale-105 ring-2 ring-[#D8AA67] ';
+                    } else if (isInRange) {
+                      btnClasses += 'bg-[#D8AA67]/25 text-[#4A0A0C] font-semibold rounded-none ';
+                    } else if (!d.isCurrentMonth) {
+                      btnClasses += 'text-[#B0A290] hover:bg-black/5 ';
+                    } else {
+                      btnClasses += 'text-[#241F1A] hover:bg-[#FFF8EB] hover:text-[#670E10] hover:ring-1 hover:ring-[#D8AA67] ';
                     }
-
-                    const roundingClass =
-                      isCheckInDay && isCheckOutDay
-                        ? 'rounded-full'
-                        : isCheckInDay
-                        ? 'rounded-l-full'
-                        : isCheckOutDay
-                        ? 'rounded-r-full'
-                        : isBetween
-                        ? 'rounded-none'
-                        : 'rounded-full';
 
                     return (
                       <button
-                        key={d.dateStr}
+                        key={`${d.dateStr}-${dIdx}`}
                         type="button"
                         disabled={isPast}
                         onClick={() => handleDateClick(d.dateStr)}
-                        className={`h-8 w-full flex items-center justify-center text-xs font-medium transition-all ${roundingClass} ${bgClass} ${
-                          isPast ? 'opacity-25 cursor-not-allowed text-gray-400' : 'cursor-pointer'
-                        }`}
+                        className={btnClasses}
                       >
                         {d.dayNumber}
                       </button>
@@ -558,13 +691,13 @@ export function BookingBar() {
         </div>
 
         {/* Selected Dates Summary Banner & Apply Button */}
-        <div className="pt-3 border-t border-[#DFD3C3] flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="pt-3 border-t border-[#DFD3C3] flex items-center justify-between gap-3">
           <div className="flex items-center space-x-2 text-xs text-[#241F1A]">
             <span className="font-semibold text-[#8F7245]">Selected Period:</span>
             {activeTab === 'rooms' ? (
               <span className="font-bold text-[#670E10]">
                 {formattedCheckIn.day} {formattedCheckIn.monthYear} &rarr;{' '}
-                {checkOut ? `${formattedCheckOut.day} ${formattedCheckOut.monthYear}` : 'Select Check-Out'}{' '}
+                {checkOut ? `${formattedCheckOut.day} ${formattedCheckOut.monthYear}` : 'Select Departure'}{' '}
                 {checkOut && `(${nightsCount} ${nightsCount === 1 ? 'Night' : 'Nights'})`}
               </span>
             ) : (
@@ -574,24 +707,13 @@ export function BookingBar() {
             )}
           </div>
 
-          <div className="flex items-center space-x-2 w-full sm:w-auto">
-            {activeTab === 'rooms' && (
-              <button
-                type="button"
-                onClick={() => setActiveTooltipTab('guests')}
-                className="px-4 py-2 rounded-xl border border-[#D8AA67] text-[#670E10] text-xs font-semibold hover:bg-[#FFF8EB] transition cursor-pointer"
-              >
-                Next: Guests &amp; Chambers &rarr;
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={closeTooltipWithAnimation}
-              className="flex-1 sm:flex-initial px-5 py-2 rounded-xl bg-gradient-to-r from-[#670E10] to-[#801417] text-[#FFF8EB] text-xs font-bold tracking-wide shadow hover:shadow-md transition cursor-pointer"
-            >
-              Confirm &bull; Apply Dates
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={closeTooltipWithAnimation}
+            className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#670E10] to-[#801417] text-[#FFF8EB] text-xs font-bold tracking-wide shadow hover:shadow-md transition cursor-pointer"
+          >
+            Confirm Dates
+          </button>
         </div>
       </div>
     );
@@ -603,7 +725,7 @@ export function BookingBar() {
 
     return (
       <div className="flex flex-col space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           {/* 1. Adults Stepper */}
           <div className="p-3.5 rounded-2xl bg-white border border-[#DFD3C3] flex items-center justify-between shadow-2xs">
             <div className="flex flex-col text-left">
@@ -703,70 +825,130 @@ export function BookingBar() {
             <div className="flex flex-col text-left">
               <span className="text-sm font-bold text-[#241F1A] flex items-center gap-1.5">
                 <span>Chambers (Rooms)</span>
-                {isSoloGuest && <Lock className="w-3.5 h-3.5 text-[#D8AA67]" />}
+                {isSoloGuest && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-[#D8AA67]/20 text-[#670E10]">
+                    <Lock className="w-3 h-3" /> Locked
+                  </span>
+                )}
               </span>
               <span className="text-[11px] text-[#7A6F62]">
                 {isSoloGuest
-                  ? 'Locked for 1 Guest (1 Chamber)'
+                  ? '1 guest = 1 chamber (locked)'
                   : adults < 4
-                  ? '1 Chamber shared standard (customizable)'
-                  : '2 Chambers allocated for 4+ guests (customizable)'}
+                  ? '1 chamber default (customizable)'
+                  : '2 chambers recommended'}
               </span>
             </div>
 
-            {isSoloGuest ? (
-              <div className="flex items-center space-x-2">
-                <span className="px-3 py-1 rounded-full bg-white border border-[#D8AA67] text-xs font-bold text-[#670E10]">
-                  1 Chamber (Locked)
-                </span>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-3">
-                <button
-                  type="button"
-                  disabled={rooms <= 1}
-                  onClick={() => handleRoomsChange(-1)}
-                  className="w-8 h-8 rounded-full border border-[#D8AA67] flex items-center justify-center text-[#670E10] hover:bg-[#FFF8EB] disabled:opacity-35 disabled:cursor-not-allowed transition cursor-pointer"
-                  aria-label="Decrease chambers"
-                >
-                  <Minus className="w-3.5 h-3.5" />
-                </button>
-                <span className="w-6 text-center font-bold text-sm text-[#241F1A]">{rooms}</span>
-                <button
-                  type="button"
-                  disabled={rooms >= adults}
-                  onClick={() => handleRoomsChange(1)}
-                  className="w-8 h-8 rounded-full border border-[#D8AA67] flex items-center justify-center text-[#670E10] hover:bg-[#FFF8EB] disabled:opacity-35 disabled:cursor-not-allowed transition cursor-pointer"
-                  aria-label="Increase chambers"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            )}
+            <div className="flex items-center space-x-3">
+              <button
+                type="button"
+                disabled={isSoloGuest || rooms <= 1}
+                onClick={() => handleRoomsChange(-1)}
+                className="w-8 h-8 rounded-full border border-[#D8AA67] flex items-center justify-center text-[#670E10] hover:bg-[#FFF8EB] disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer"
+                aria-label="Decrease chambers"
+              >
+                <Minus className="w-3.5 h-3.5" />
+              </button>
+              <span className="w-6 text-center font-bold text-sm text-[#241F1A]">{rooms}</span>
+              <button
+                type="button"
+                disabled={isSoloGuest || rooms >= adults}
+                onClick={() => handleRoomsChange(1)}
+                className="w-8 h-8 rounded-full border border-[#D8AA67] flex items-center justify-center text-[#670E10] hover:bg-[#FFF8EB] disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer"
+                aria-label="Increase chambers"
+              >
+                <Plus className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Policy note & apply button */}
-        <div className="pt-3 border-t border-[#DFD3C3] flex flex-col sm:flex-row items-center justify-between gap-3">
-          <span className="text-xs text-[#7A6F62] italic text-center sm:text-left">
+        {/* Footer */}
+        <div className="pt-3 border-t border-[#DFD3C3] flex items-center justify-between gap-3">
+          <span className="text-xs text-[#7A6F62] italic">
             * 1 chamber is reserved by default for up to 3 guests; 2 chambers auto-suggested for 4+ guests. You can adjust chamber count freely.
           </span>
-          <div className="flex items-center space-x-2 w-full sm:w-auto">
-            <button
-              type="button"
-              onClick={() => setActiveTooltipTab('calendar')}
-              className="px-4 py-2 rounded-xl border border-[#D8AA67] text-[#670E10] text-xs font-semibold hover:bg-[#FFF8EB] transition cursor-pointer"
-            >
-              &larr; Back to Dates
-            </button>
-            <button
-              type="button"
-              onClick={closeTooltipWithAnimation}
-              className="flex-1 sm:flex-initial px-5 py-2 rounded-xl bg-gradient-to-r from-[#670E10] to-[#801417] text-[#FFF8EB] text-xs font-bold tracking-wide shadow hover:shadow-md transition cursor-pointer"
-            >
-              Apply Guests &amp; Chambers
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={closeTooltipWithAnimation}
+            className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#670E10] to-[#801417] text-[#FFF8EB] text-xs font-bold tracking-wide shadow hover:shadow-md transition cursor-pointer"
+          >
+            Apply Guests &amp; Chambers
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // ── Render Event Occasion Selection (Party Hall Tab) ──
+  const renderOccasionContent = () => {
+    return (
+      <div className="flex flex-col space-y-3.5">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold uppercase tracking-wider text-[#8F7245]">
+            Select Royal Event Occasion
+          </span>
+          <span className="text-xs font-semibold text-[#670E10] truncate max-w-[240px]">
+            Selected: {hallEventType}
+          </span>
+        </div>
+
+        {/* Occasion Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          {EVENT_OCCASION_OPTIONS.map((opt) => {
+            const isSelected = hallEventType === opt.title;
+            return (
+              <div
+                key={opt.id}
+                onClick={() => {
+                  setHallEventType(opt.title);
+                }}
+                className={`p-3.5 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between ${
+                  isSelected
+                    ? 'bg-[#FFF8EB] border-[#670E10] shadow-md ring-2 ring-[#D8AA67]'
+                    : 'bg-white border-[#DFD3C3] hover:border-[#D8AA67] hover:bg-[#FAF7F2]'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center space-x-2 min-w-0">
+                    <span className="text-lg">{opt.icon}</span>
+                    <span
+                      className="text-base font-bold text-[#670E10] leading-tight truncate"
+                      style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)" }}
+                    >
+                      {opt.title}
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#EFE8DD] text-[#7A6F62] shrink-0 ml-1">
+                    {opt.badge}
+                  </span>
+                </div>
+                <p className="text-xs text-[#7A6F62] leading-snug mb-2 pl-6">{opt.subtext}</p>
+                <div className="flex items-center justify-end">
+                  {isSelected ? (
+                    <span className="flex items-center text-xs font-bold text-[#670E10]">
+                      <Check className="w-3.5 h-3.5 mr-1 text-[#670E10]" />
+                      Selected
+                    </span>
+                  ) : (
+                    <span className="text-xs text-[#8F7245] font-semibold">Select &rarr;</span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Apply footer */}
+        <div className="pt-3 border-t border-[#DFD3C3] flex items-center justify-end">
+          <button
+            type="button"
+            onClick={closeTooltipWithAnimation}
+            className="w-full sm:w-auto px-5 py-2 rounded-xl bg-gradient-to-r from-[#670E10] to-[#801417] text-[#FFF8EB] text-xs font-bold tracking-wide shadow hover:shadow-md transition cursor-pointer"
+          >
+            Confirm Occasion
+          </button>
         </div>
       </div>
     );
@@ -842,6 +1024,7 @@ export function BookingBar() {
 
   // Determine horizontal alignment of tooltip dialog relative to booking bar on desktop
   const isRightAlignedPanel = activeTooltipTab === 'guests' || activeTooltipTab === 'hallCapacity';
+  const panelHeader = getPanelHeader();
 
   return (
     <div ref={barRootRef} className="w-full max-w-[1080px] mx-auto relative pt-4">
@@ -962,10 +1145,16 @@ export function BookingBar() {
             <input type="hidden" name="pets" value={pets} />
             <input type="hidden" name="rooms" value={rooms} />
 
-            {/* 1. Check In Tile (Click opens floating tooltip dialog focused on Check-In) */}
+            {/* 1. Check In Tile (Click directly switches bar and opens tooltip) */}
             <div
               ref={checkInTileRef}
-              onClick={() => openTooltip('calendar', checkInTileRef, 15, 'in')}
+              onClick={() => {
+                if (tooltipOpen && activeTooltipTab === 'calendar' && selectingField === 'in') {
+                  closeTooltipWithAnimation();
+                } else {
+                  openTooltip('calendar', checkInTileRef, 15, 'in');
+                }
+              }}
               className={`relative flex items-center justify-between px-4 py-3 rounded-[18px] border bg-white transition-all cursor-pointer group h-[64px] ${
                 tooltipOpen && activeTooltipTab === 'calendar' && selectingField === 'in'
                   ? 'border-[#670E10] ring-2 ring-[#D8AA67] shadow-md bg-[#FFF8EB]'
@@ -993,9 +1182,15 @@ export function BookingBar() {
               </div>
             </div>
 
-            {/* 2. Nights Separator Pill (Desktop only, click opens tooltip dialog) */}
+            {/* 2. Nights Separator Pill (Desktop only, click opens calendar) */}
             <div
-              onClick={() => openTooltip('calendar', checkInTileRef, 28)}
+              onClick={() => {
+                if (tooltipOpen && activeTooltipTab === 'calendar') {
+                  closeTooltipWithAnimation();
+                } else {
+                  openTooltip('calendar', checkOutTileRef, 38, 'out');
+                }
+              }}
               className="hidden lg:flex flex-col items-center justify-center px-0.5 cursor-pointer group"
             >
               <span className="text-[10px] font-bold px-2.5 py-1 rounded-[12px] bg-[#FAF7F2] border border-[#DFD3C3] text-[#670E10] whitespace-nowrap shadow-2xs flex items-center gap-1 group-hover:border-[#B08D57] group-hover:bg-[#FFF8EB] transition">
@@ -1006,10 +1201,16 @@ export function BookingBar() {
               </span>
             </div>
 
-            {/* 3. Check Out Tile (Click opens floating tooltip dialog focused on Check-Out) */}
+            {/* 3. Check Out Tile (Click directly switches bar and opens tooltip) */}
             <div
               ref={checkOutTileRef}
-              onClick={() => openTooltip('calendar', checkOutTileRef, 38, 'out')}
+              onClick={() => {
+                if (tooltipOpen && activeTooltipTab === 'calendar' && selectingField === 'out') {
+                  closeTooltipWithAnimation();
+                } else {
+                  openTooltip('calendar', checkOutTileRef, 38, 'out');
+                }
+              }}
               className={`relative flex items-center justify-between px-4 py-3 rounded-[18px] border bg-white transition-all cursor-pointer group h-[64px] ${
                 tooltipOpen && activeTooltipTab === 'calendar' && selectingField === 'out'
                   ? 'border-[#670E10] ring-2 ring-[#D8AA67] shadow-md bg-[#FFF8EB]'
@@ -1037,10 +1238,16 @@ export function BookingBar() {
               </div>
             </div>
 
-            {/* 4. Guests & Chambers Tile (Click opens floating tooltip dialog with steppers) */}
+            {/* 4. Guests & Chambers Tile (Click directly switches bar and opens tooltip) */}
             <div
               ref={guestsTileRef}
-              onClick={() => openTooltip('guests', guestsTileRef, 72)}
+              onClick={() => {
+                if (tooltipOpen && activeTooltipTab === 'guests') {
+                  closeTooltipWithAnimation();
+                } else {
+                  openTooltip('guests', guestsTileRef, 72);
+                }
+              }}
               className={`relative flex items-center justify-between px-4 py-3 rounded-[18px] border bg-white transition-all cursor-pointer group h-[64px] ${
                 tooltipOpen && activeTooltipTab === 'guests'
                   ? 'border-[#670E10] ring-2 ring-[#D8AA67] shadow-md bg-[#FFF8EB]'
@@ -1086,9 +1293,23 @@ export function BookingBar() {
             onSubmit={handleHallSearch}
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.1fr_1fr_1.2fr_auto] gap-2.5 sm:gap-3 items-center"
           >
-            {/* Event Occasion */}
-            <div className="relative flex items-center justify-between px-4 py-3 rounded-[18px] border border-[#DFD3C3] bg-white hover:border-[#B08D57] hover:shadow-md transition-all h-[64px] group">
-              <div className="flex flex-col text-left flex-1 min-w-0 mr-2 pointer-events-none">
+            {/* 1. Event Occasion (Click opens rich tooltip dialog / drawer) */}
+            <div
+              ref={hallOccasionTileRef}
+              onClick={() => {
+                if (tooltipOpen && activeTooltipTab === 'hallOccasion') {
+                  closeTooltipWithAnimation();
+                } else {
+                  openTooltip('hallOccasion', hallOccasionTileRef, 16);
+                }
+              }}
+              className={`relative flex items-center justify-between px-4 py-3 rounded-[18px] border bg-white transition-all cursor-pointer group h-[64px] ${
+                tooltipOpen && activeTooltipTab === 'hallOccasion'
+                  ? 'border-[#670E10] ring-2 ring-[#D8AA67] shadow-md bg-[#FFF8EB]'
+                  : 'border-[#DFD3C3] hover:border-[#B08D57] hover:shadow-md'
+              }`}
+            >
+              <div className="flex flex-col text-left flex-1 min-w-0 mr-2">
                 <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#8F7245] leading-none mb-1">
                   Event Occasion
                 </span>
@@ -1102,24 +1323,18 @@ export function BookingBar() {
               <div className="w-8 h-8 rounded-[12px] bg-[#FAF7F2] border border-[#DFD3C3] flex items-center justify-center shrink-0 group-hover:border-[#B08D57] group-hover:bg-[#FFF8EB] transition-colors">
                 <PartyPopper className="w-4 h-4 text-[#670E10] group-hover:text-[#B08D57] transition-colors" />
               </div>
-
-              <select
-                value={hallEventType}
-                onChange={(e) => setHallEventType(e.target.value)}
-                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10 text-sm font-semibold"
-              >
-                <option value="Birthday Party">Birthday Party</option>
-                <option value="Anniversary & Milestone">Anniversary &amp; Milestone Party</option>
-                <option value="Romantic Candlelight Dinner">Book for a Date (Private Dining)</option>
-                <option value="Corporate Retreat & Conference">Corporate Event / Conference</option>
-                <option value="Pre-Wedding & Sangeet Gathering">Pre-Wedding &amp; Sangeet Gathering</option>
-              </select>
             </div>
 
-            {/* Event Date (Click opens floating tooltip dialog) */}
+            {/* 2. Event Date (Click opens floating tooltip dialog / drawer) */}
             <div
               ref={hallDateTileRef}
-              onClick={() => openTooltip('hallCalendar', hallDateTileRef, 36)}
+              onClick={() => {
+                if (tooltipOpen && activeTooltipTab === 'hallCalendar') {
+                  closeTooltipWithAnimation();
+                } else {
+                  openTooltip('hallCalendar', hallDateTileRef, 42);
+                }
+              }}
               className={`relative flex items-center justify-between px-4 py-3 rounded-[18px] border bg-white transition-all cursor-pointer group h-[64px] ${
                 tooltipOpen && activeTooltipTab === 'hallCalendar'
                   ? 'border-[#670E10] ring-2 ring-[#D8AA67] shadow-md bg-[#FFF8EB]'
@@ -1147,10 +1362,16 @@ export function BookingBar() {
               </div>
             </div>
 
-            {/* Hall Capacity (Click opens floating tooltip dialog) */}
+            {/* 3. Hall Capacity (Click opens floating tooltip dialog / drawer) */}
             <div
               ref={hallCapacityTileRef}
-              onClick={() => openTooltip('hallCapacity', hallCapacityTileRef, 68)}
+              onClick={() => {
+                if (tooltipOpen && activeTooltipTab === 'hallCapacity') {
+                  closeTooltipWithAnimation();
+                } else {
+                  openTooltip('hallCapacity', hallCapacityTileRef, 72);
+                }
+              }}
               className={`relative flex items-center justify-between px-4 py-3 rounded-[18px] border bg-white transition-all cursor-pointer group h-[64px] ${
                 tooltipOpen && activeTooltipTab === 'hallCapacity'
                   ? 'border-[#670E10] ring-2 ring-[#D8AA67] shadow-md bg-[#FFF8EB]'
@@ -1192,7 +1413,7 @@ export function BookingBar() {
         )}
       </div>
 
-      {/* ── 3. Desktop Floating Tooltip Dialog (Anchored directly under the bar with pointer arrow) ── */}
+      {/* ── 3. Desktop Floating Tooltip Dialog (Display Aware & Collision Resilient) ── */}
       {!isMobile && tooltipOpen && (
         <>
           {/* Subtle click-outside backdrop overlay to dismiss tooltip without blocking view */}
@@ -1205,77 +1426,60 @@ export function BookingBar() {
 
           {/* Floating Tooltip Dialog Container */}
           <div
-            className={`absolute top-[calc(100%+14px)] z-50 ${
+            className={`absolute z-50 ${
+              placement === 'top'
+                ? 'bottom-[calc(100%+14px)] origin-bottom'
+                : 'top-[calc(100%+14px)] origin-top'
+            } ${
               isRightAlignedPanel
                 ? 'right-0 sm:right-4 w-full max-w-[540px]'
-                : 'left-0 sm:left-4 w-full max-w-[750px]'
-            } rounded-[24px] border-2 border-[#D8AA67] bg-[#FAF7F2] shadow-[0_24px_70px_-10px_rgba(35,10,14,0.38),0_6px_20px_rgba(0,0,0,0.08)] flex flex-col overflow-hidden origin-top ${
-              isClosing ? 'animate-tooltip-collapse' : 'animate-tooltip-expand'
+                : activeTooltipTab === 'hallOccasion'
+                ? 'left-0 sm:left-4 w-full max-w-[620px]'
+                : 'left-0 sm:left-4 w-full max-w-[720px]'
+            } rounded-[24px] border-2 border-[#D8AA67] bg-[#FAF7F2] shadow-[0_24px_70px_-10px_rgba(35,10,14,0.38),0_6px_20px_rgba(0,0,0,0.08)] flex flex-col overflow-hidden ${
+              placement === 'top'
+                ? isClosing
+                  ? 'animate-tooltip-collapse-top'
+                  : 'animate-tooltip-expand-top'
+                : isClosing
+                ? 'animate-tooltip-collapse'
+                : 'animate-tooltip-expand'
             }`}
           >
-            {/* Tooltip Pointing Arrow / Beak pointing to the clicked tile */}
-            <div
-              className="absolute -top-[9px] w-4 h-4 rotate-45 border-t-2 border-l-2 border-[#D8AA67] bg-[#FAF7F2] -translate-x-1/2 pointer-events-none z-20 shadow-xs"
-              style={{
-                left: `${beakLeftPercent}%`,
-              }}
-            />
+            {/* Tooltip Pointing Arrow / Beak pointing to the active tile */}
+            {placement === 'bottom' ? (
+              <div
+                className="absolute -top-[9px] w-4 h-4 rotate-45 border-t-2 border-l-2 border-[#D8AA67] bg-[#FAF7F2] -translate-x-1/2 pointer-events-none z-20 shadow-xs transition-all duration-200"
+                style={{
+                  left: `${beakLeftPercent}%`,
+                }}
+              />
+            ) : (
+              <div
+                className="absolute -bottom-[9px] w-4 h-4 rotate-45 border-b-2 border-r-2 border-[#D8AA67] bg-[#FAF7F2] -translate-x-1/2 pointer-events-none z-20 shadow-xs transition-all duration-200"
+                style={{
+                  left: `${beakLeftPercent}%`,
+                }}
+              />
+            )}
 
-            {/* Tooltip Dialog Header with Palace Tabs & Close Button */}
-            <div className="px-5 py-3 border-b border-[#DFD3C3] flex items-center justify-between bg-[#F5F0E6]/80">
-              <div className="flex items-center space-x-2 sm:space-x-3">
-                <Sparkles className="w-4 h-4 text-[#D8AA67] shrink-0" />
-                {activeTab === 'rooms' ? (
-                  <div className="inline-flex p-1 rounded-xl bg-[#EFE8DD] border border-[#DFD3C3]">
-                    <button
-                      type="button"
-                      onClick={() => setActiveTooltipTab('calendar')}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
-                        activeTooltipTab === 'calendar'
-                          ? 'bg-[#670E10] text-[#FFF8EB] shadow-xs'
-                          : 'text-[#6B5E4F] hover:text-[#241F1A]'
-                      }`}
-                    >
-                      📅 Stay Dates
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setActiveTooltipTab('guests')}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
-                        activeTooltipTab === 'guests'
-                          ? 'bg-[#670E10] text-[#FFF8EB] shadow-xs'
-                          : 'text-[#6B5E4F] hover:text-[#241F1A]'
-                      }`}
-                    >
-                      👥 Guests &amp; Chambers
-                    </button>
-                  </div>
-                ) : (
-                  <div className="inline-flex p-1 rounded-xl bg-[#EFE8DD] border border-[#DFD3C3]">
-                    <button
-                      type="button"
-                      onClick={() => setActiveTooltipTab('hallCalendar')}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
-                        activeTooltipTab === 'hallCalendar'
-                          ? 'bg-[#670E10] text-[#FFF8EB] shadow-xs'
-                          : 'text-[#6B5E4F] hover:text-[#241F1A]'
-                      }`}
-                    >
-                      📅 Celebration Date
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setActiveTooltipTab('hallCapacity')}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
-                        activeTooltipTab === 'hallCapacity'
-                          ? 'bg-[#670E10] text-[#FFF8EB] shadow-xs'
-                          : 'text-[#6B5E4F] hover:text-[#241F1A]'
-                      }`}
-                    >
-                      👥 Hall Capacity
-                    </button>
-                  </div>
-                )}
+            {/* Tooltip Dialog Clean Header (No redundant attached tabs) */}
+            <div className="px-5 py-3 border-b border-[#DFD3C3] flex items-center justify-between bg-[#F5F0E6]/90">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-7 h-7 rounded-lg bg-[#FAF7F2] border border-[#D8AA67]/60 flex items-center justify-center shrink-0">
+                  {panelHeader.icon}
+                </div>
+                <div className="flex flex-col text-left">
+                  <span
+                    className="text-base font-bold text-[#670E10] leading-none"
+                    style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)" }}
+                  >
+                    {panelHeader.title}
+                  </span>
+                  <span className="text-[11px] text-[#7A6F62] mt-0.5">
+                    {panelHeader.subtitle}
+                  </span>
+                </div>
               </div>
 
               <button
@@ -1288,18 +1492,22 @@ export function BookingBar() {
               </button>
             </div>
 
-            {/* Tooltip Dialog Content */}
-            <div className="p-5 sm:p-6 overflow-y-auto max-h-[68vh]">
+            {/* Tooltip Dialog Scrollable Content with Display-Aware Max Height */}
+            <div
+              className="p-5 overflow-y-auto"
+              style={{ maxHeight: `${maxContentHeight}px` }}
+            >
               {(activeTooltipTab === 'calendar' || activeTooltipTab === 'hallCalendar') &&
                 renderCalendarContent()}
               {activeTooltipTab === 'guests' && renderGuestsStepperContent()}
+              {activeTooltipTab === 'hallOccasion' && renderOccasionContent()}
               {activeTooltipTab === 'hallCapacity' && renderHallCapacityContent()}
             </div>
           </div>
         </>
       )}
 
-      {/* ── 4. Mobile Bottom Sheet Dialog ── */}
+      {/* ── 4. Mobile Bottom Sheet Dialog / Drawer ── */}
       {isMobile &&
         tooltipOpen &&
         mounted &&
@@ -1313,68 +1521,30 @@ export function BookingBar() {
             }`}
           >
             <div
-              className={`w-full max-h-[90vh] rounded-t-[28px] border-t-2 border-x-2 border-[#D8AA67] bg-[#FAF7F2] flex flex-col overflow-hidden ${
+              className={`w-full max-h-[88vh] rounded-t-[28px] border-t-2 border-x-2 border-[#D8AA67] bg-[#FAF7F2] flex flex-col overflow-hidden ${
                 isClosing ? 'animate-slide-down-modal' : 'animate-slide-up-modal'
               }`}
             >
               {/* Drag Handle on Mobile */}
               <div className="w-12 h-1 bg-[#D8AA67]/50 rounded-full mx-auto mt-2.5 mb-1" />
 
-              {/* Mobile Dialog Header */}
-              <div className="px-5 py-3.5 border-b border-[#DFD3C3] flex items-center justify-between bg-[#F5F0E6]/80">
-                <div className="flex items-center space-x-2">
-                  <Sparkles className="w-4 h-4 text-[#D8AA67] shrink-0" />
-                  {activeTab === 'rooms' ? (
-                    <div className="inline-flex p-1 rounded-xl bg-[#EFE8DD] border border-[#DFD3C3]">
-                      <button
-                        type="button"
-                        onClick={() => setActiveTooltipTab('calendar')}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                          activeTooltipTab === 'calendar'
-                            ? 'bg-[#670E10] text-[#FFF8EB] shadow-xs'
-                            : 'text-[#6B5E4F]'
-                        }`}
-                      >
-                        📅 Dates
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setActiveTooltipTab('guests')}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                          activeTooltipTab === 'guests'
-                            ? 'bg-[#670E10] text-[#FFF8EB] shadow-xs'
-                            : 'text-[#6B5E4F]'
-                        }`}
-                      >
-                        👥 Guests
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="inline-flex p-1 rounded-xl bg-[#EFE8DD] border border-[#DFD3C3]">
-                      <button
-                        type="button"
-                        onClick={() => setActiveTooltipTab('hallCalendar')}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                          activeTooltipTab === 'hallCalendar'
-                            ? 'bg-[#670E10] text-[#FFF8EB] shadow-xs'
-                            : 'text-[#6B5E4F]'
-                        }`}
-                      >
-                        📅 Date
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setActiveTooltipTab('hallCapacity')}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                          activeTooltipTab === 'hallCapacity'
-                            ? 'bg-[#670E10] text-[#FFF8EB] shadow-xs'
-                            : 'text-[#6B5E4F]'
-                        }`}
-                      >
-                        👥 Capacity
-                      </button>
-                    </div>
-                  )}
+              {/* Mobile Dialog Clean Header */}
+              <div className="px-5 py-3 border-b border-[#DFD3C3] flex items-center justify-between bg-[#F5F0E6]/90">
+                <div className="flex items-center space-x-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-[#FAF7F2] border border-[#D8AA67]/60 flex items-center justify-center shrink-0">
+                    {panelHeader.icon}
+                  </div>
+                  <div className="flex flex-col text-left">
+                    <span
+                      className="text-base font-bold text-[#670E10] leading-none"
+                      style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)" }}
+                    >
+                      {panelHeader.title}
+                    </span>
+                    <span className="text-[11px] text-[#7A6F62] mt-0.5 truncate max-w-[240px]">
+                      {panelHeader.subtitle}
+                    </span>
+                  </div>
                 </div>
 
                 <button
@@ -1388,10 +1558,11 @@ export function BookingBar() {
               </div>
 
               {/* Mobile Dialog Content */}
-              <div className="p-4 sm:p-5 overflow-y-auto max-h-[70vh]">
+              <div className="p-4 sm:p-5 overflow-y-auto max-h-[68vh]">
                 {(activeTooltipTab === 'calendar' || activeTooltipTab === 'hallCalendar') &&
                   renderCalendarContent()}
                 {activeTooltipTab === 'guests' && renderGuestsStepperContent()}
+                {activeTooltipTab === 'hallOccasion' && renderOccasionContent()}
                 {activeTooltipTab === 'hallCapacity' && renderHallCapacityContent()}
               </div>
 
