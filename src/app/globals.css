@@ -164,8 +164,13 @@ body {
 }
 
 /* ── Hide Scrollbars (Clean viewport without side scroller) ── */
-html, body {
-  overflow-x: hidden;
+html {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+body {
+  overflow-x: clip;
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
 }

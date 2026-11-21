@@ -199,10 +199,10 @@ export function EventMemories() {
 
   // Listen to window scroll and resize
   useEffect(() => {
-    // Initial calculation after layout
-    const timer = setTimeout(() => {
-      updateScrollDrivenAnimation();
-    }, 60);
+    // Initial calculations across render lifecycle
+    updateScrollDrivenAnimation();
+    const timer1 = setTimeout(updateScrollDrivenAnimation, 60);
+    const timer2 = setTimeout(updateScrollDrivenAnimation, 300);
 
     const handleScroll = () => {
       window.requestAnimationFrame(updateScrollDrivenAnimation);
@@ -212,7 +212,8 @@ export function EventMemories() {
     window.addEventListener('resize', handleScroll, { passive: true });
 
     return () => {
-      clearTimeout(timer);
+      clearTimeout(timer1);
+      clearTimeout(timer2);
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleScroll);
     };
@@ -247,7 +248,7 @@ export function EventMemories() {
       aria-label="Event Memories — Sticky Scroll Perspective Gallery"
     >
       {/* ── STICKY PINNED VIEWPORT CONTAINER (LOCKS ON SCREEN WHILE SCROLLING) ── */}
-      <div className="sticky top-0 h-screen w-full overflow-hidden flex flex-col justify-between py-6 sm:py-8 lg:py-10 z-10">
+      <div className="sticky top-0 h-screen h-[100dvh] max-h-screen w-full overflow-hidden flex flex-col justify-between pt-[74px] sm:pt-[82px] lg:pt-[88px] pb-5 sm:pb-7 lg:pb-9 z-10">
         {/* Architectural Line Art Flanking in Background */}
         <div className="absolute left-[-40px] sm:left-[-20px] lg:left-0 top-1/2 -translate-y-1/2 pointer-events-none z-0 w-64 sm:w-80 lg:w-[420px] opacity-25">
           <img
@@ -357,7 +358,7 @@ export function EventMemories() {
                     cardRefs.current[index] = el;
                   }}
                   onClick={() => setSelectedMemory(memory)}
-                  className="group relative shrink-0 w-[265px] sm:w-[320px] md:w-[360px] lg:w-[390px] h-[370px] sm:h-[430px] md:h-[470px] lg:h-[490px] rounded-[22px] sm:rounded-[28px] overflow-hidden border-2 transition-all duration-300 ease-out cursor-pointer"
+                  className="group relative shrink-0 w-[265px] sm:w-[320px] md:w-[360px] lg:w-[390px] h-[340px] sm:h-[400px] md:h-[440px] lg:h-[475px] rounded-[22px] sm:rounded-[28px] overflow-hidden border-2 transition-all duration-300 ease-out cursor-pointer"
                   style={{
                     backgroundColor: '#FFFDF9',
                     borderColor: isCenter ? '#D8AA67' : 'rgba(216, 170, 103, 0.6)',
