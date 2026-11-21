@@ -69,13 +69,16 @@ export const Navbar: React.FC<NavbarProps> = ({
     if (propIsScrolled !== undefined) return;
 
     const handleScroll = () => {
-      setInternalScrolled(window.scrollY > 20);
+      const scrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+      setInternalScrolled(scrollY > 15);
     };
 
     handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
+    document.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
       window.removeEventListener('scroll', handleScroll);
+      document.removeEventListener('scroll', handleScroll);
     };
   }, [propIsScrolled]);
 
@@ -203,25 +206,26 @@ export const Navbar: React.FC<NavbarProps> = ({
   ];
 
   return (
-    <header
-      data-scrolled={isScrolled}
-      className={`sticky top-0 z-50 w-full transition-all duration-300 ease-in-out flex items-center ${
-        isScrolled
-          ? 'h-[68px] sm:h-[72px] shadow-[0_10px_30px_rgba(20,3,4,0.7)] backdrop-blur-md'
-          : 'h-[80px] sm:h-[86px] shadow-2xl backdrop-blur-sm'
-      } px-4 sm:px-8 md:px-12 lg:px-16 ${className}`}
-      style={{
-        backgroundColor: isScrolled
-          ? 'rgba(56, 5, 6, 0.96)'
-          : 'var(--forest-deep, #4f0809)',
-        boxShadow: isScrolled
-          ? '0 10px 30px rgba(20, 3, 4, 0.7)'
-          : '0 4px 24px rgba(40, 5, 6, 0.4)',
-        borderBottom: isScrolled
-          ? '1px solid rgba(216, 170, 103, 0.45)'
-          : '1px solid rgba(216, 170, 103, 0.25)',
-      }}
-    >
+    <>
+      <header
+        data-scrolled={isScrolled}
+        className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 ease-in-out flex items-center ${
+          isScrolled
+            ? 'h-[68px] sm:h-[72px] shadow-[0_10px_30px_rgba(20,3,4,0.7)] backdrop-blur-md'
+            : 'h-[80px] sm:h-[86px] shadow-2xl backdrop-blur-sm'
+        } px-4 sm:px-8 md:px-12 lg:px-16 ${className}`}
+        style={{
+          backgroundColor: isScrolled
+            ? 'rgba(56, 5, 6, 0.96)'
+            : 'var(--forest-deep, #4f0809)',
+          boxShadow: isScrolled
+            ? '0 10px 30px rgba(20, 3, 4, 0.7)'
+            : '0 4px 24px rgba(40, 5, 6, 0.4)',
+          borderBottom: isScrolled
+            ? '1px solid rgba(216, 170, 103, 0.45)'
+            : '1px solid rgba(216, 170, 103, 0.25)',
+        }}
+      >
       <div className="w-full flex items-center justify-between">
         {/* Brand Logo & Title */}
         <Link href="/" className="flex items-center space-x-3 sm:space-x-4 group shrink-0">
@@ -565,5 +569,8 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       )}
     </header>
+    {/* Structural spacer so non-hero pages are never covered by the fixed floating header */}
+    <div className="h-[80px] sm:h-[86px] w-full shrink-0 pointer-events-none" aria-hidden="true" />
+  </>
   );
 };

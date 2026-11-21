@@ -17,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="h-full antialiased" suppressHydrationWarning>
+    <html lang="en" className="antialiased" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -26,7 +26,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-full flex flex-col" style={{ backgroundColor: '#F5F1E8', color: '#241F1A' }} suppressHydrationWarning>
+      <body className="min-h-screen flex flex-col" style={{ backgroundColor: '#F5F1E8', color: '#241F1A' }} suppressHydrationWarning>
         <Suspense fallback={<div className="h-20" style={{ backgroundColor: '#4f0809' }} />}>
           <Navbar />
         </Suspense>
