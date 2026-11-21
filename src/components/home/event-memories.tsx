@@ -131,17 +131,38 @@ export function EventMemories() {
     const progress = Math.max(0, Math.min(1, rawProgress));
     setScrollProgress(progress);
 
-    // Calculate maximum horizontal travel distance:
-    // Move from first card at center/comfortable start to last card in center
-    const trackWidth = track.scrollWidth;
-    const maxHorizontalTranslate = Math.max(0, trackWidth - windowW * 0.75);
-    const currentTranslateX = progress * maxHorizontalTranslate;
+    // Get first card and last card
+    const firstCard = cardRefs.current[0];
+    const lastCard = cardRefs.current[EVENT_MEMORIES.length - 1];
 
-    // Apply horizontal translation to track
-    track.style.transform = `translate3d(${-currentTranslateX}px, 0, 0)`;
+    const screenCenter = windowW / 2;
+
+    if (firstCard && lastCard) {
+      // Exact center coordinates of first card and last card relative to track
+      const firstCardCenter = firstCard.offsetLeft + firstCard.offsetWidth / 2;
+      const lastCardCenter = lastCard.offsetLeft + lastCard.offsetWidth / 2;
+
+      // Track translation when Card 0 is centered
+      const startTranslate = firstCardCenter - screenCenter;
+
+      // Track translation when Card (N - 1) is centered
+      const endTranslate = lastCardCenter - screenCenter;
+
+      // Total distance to travel so EVERY card from 0 to N-1 reaches the center
+      const totalTravel = endTranslate - startTranslate;
+
+      // Progress mapping:
+      // 0.00 to 0.04: gentle lead-in on Card 0
+      // 0.04 to 0.88: smooth transition across all cards to Card (N - 1)
+      // 0.88 to 1.00: section stays locked with Card (N - 1) centered at the end!
+      const travelProgress = Math.max(0, Math.min(1, (progress - 0.04) / 0.84));
+      const currentTranslateX = startTranslate + travelProgress * totalTravel;
+
+      // Apply horizontal translation to track
+      track.style.transform = `translate3d(${-currentTranslateX}px, 0, 0)`;
+    }
 
     // Calculate real-time 3D perspective for each card based on its actual screen position
-    const screenCenter = windowW / 2;
     let closestIndex = 0;
     let minDistance = Infinity;
 
@@ -178,7 +199,11 @@ export function EventMemories() {
 
   // Listen to window scroll and resize
   useEffect(() => {
-    updateScrollDrivenAnimation();
+    // Initial calculation after layout
+    const timer = setTimeout(() => {
+      updateScrollDrivenAnimation();
+    }, 60);
+
     const handleScroll = () => {
       window.requestAnimationFrame(updateScrollDrivenAnimation);
     };
@@ -187,6 +212,7 @@ export function EventMemories() {
     window.addEventListener('resize', handleScroll, { passive: true });
 
     return () => {
+      clearTimeout(timer);
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleScroll);
     };
@@ -201,8 +227,11 @@ export function EventMemories() {
     const sectionTop = currentScrollY + rect.top;
     const totalScrollableH = rect.height - window.innerHeight;
 
-    const targetProgress = idx / (EVENT_MEMORIES.length - 1);
-    const targetY = sectionTop + targetProgress * totalScrollableH;
+    // Target travelProgress: idx / (N - 1)
+    // Inverse formula: rawProgress = 0.04 + travelProgress * 0.84
+    const targetTravelProgress = idx / (EVENT_MEMORIES.length - 1);
+    const targetRawProgress = 0.04 + targetTravelProgress * 0.84;
+    const targetY = sectionTop + targetRawProgress * totalScrollableH;
 
     window.scrollTo({
       top: targetY,
@@ -213,7 +242,7 @@ export function EventMemories() {
   return (
     <section
       ref={sectionRef}
-      className="relative h-[320vh] lg:h-[360vh]"
+      className="relative h-[420vh] lg:h-[460vh]"
       style={{ backgroundColor: 'var(--cream, #fbf5e9)' }}
       aria-label="Event Memories — Sticky Scroll Perspective Gallery"
     >
@@ -433,9 +462,18 @@ export function EventMemories() {
 
             {/* Scroll Hint & View Full Gallery */}
             <div className="flex items-center space-x-4">
-              <span className="hidden sm:inline-flex items-center space-x-1 text-xs text-[#8A7B68] font-medium">
-                <span>Scroll down to continue</span>
-                <ChevronDown className="w-3.5 h-3.5 text-[#D8AA67] animate-bounce" />
+              <span className="hidden sm:inline-flex items-center space-x-1.5 text-xs text-[#8A7B68] font-medium">
+                {scrollProgress >= 0.88 ? (
+                  <span className="text-[#670E10] font-bold flex items-center space-x-1">
+                    <span>Celebrations Complete &bull; Continue Scrolling</span>
+                    <ChevronDown className="w-3.5 h-3.5 text-[#670E10]" />
+                  </span>
+                ) : (
+                  <>
+                    <span>Scroll down to explore celebrations</span>
+                    <ChevronDown className="w-3.5 h-3.5 text-[#D8AA67] animate-bounce" />
+                  </>
+                )}
               </span>
 
               <Link
