@@ -120,61 +120,117 @@ export function BookingBar() {
   const nightsCount = calculateNights(checkIn, checkOut);
 
   return (
-    <div className="w-full max-w-[1080px] mx-auto relative pt-2 sm:pt-4">
-      {/* ── 1. Popping-Out Tabs: Stacked Over the Details Section ── */}
-      <div className="relative z-20 -mb-4 sm:-mb-5 px-3 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-        {/* Apple-Style Popped-Out Control Deck */}
+    <div className="w-full max-w-[1080px] mx-auto relative pt-4">
+      {/* ── 1. Popping-Out Tabs with Smooth Fillet Curves Where Sections Meet ── */}
+      <div className="relative z-20 flex flex-col sm:flex-row sm:items-end justify-between px-4 sm:px-8">
+        {/* Popped-Out Chamber Tab Deck */}
         <div
-          className="inline-flex p-1.5 rounded-[20px] sm:rounded-[22px] border-2 shadow-[0_16px_36px_rgba(20,8,10,0.42),0_2px_8px_rgba(0,0,0,0.15)] backdrop-blur-xl self-start transition-all"
+          className="relative inline-flex items-center px-2 pt-2 pb-1 rounded-t-[22px] sm:rounded-t-[26px] border-t-2 border-x-2 transition-all self-start"
           style={{
-            backgroundColor: 'rgba(28, 22, 18, 0.94)',
+            backgroundColor: '#FAF7F2',
             borderColor: '#D8AA67',
+            marginBottom: '-2px', // Flushes seamlessly into the top border of the card
           }}
         >
-          <button
-            type="button"
-            onClick={() => setActiveTab('rooms')}
-            className={`flex items-center space-x-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-[15px] sm:rounded-[17px] text-xs sm:text-sm font-semibold tracking-wide transition-all cursor-pointer ${
-              activeTab === 'rooms'
-                ? 'bg-gradient-to-r from-[#670E10] via-[#7B1316] to-[#550B0D] text-[#FFF8EB] shadow-lg border border-[#D8AA67]/70 scale-[1.02]'
-                : 'text-[#D4C8B8] hover:text-[#FFF8EB] hover:bg-white/10'
-            }`}
-          >
-            <BedDouble className="w-4 h-4 text-[#D8AA67]" />
-            <span style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)", fontSize: '16px' }}>
-              Rooms &amp; Suites
-            </span>
-          </button>
+          {/* Left Inverted Concave Curve (Where tab meets card on the left) */}
+          <div className="absolute -left-[20px] sm:-left-[24px] bottom-0 w-[20px] sm:w-[24px] h-[20px] sm:h-[24px] pointer-events-none overflow-hidden">
+            <svg
+              viewBox="0 0 24 24"
+              preserveAspectRatio="none"
+              className="w-full h-full block"
+            >
+              {/* Fill to merge tab surface with card surface */}
+              <path
+                d="M 24 0 C 24 13.255 13.255 24 0 24 L 24 24 Z"
+                fill="#FAF7F2"
+              />
+              {/* Gold border flowing smoothly along the concave curve */}
+              <path
+                d="M 24 0 C 24 13.255 13.255 24 0 24"
+                fill="none"
+                stroke="#D8AA67"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              />
+            </svg>
+          </div>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab('hall')}
-            className={`flex items-center space-x-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-[15px] sm:rounded-[17px] text-xs sm:text-sm font-semibold tracking-wide transition-all cursor-pointer ${
-              activeTab === 'hall'
-                ? 'bg-gradient-to-r from-[#670E10] via-[#7B1316] to-[#550B0D] text-[#FFF8EB] shadow-lg border border-[#D8AA67]/70 scale-[1.02]'
-                : 'text-[#D4C8B8] hover:text-[#FFF8EB] hover:bg-white/10'
-            }`}
-          >
-            <PartyPopper className="w-4 h-4 text-[#D8AA67]" />
-            <span style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)", fontSize: '16px' }}>
-              Party Hall (25–50 Pax)
-            </span>
-          </button>
+          {/* Right Inverted Concave Curve (Where tab meets card on the right) */}
+          <div className="absolute -right-[20px] sm:-right-[24px] bottom-0 w-[20px] sm:w-[24px] h-[20px] sm:h-[24px] pointer-events-none overflow-hidden">
+            <svg
+              viewBox="0 0 24 24"
+              preserveAspectRatio="none"
+              className="w-full h-full block"
+            >
+              {/* Fill to merge tab surface with card surface */}
+              <path
+                d="M 0 0 C 0 13.255 10.745 24 24 24 L 0 24 Z"
+                fill="#FAF7F2"
+              />
+              {/* Gold border flowing smoothly along the concave curve */}
+              <path
+                d="M 0 0 C 0 13.255 10.745 24 24 24"
+                fill="none"
+                stroke="#D8AA67"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              />
+            </svg>
+          </div>
+
+          {/* Bottom baseline mask (covers card top line beneath the tab deck) */}
+          <div
+            className="absolute -bottom-[2px] left-0 right-0 h-[4px] pointer-events-none"
+            style={{ backgroundColor: '#FAF7F2' }}
+          />
+
+          {/* Apple-Style Segmented Capsule */}
+          <div className="relative z-10 inline-flex p-1 rounded-[16px] sm:rounded-[18px] bg-[#EFE8DD]/85 border border-[#DFD3C3] shadow-inner">
+            <button
+              type="button"
+              onClick={() => setActiveTab('rooms')}
+              className={`flex items-center space-x-2 px-3.5 sm:px-5 py-2 rounded-[13px] sm:rounded-[15px] text-xs sm:text-sm font-semibold tracking-wide transition-all cursor-pointer ${
+                activeTab === 'rooms'
+                  ? 'bg-gradient-to-r from-[#670E10] via-[#7B1316] to-[#550B0D] text-[#FFF8EB] shadow-md border border-[#D8AA67]/70 scale-[1.01]'
+                  : 'text-[#6B5E4F] hover:text-[#241F1A] hover:bg-black/5'
+              }`}
+            >
+              <BedDouble className="w-4 h-4 text-[#D8AA67]" />
+              <span style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)", fontSize: '16px' }}>
+                Rooms &amp; Suites
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('hall')}
+              className={`flex items-center space-x-2 px-3.5 sm:px-5 py-2 rounded-[13px] sm:rounded-[15px] text-xs sm:text-sm font-semibold tracking-wide transition-all cursor-pointer ${
+                activeTab === 'hall'
+                  ? 'bg-gradient-to-r from-[#670E10] via-[#7B1316] to-[#550B0D] text-[#FFF8EB] shadow-md border border-[#D8AA67]/70 scale-[1.01]'
+                  : 'text-[#6B5E4F] hover:text-[#241F1A] hover:bg-black/5'
+              }`}
+            >
+              <PartyPopper className="w-4 h-4 text-[#D8AA67]" />
+              <span style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)", fontSize: '16px' }}>
+                Party Hall (25–50 Pax)
+              </span>
+            </button>
+          </div>
         </div>
 
-        {/* Popped-Out Direct Privilege Chip */}
-        <div className="hidden sm:inline-flex items-center space-x-2 text-xs font-semibold text-[#670E10] bg-[#FFF8EB] px-4 py-2 rounded-full border border-[#D8AA67]/80 shadow-[0_10px_24px_rgba(20,8,10,0.2)] self-center">
+        {/* Palace Direct Privileges Tag */}
+        <div className="hidden sm:inline-flex items-center space-x-2 text-xs font-semibold text-[#670E10] bg-[#FFF8EB] px-4 py-2 rounded-full border border-[#D8AA67]/80 shadow-md self-center mb-2">
           <Sparkles className="w-3.5 h-3.5 text-[#B08D57]" />
-          <span>Direct Palace Privilege &bull; Best Tariff &bull; Welcome Drink</span>
+          <span>Direct Palace Privilege &bull; Best Tariff Guarantee</span>
         </div>
       </div>
 
-      {/* ── 2. Booking Details Section: Apple-Style Curved Base ── */}
+      {/* ── 2. Master Booking Details Card with Apple-Style Continuous Radii ── */}
       <div
-        className="relative z-10 w-full rounded-[26px] sm:rounded-[34px] pt-8 sm:pt-9 pb-4 sm:pb-5 px-3.5 sm:px-5 transition-all border-2 shadow-[0_26px_65px_-10px_rgba(35,12,14,0.32),0_4px_16px_rgba(0,0,0,0.06)]"
+        className="relative z-10 w-full rounded-[26px] sm:rounded-[34px] pt-6 sm:pt-7 pb-4 sm:pb-5 px-3.5 sm:px-5 transition-all border-2 shadow-[0_26px_65px_-10px_rgba(35,12,14,0.32),0_4px_16px_rgba(0,0,0,0.06)]"
         style={{
           backgroundColor: '#FAF7F2',
-          borderColor: 'rgba(216, 170, 103, 0.65)',
+          borderColor: '#D8AA67',
         }}
       >
         {activeTab === 'rooms' ? (
