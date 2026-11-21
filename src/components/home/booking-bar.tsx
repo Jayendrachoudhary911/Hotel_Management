@@ -121,105 +121,107 @@ export function BookingBar() {
 
   return (
     <div className="w-full max-w-[1080px] mx-auto relative pt-4">
-      {/* ── 1. Popping-Out Tabs with Smooth Fillet Curves Where Sections Meet ── */}
-      <div className="relative z-20 flex flex-col sm:flex-row sm:items-end justify-between px-4 sm:px-8">
+      {/* ── 1. Popping-Out Tabs with Inset Fillet Curves ── */}
+      <div className="relative z-20 flex flex-col sm:flex-row sm:items-end justify-between px-0">
         {/* Popped-Out Chamber Tab Deck */}
         <div
-          className="relative inline-flex items-center px-2 pt-2 pb-1 rounded-t-[22px] sm:rounded-t-[26px] border-t-2 border-x-2 transition-all self-start"
+          className="relative inline-flex items-center px-1.5 sm:px-2 pt-1.5 sm:pt-2 pb-1 rounded-t-[16px] sm:rounded-t-[22px] border-t-2 border-x-2 transition-all mx-auto sm:mx-0 sm:ml-16 md:ml-20 lg:ml-24 shadow-2xs"
           style={{
             backgroundColor: '#FAF7F2',
             borderColor: '#D8AA67',
             marginBottom: '-2px', // Flushes seamlessly into the top border of the card
           }}
         >
-          {/* Left Inverted Concave Curve (Where tab meets card on the left) */}
-          <div className="absolute -left-[20px] sm:-left-[24px] bottom-0 w-[20px] sm:w-[24px] h-[20px] sm:h-[24px] pointer-events-none overflow-hidden">
+          {/* Left Inverted Concave Fillet Curve */}
+          <div className="absolute -left-[14px] sm:-left-[20px] bottom-0 w-[14px] sm:w-[20px] h-[14px] sm:h-[20px] pointer-events-none">
             <svg
-              viewBox="0 0 24 24"
+              viewBox="0 0 20 20"
               preserveAspectRatio="none"
               className="w-full h-full block"
             >
-              {/* Fill to merge tab surface with card surface */}
+              {/* Fill to merge tab surface with card surface and mask underlying card border */}
               <path
-                d="M 24 0 C 24 13.255 13.255 24 0 24 L 24 24 Z"
+                d="M 20 0 C 20 11.045 11.045 20 0 20 L 0 23 L 23 23 L 23 0 Z"
                 fill="#FAF7F2"
               />
               {/* Gold border flowing smoothly along the concave curve */}
               <path
-                d="M 24 0 C 24 13.255 13.255 24 0 24"
+                d="M 20 -1 L 20 0 C 20 11.045 11.045 20 0 20 L -2 20"
                 fill="none"
                 stroke="#D8AA67"
-                strokeWidth="2.5"
-                strokeLinecap="round"
+                strokeWidth="2"
+                strokeLinecap="butt"
               />
             </svg>
           </div>
 
-          {/* Right Inverted Concave Curve (Where tab meets card on the right) */}
-          <div className="absolute -right-[20px] sm:-right-[24px] bottom-0 w-[20px] sm:w-[24px] h-[20px] sm:h-[24px] pointer-events-none overflow-hidden">
+          {/* Right Inverted Concave Fillet Curve */}
+          <div className="absolute -right-[14px] sm:-right-[20px] bottom-0 w-[14px] sm:w-[20px] h-[14px] sm:h-[20px] pointer-events-none">
             <svg
-              viewBox="0 0 24 24"
+              viewBox="0 0 20 20"
               preserveAspectRatio="none"
               className="w-full h-full block"
             >
-              {/* Fill to merge tab surface with card surface */}
+              {/* Fill to merge tab surface with card surface and mask underlying card border */}
               <path
-                d="M 0 0 C 0 13.255 10.745 24 24 24 L 0 24 Z"
+                d="M 0 0 C 0 11.045 8.955 20 20 20 L 20 23 L -3 23 L -3 0 Z"
                 fill="#FAF7F2"
               />
               {/* Gold border flowing smoothly along the concave curve */}
               <path
-                d="M 0 0 C 0 13.255 10.745 24 24 24"
+                d="M 0 -1 L 0 0 C 0 11.045 8.955 20 20 20 L 22 20"
                 fill="none"
                 stroke="#D8AA67"
-                strokeWidth="2.5"
-                strokeLinecap="round"
+                strokeWidth="2"
+                strokeLinecap="butt"
               />
             </svg>
           </div>
 
           {/* Bottom baseline mask (covers card top line beneath the tab deck) */}
           <div
-            className="absolute -bottom-[2px] left-0 right-0 h-[4px] pointer-events-none"
+            className="absolute -bottom-[2px] -left-[1px] -right-[1px] h-[4px] pointer-events-none"
             style={{ backgroundColor: '#FAF7F2' }}
           />
 
-          {/* Apple-Style Segmented Capsule */}
-          <div className="relative z-10 inline-flex p-1 rounded-[16px] sm:rounded-[18px] bg-[#EFE8DD]/85 border border-[#DFD3C3] shadow-inner">
+          {/* Segmented Control Capsule */}
+          <div className="relative z-10 inline-flex p-1 rounded-[13px] sm:rounded-[18px] bg-[#EFE8DD]/85 border border-[#DFD3C3] shadow-inner">
             <button
               type="button"
               onClick={() => setActiveTab('rooms')}
-              className={`flex items-center space-x-2 px-3.5 sm:px-5 py-2 rounded-[13px] sm:rounded-[15px] text-xs sm:text-sm font-semibold tracking-wide transition-all cursor-pointer ${
+              className={`flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-4 lg:px-5 py-1.5 sm:py-2 rounded-[10px] sm:rounded-[14px] text-xs sm:text-sm font-semibold tracking-wide transition-all cursor-pointer whitespace-nowrap ${
                 activeTab === 'rooms'
                   ? 'bg-gradient-to-r from-[#670E10] via-[#7B1316] to-[#550B0D] text-[#FFF8EB] shadow-md border border-[#D8AA67]/70 scale-[1.01]'
                   : 'text-[#6B5E4F] hover:text-[#241F1A] hover:bg-black/5'
               }`}
             >
-              <BedDouble className="w-4 h-4 text-[#D8AA67]" />
-              <span style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)", fontSize: '16px' }}>
-                Rooms &amp; Suites
+              <BedDouble className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#D8AA67] shrink-0" />
+              <span style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)", fontSize: '15px' }}>
+                <span className="hidden min-[380px]:inline">Rooms &amp; Suites</span>
+                <span className="min-[380px]:hidden">Rooms</span>
               </span>
             </button>
 
             <button
               type="button"
               onClick={() => setActiveTab('hall')}
-              className={`flex items-center space-x-2 px-3.5 sm:px-5 py-2 rounded-[13px] sm:rounded-[15px] text-xs sm:text-sm font-semibold tracking-wide transition-all cursor-pointer ${
+              className={`flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-4 lg:px-5 py-1.5 sm:py-2 rounded-[10px] sm:rounded-[14px] text-xs sm:text-sm font-semibold tracking-wide transition-all cursor-pointer whitespace-nowrap ${
                 activeTab === 'hall'
                   ? 'bg-gradient-to-r from-[#670E10] via-[#7B1316] to-[#550B0D] text-[#FFF8EB] shadow-md border border-[#D8AA67]/70 scale-[1.01]'
                   : 'text-[#6B5E4F] hover:text-[#241F1A] hover:bg-black/5'
               }`}
             >
-              <PartyPopper className="w-4 h-4 text-[#D8AA67]" />
-              <span style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)", fontSize: '16px' }}>
-                Party Hall (25–50 Pax)
+              <PartyPopper className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#D8AA67] shrink-0" />
+              <span style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)", fontSize: '15px' }}>
+                <span className="hidden lg:inline">Party Hall (25–50 Pax)</span>
+                <span className="lg:hidden">Party Hall</span>
               </span>
             </button>
           </div>
         </div>
 
         {/* Palace Direct Privileges Tag */}
-        <div className="hidden sm:inline-flex items-center space-x-2 text-xs font-semibold text-[#670E10] bg-[#FFF8EB] px-4 py-2 rounded-full border border-[#D8AA67]/80 shadow-md self-center mb-2">
+        <div className="hidden md:inline-flex items-center space-x-2 text-xs font-semibold text-[#670E10] bg-[#FFF8EB] px-4 py-2 rounded-full border border-[#D8AA67]/80 shadow-md self-center mb-2 mr-4 sm:mr-8">
           <Sparkles className="w-3.5 h-3.5 text-[#B08D57]" />
           <span>Direct Palace Privilege &bull; Best Tariff Guarantee</span>
         </div>
@@ -227,7 +229,7 @@ export function BookingBar() {
 
       {/* ── 2. Master Booking Details Card with Apple-Style Continuous Radii ── */}
       <div
-        className="relative z-10 w-full rounded-[26px] sm:rounded-[34px] pt-6 sm:pt-7 pb-4 sm:pb-5 px-3.5 sm:px-5 transition-all border-2 shadow-[0_26px_65px_-10px_rgba(35,12,14,0.32),0_4px_16px_rgba(0,0,0,0.06)]"
+        className="relative z-10 w-full rounded-[22px] sm:rounded-[32px] pt-6 sm:pt-7 pb-4 sm:pb-5 px-3.5 sm:px-5 transition-all border-2 shadow-[0_26px_65px_-10px_rgba(35,12,14,0.32),0_4px_16px_rgba(0,0,0,0.06)]"
         style={{
           backgroundColor: '#FAF7F2',
           borderColor: '#D8AA67',
