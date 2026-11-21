@@ -24,21 +24,21 @@ import type { User } from '@supabase/supabase-js';
 
 function PalaceMark() {
   return (
-    <svg
-      className="palace-mark w-7 h-7 sm:w-8 sm:h-8 shrink-0"
-      viewBox="0 0 52 58"
-      aria-hidden="true"
-      fill="none"
-      stroke="#D8AA67"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M5 53V24L26 5l21 19v29" />
-      <path d="M11 53V27L26 13l15 14v26M17 53V30l9-9 9 9v23" />
-      <path d="M22 53V36c0-4 1.8-6.7 4-8.8 2.2 2.1 4 4.8 4 8.8v17M2 53h48" />
-      <path d="M9 22 26 7l17 15M13 20 26 9l13 11" />
-    </svg>
+<svg
+  className="palace-mark w-5 h-5 sm:w-6 sm:h-6 shrink-0"
+  viewBox="0 0 52 58"
+  aria-hidden="true"
+  fill="none"
+  stroke="#D8AA67"
+  strokeWidth="1.75"
+  strokeLinecap="round"
+  strokeLinejoin="round"
+>
+  <path d="M5 53V24L26 5l21 19v29" />
+  <path d="M11 53V27L26 13l15 14v26M17 53V30l9-9 9 9v23" />
+  <path d="M22 53V36c0-4 1.8-6.7 4-8.8 2.2 2.1 4 4.8 4 8.8v17M2 53h48" />
+  <path d="M9 22 26 7l17 15M13 20 26 9l13 11" />
+</svg>
   );
 }
 
@@ -245,11 +245,11 @@ export const Navbar: React.FC<NavbarProps> = ({
         data-scrolled={isScrolled}
         className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 ease-in-out flex items-center ${
           isScrolled
-            ? 'h-[66px] sm:h-[70px] bg-[#0A0203]/95 shadow-[0_10px_35px_rgba(0,0,0,0.7)] border-b border-[#D8AA67]/25'
-            : 'h-[72px] sm:h-[78px] bg-[#0E0304]/90 backdrop-blur-sm border-b border-[#D8AA67]/15'
+            ? 'h-[66px] sm:h-[70px] bg-[#0A0203]/00'
+            : 'h-[72px] sm:h-[78px] bg-[#0E0304]/00'
         } px-3.5 sm:px-6 lg:px-8 xl:px-10 ${className}`}
       >
-        <div className="w-full max-w-7xl mx-auto flex items-center justify-between">
+        <div className="w-full max-w-8xl mx-auto flex items-center justify-between">
           {/* ── 1. Left: Brand Capsule Pill (Matches reference [BunkMates] capsule) ── */}
           <Link
             href="/"
@@ -258,12 +258,12 @@ export const Navbar: React.FC<NavbarProps> = ({
             <PalaceMark />
             <div className="flex flex-col text-left">
               <span
-                className="font-bold tracking-[0.14em] uppercase text-sm sm:text-base text-[#FFF8EB] group-hover:text-[#D8AA67] transition-colors leading-none"
+                className="font-bold tracking-[0.01em] uppercase text-xs sm:text-base text-[#FFF8EB] group-hover:text-[#D8AA67] transition-colors leading-none"
                 style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)" }}
               >
                 Rajmahal
               </span>
-              <span className="text-[7.5px] sm:text-[8px] font-semibold tracking-[0.28em] uppercase text-[#D8AA67] leading-none mt-0.5">
+              <span className="text-[5.5px] sm:text-[8px] font-semibold tracking-[0.28em] uppercase text-[#D8AA67] leading-none mt-0.5">
                 Heritage Hotel
               </span>
             </div>
