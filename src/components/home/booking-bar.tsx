@@ -176,7 +176,6 @@ export function BookingBar() {
   const [pets, setPets] = useState(0);
 
   // Room count state: default is 1 room for 2 guests; auto-increments to 2 at 4 guests
-  // Locked only when guests = 1.
   const [rooms, setRooms] = useState(1);
   const [userHasCustomizedRooms, setUserHasCustomizedRooms] = useState(false);
 
@@ -189,7 +188,7 @@ export function BookingBar() {
   const [tooltipOpen, setTooltipOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [activeTooltipTab, setActiveTooltipTab] = useState<TooltipPanelType>('calendar');
-  const [beakLeftPercent, setBeakLeftPercent] = useState<number>(20);
+  const [beakLeftPx, setBeakLeftPx] = useState<number>(80);
 
   // Display Awareness & Collision Detection State
   const [placement, setPlacement] = useState<'bottom' | 'top'>('bottom');
@@ -197,12 +196,14 @@ export function BookingBar() {
 
   // Calendar Navigation Month State
   const [calendarMonth, setCalendarMonth] = useState<Date>(new Date());
-  // Date selection mode: 'in' = selecting checkin, 'out' = selecting checkout
   const [selectingField, setSelectingField] = useState<'in' | 'out'>('in');
   const [isCustomMode, setIsCustomMode] = useState(false);
 
-  // Refs for calculating tooltip beak / arrowhead positions & collision detection
+  // Refs
   const barRootRef = useRef<HTMLDivElement>(null);
+  const dialogCardRef = useRef<HTMLDivElement>(null);
+  const activeTileRef = useRef<HTMLDivElement | null>(null);
+
   const checkInTileRef = useRef<HTMLDivElement>(null);
   const checkOutTileRef = useRef<HTMLDivElement>(null);
   const guestsTileRef = useRef<HTMLDivElement>(null);
@@ -271,7 +272,7 @@ export function BookingBar() {
     pets > 0 ? ` • ${pets} ${pets === 1 ? 'Pet' : 'Pets'}` : ''
   }`;
 
-  // ── Display Awareness Calculation ──
+  // ── Display Awareness Calculation (No programmatic scroll) ──
   const updateDisplayAwareness = useCallback(() => {
     if (!barRootRef.current) return;
     const barRect = barRootRef.current.getBoundingClientRect();
@@ -279,7 +280,6 @@ export function BookingBar() {
     const spaceBelow = windowH - barRect.bottom;
     const spaceAbove = barRect.top;
 
-    // If space below is tighter than 370px and space above has more room, flip above
     const flipToTop = spaceBelow < 370 && spaceAbove > spaceBelow;
     setPlacement(flipToTop ? 'top' : 'bottom');
 
@@ -290,27 +290,28 @@ export function BookingBar() {
     setMaxContentHeight(availableH);
   }, []);
 
-  // ── Calibrate Beak / Arrow Position ──
-  const calibrateBeak = useCallback(
-    (targetTileRef: React.RefObject<HTMLDivElement | null>, defaultPct: number) => {
-      if (targetTileRef.current && barRootRef.current) {
-        const tileRect = targetTileRef.current.getBoundingClientRect();
-        const barRect = barRootRef.current.getBoundingClientRect();
-        const relativeX = tileRect.left - barRect.left + tileRect.width / 2;
-        const pct = Math.max(8, Math.min(92, (relativeX / barRect.width) * 100));
-        setBeakLeftPercent(pct);
-      } else {
-        setBeakLeftPercent(defaultPct);
+  // ── Calibrate Beak / Arrow Position (Sub-pixel exact tile alignment) ──
+  const calibrateBeak = useCallback((targetTile: HTMLDivElement | null) => {
+    if (targetTile) {
+      activeTileRef.current = targetTile;
+    }
+    requestAnimationFrame(() => {
+      const tile = activeTileRef.current;
+      if (tile && dialogCardRef.current) {
+        const tileRect = tile.getBoundingClientRect();
+        const dialogRect = dialogCardRef.current.getBoundingClientRect();
+        const tileCenterX = tileRect.left + tileRect.width / 2;
+        const leftInDialog = tileCenterX - dialogRect.left;
+        const clampedPx = Math.max(20, Math.min(dialogRect.width - 20, leftInDialog));
+        setBeakLeftPx(clampedPx);
       }
-    },
-    []
-  );
+    });
+  }, []);
 
-  // ── Open Tooltip Dialog with Display Awareness & Beak Calibration ──
+  // ── Open Tooltip Dialog with Beak Alignment (No page scroll) ──
   const openTooltip = (
     panel: TooltipPanelType,
     targetTileRef: React.RefObject<HTMLDivElement | null>,
-    defaultBeakPct: number,
     targetDateField?: 'in' | 'out'
   ) => {
     setActiveTooltipTab(panel);
@@ -318,22 +319,15 @@ export function BookingBar() {
       setSelectingField(targetDateField);
     }
 
-    calibrateBeak(targetTileRef, defaultBeakPct);
+    if (targetTileRef.current) {
+      activeTileRef.current = targetTileRef.current;
+    }
+
     updateDisplayAwareness();
     setIsClosing(false);
     setTooltipOpen(true);
 
-    // Display awareness: Smooth scroll into view if bar is pushed near viewport edges
-    setTimeout(() => {
-      if (barRootRef.current) {
-        const barRect = barRootRef.current.getBoundingClientRect();
-        const spaceBelow = window.innerHeight - barRect.bottom;
-        if (spaceBelow < 350 && barRect.top > 120) {
-          const needed = 350 - spaceBelow + 18;
-          window.scrollBy({ top: needed, behavior: 'smooth' });
-        }
-      }
-    }, 40);
+    calibrateBeak(targetTileRef.current);
   };
 
   const closeTooltipWithAnimation = () => {
@@ -344,29 +338,52 @@ export function BookingBar() {
     }, 180);
   };
 
-  // Keep tooltip aligned & check scroll bounds
+  // Re-calibrate beak whenever open state, tab, or field changes
+  useEffect(() => {
+    if (tooltipOpen) {
+      calibrateBeak(activeTileRef.current);
+    }
+  }, [tooltipOpen, activeTooltipTab, selectingField, calibrateBeak]);
+
+  // Handle outside clicks: Keep bar operatable, only close when clicking outside both bar & dialog
   useEffect(() => {
     if (!tooltipOpen) return;
+
+    const handleOutsideClick = (e: MouseEvent) => {
+      const target = e.target as Node;
+      // If clicking inside dialog, keep open
+      if (dialogCardRef.current && dialogCardRef.current.contains(target)) {
+        return;
+      }
+      // If clicking inside booking bar, keep open (tile handlers switch active options)
+      if (barRootRef.current && barRootRef.current.contains(target)) {
+        return;
+      }
+      // Clicked outside both bar and dialog: close cleanly
+      closeTooltipWithAnimation();
+    };
 
     const handleScrollOrResize = () => {
       if (!barRootRef.current) return;
       const barRect = barRootRef.current.getBoundingClientRect();
-      // If booking bar scrolls completely out of viewport, dismiss tooltip cleanly
       if (barRect.bottom < 40 || barRect.top > window.innerHeight - 40) {
         setTooltipOpen(false);
         return;
       }
       updateDisplayAwareness();
+      calibrateBeak(activeTileRef.current);
     };
 
+    document.addEventListener('mousedown', handleOutsideClick);
     window.addEventListener('scroll', handleScrollOrResize, { passive: true });
     window.addEventListener('resize', handleScrollOrResize);
 
     return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
       window.removeEventListener('scroll', handleScrollOrResize);
       window.removeEventListener('resize', handleScrollOrResize);
     };
-  }, [tooltipOpen, updateDisplayAwareness]);
+  }, [tooltipOpen, updateDisplayAwareness, calibrateBeak]);
 
   // ── Adults & Rooms Logic ──
   const handleAdultsChange = (newAdults: number) => {
@@ -376,7 +393,6 @@ export function BookingBar() {
     if (newAdults === 1) {
       setRooms(1);
     } else if (!userHasCustomizedRooms) {
-      // Auto rule: 2 or 3 adults stay at 1 room; 4 or more auto-increments to 2 rooms
       if (newAdults < 4) {
         setRooms(1);
       } else {
@@ -388,7 +404,7 @@ export function BookingBar() {
   };
 
   const handleRoomsChange = (delta: number) => {
-    if (adults === 1) return; // Locked when only 1 guest!
+    if (adults === 1) return;
     const newRooms = rooms + delta;
     if (newRooms >= 1 && newRooms <= adults) {
       setUserHasCustomizedRooms(true);
@@ -401,7 +417,7 @@ export function BookingBar() {
     if (nights === 0) {
       setIsCustomMode(true);
       setSelectingField('in');
-      calibrateBeak(checkInTileRef, 15);
+      calibrateBeak(checkInTileRef.current);
       return;
     }
 
@@ -413,20 +429,19 @@ export function BookingBar() {
     setCheckOut(newCheckOut);
     // Auto switch focus to Check-Out in the bar
     setSelectingField('out');
-    calibrateBeak(checkOutTileRef, 38);
+    calibrateBeak(checkOutTileRef.current);
   };
 
   // ── Date Picking State Machine with Bar Auto-Switching ──
   const handleDateClick = (dateStr: string) => {
     const todayStr = toYMD(new Date());
-    if (dateStr < todayStr) return; // No past dates
+    if (dateStr < todayStr) return;
 
     if (activeTab === 'hall' || activeTooltipTab === 'hallCalendar') {
       setHallDate(dateStr);
       return;
     }
 
-    // Rooms mode:
     if (selectingField === 'in') {
       setCheckIn(dateStr);
       setIsCustomMode(true);
@@ -436,21 +451,18 @@ export function BookingBar() {
       }
       // Auto-switch to Check-Out selection IN THE BAR
       setSelectingField('out');
-      calibrateBeak(checkOutTileRef, 38);
+      calibrateBeak(checkOutTileRef.current);
     } else {
-      // Selecting Check-Out:
       if (dateStr > checkIn) {
         setCheckOut(dateStr);
         setIsCustomMode(true);
       } else {
-        // Clicked date is earlier than or equal to check-in:
-        // Set it as new Check-In, and auto-switch back to Check-Out in the bar
         setCheckIn(dateStr);
         const nextDay = toYMD(addDays(parseYMD(dateStr), 1));
         setCheckOut(nextDay);
         setIsCustomMode(true);
         setSelectingField('out');
-        calibrateBeak(checkOutTileRef, 38);
+        calibrateBeak(checkOutTileRef.current);
       }
     }
   };
@@ -470,7 +482,7 @@ export function BookingBar() {
     }
   };
 
-  // ── Month Days Generator for Custom Calendar ──
+  // Month Days Generator
   const getMonthDays = (baseDate: Date) => {
     const year = baseDate.getFullYear();
     const month = baseDate.getMonth();
@@ -479,7 +491,6 @@ export function BookingBar() {
 
     const days: { dayNumber: number; dateStr: string; isCurrentMonth: boolean }[] = [];
 
-    // Previous month filler days
     const prevMonthDays = new Date(year, month, 0).getDate();
     for (let i = firstDayIndex - 1; i >= 0; i--) {
       const d = prevMonthDays - i;
@@ -487,13 +498,11 @@ export function BookingBar() {
       days.push({ dayNumber: d, dateStr: toYMD(prevDate), isCurrentMonth: false });
     }
 
-    // Current month days
     for (let i = 1; i <= daysInMonth; i++) {
       const currDate = new Date(year, month, i);
       days.push({ dayNumber: i, dateStr: toYMD(currDate), isCurrentMonth: true });
     }
 
-    // Next month filler
     const remaining = (7 - (days.length % 7)) % 7;
     for (let i = 1; i <= remaining; i++) {
       const nextDate = new Date(year, month + 1, i);
@@ -506,7 +515,7 @@ export function BookingBar() {
   const nextMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1);
   const todayStr = toYMD(new Date());
 
-  // ── Header Details for the Active Panel ──
+  // Header Details
   const getPanelHeader = () => {
     switch (activeTooltipTab) {
       case 'calendar':
@@ -551,13 +560,13 @@ export function BookingBar() {
     }
   };
 
-  // ── Render Clean Calendar Content (Without redundant attached tabs/banners) ──
+  // ── Render Connected Date Range Calendar Content ──
   const renderCalendarContent = () => {
     const monthsToDisplay = isMobile ? [calendarMonth] : [calendarMonth, nextMonth];
 
     return (
       <div className="flex flex-col space-y-3.5">
-        {/* Quick Stay Suggestions Pills (Rooms Mode Only) */}
+        {/* Quick Stay Suggestions Pills */}
         {activeTab === 'rooms' && (
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
             {STAY_SUGGESTIONS.map((sug) => {
@@ -590,7 +599,6 @@ export function BookingBar() {
 
             return (
               <div key={monthName} className="flex flex-col">
-                {/* Month Navigation Header */}
                 <div className="flex items-center justify-between mb-2.5 px-1">
                   {mIdx === 0 ? (
                     <button
@@ -630,8 +638,8 @@ export function BookingBar() {
                   )}
                 </div>
 
-                {/* Day of week labels */}
-                <div className="grid grid-cols-7 gap-1 text-center mb-1 text-[11px] font-semibold text-[#8F7245]">
+                {/* Day labels */}
+                <div className="grid grid-cols-7 text-center mb-1 text-[11px] font-semibold text-[#8F7245]">
                   <span>Su</span>
                   <span>Mo</span>
                   <span>Tu</span>
@@ -641,8 +649,8 @@ export function BookingBar() {
                   <span>Sa</span>
                 </div>
 
-                {/* Days Grid */}
-                <div className="grid grid-cols-7 gap-1 text-center">
+                {/* Days Grid with Continuous Ribbon Design */}
+                <div className="grid grid-cols-7 gap-y-1 text-center">
                   {days.map((d, dIdx) => {
                     const isPast = d.dateStr < todayStr;
                     const isCheckInDay = activeTab === 'rooms' && d.dateStr === checkIn;
@@ -656,32 +664,41 @@ export function BookingBar() {
                       checkOut &&
                       d.dateStr > checkIn &&
                       d.dateStr < checkOut;
-
-                    let btnClasses =
-                      'h-8 w-8 mx-auto rounded-full text-xs font-semibold flex items-center justify-center transition-all cursor-pointer ';
-
-                    if (isPast) {
-                      btnClasses += 'text-[#C5B8A5] opacity-40 cursor-not-allowed ';
-                    } else if (isCheckInDay || isCheckOutDay || isHallDay) {
-                      btnClasses += 'bg-[#670E10] text-[#FFF8EB] font-bold shadow-xs scale-105 ring-2 ring-[#D8AA67] ';
-                    } else if (isInRange) {
-                      btnClasses += 'bg-[#D8AA67]/25 text-[#4A0A0C] font-semibold rounded-none ';
-                    } else if (!d.isCurrentMonth) {
-                      btnClasses += 'text-[#B0A290] hover:bg-black/5 ';
-                    } else {
-                      btnClasses += 'text-[#241F1A] hover:bg-[#FFF8EB] hover:text-[#670E10] hover:ring-1 hover:ring-[#D8AA67] ';
-                    }
+                    const hasRange = Boolean(activeTab === 'rooms' && checkIn && checkOut && checkOut > checkIn);
 
                     return (
-                      <button
-                        key={`${d.dateStr}-${dIdx}`}
-                        type="button"
-                        disabled={isPast}
-                        onClick={() => handleDateClick(d.dateStr)}
-                        className={btnClasses}
-                      >
-                        {d.dayNumber}
-                      </button>
+                      <div key={`${d.dateStr}-${dIdx}`} className="relative h-8 flex items-center justify-center">
+                        {/* Continuous connected range ribbon background */}
+                        {hasRange && isCheckInDay && (
+                          <div className="absolute inset-y-0.5 right-0 w-1/2 bg-[#EBDDC7] pointer-events-none" />
+                        )}
+                        {hasRange && isCheckOutDay && (
+                          <div className="absolute inset-y-0.5 left-0 w-1/2 bg-[#EBDDC7] pointer-events-none" />
+                        )}
+                        {hasRange && isInRange && (
+                          <div className="absolute inset-y-0.5 inset-x-0 bg-[#EBDDC7] pointer-events-none" />
+                        )}
+
+                        {/* Interactive Day Cell Button */}
+                        <button
+                          type="button"
+                          disabled={isPast}
+                          onClick={() => handleDateClick(d.dateStr)}
+                          className={`relative z-10 text-xs font-semibold flex items-center justify-center transition-all cursor-pointer ${
+                            isPast
+                              ? 'h-8 w-8 rounded-full text-[#C5B8A5] opacity-40 cursor-not-allowed'
+                              : isCheckInDay || isCheckOutDay || isHallDay
+                              ? 'h-8 w-8 rounded-full bg-[#670E10] text-[#FFF8EB] font-bold shadow-xs ring-2 ring-[#D8AA67] scale-105'
+                              : isInRange
+                              ? 'w-full h-8 text-[#4A0A0C] font-bold hover:bg-[#D8AA67]/40'
+                              : !d.isCurrentMonth
+                              ? 'h-8 w-8 rounded-full text-[#B0A290] hover:bg-black/5'
+                              : 'h-8 w-8 rounded-full text-[#241F1A] hover:bg-[#FFF8EB] hover:text-[#670E10] hover:ring-1 hover:ring-[#D8AA67]'
+                          }`}
+                        >
+                          {d.dayNumber}
+                        </button>
+                      </div>
                     );
                   })}
                 </div>
@@ -690,7 +707,7 @@ export function BookingBar() {
           })}
         </div>
 
-        {/* Selected Dates Summary Banner & Apply Button */}
+        {/* Selected Dates Summary & Confirm Dates Button (Opens Rooms/Guests Dialog) */}
         <div className="pt-3 border-t border-[#DFD3C3] flex items-center justify-between gap-3">
           <div className="flex items-center space-x-2 text-xs text-[#241F1A]">
             <span className="font-semibold text-[#8F7245]">Selected Period:</span>
@@ -709,17 +726,24 @@ export function BookingBar() {
 
           <button
             type="button"
-            onClick={closeTooltipWithAnimation}
-            className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#670E10] to-[#801417] text-[#FFF8EB] text-xs font-bold tracking-wide shadow hover:shadow-md transition cursor-pointer"
+            onClick={() => {
+              // Confirm dates automatically opens the guests / hall capacity dialog
+              if (activeTab === 'rooms') {
+                openTooltip('guests', guestsTileRef);
+              } else {
+                openTooltip('hallCapacity', hallCapacityTileRef);
+              }
+            }}
+            className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#670E10] to-[#801417] text-[#FFF8EB] text-xs font-bold tracking-wide shadow hover:shadow-md transition cursor-pointer flex items-center space-x-1.5"
           >
-            Confirm Dates
+            <span>Confirm Dates &bull; Select {activeTab === 'rooms' ? 'Guests' : 'Capacity'} &rarr;</span>
           </button>
         </div>
       </div>
     );
   };
 
-  // ── Render Guests Stepper Content (Rooms Tab) ──
+  // ── Render Guests Stepper Content ──
   const renderGuestsStepperContent = () => {
     const isSoloGuest = adults === 1;
 
@@ -816,7 +840,7 @@ export function BookingBar() {
             </div>
           </div>
 
-          {/* 4. Chambers (Rooms) Stepper — Locked ONLY when guest is 1; user customizable when guests > 1 */}
+          {/* 4. Chambers (Rooms) Stepper */}
           <div
             className={`p-3.5 rounded-2xl border flex items-center justify-between shadow-2xs transition-colors ${
               isSoloGuest ? 'bg-[#F5EFE6] border-[#D8AA67]/60' : 'bg-white border-[#DFD3C3]'
@@ -867,7 +891,7 @@ export function BookingBar() {
         {/* Footer */}
         <div className="pt-3 border-t border-[#DFD3C3] flex items-center justify-between gap-3">
           <span className="text-xs text-[#7A6F62] italic">
-            * 1 chamber is reserved by default for up to 3 guests; 2 chambers auto-suggested for 4+ guests. You can adjust chamber count freely.
+            * 1 chamber is reserved by default for up to 3 guests; 2 chambers auto-suggested for 4+ guests.
           </span>
           <button
             type="button"
@@ -881,7 +905,7 @@ export function BookingBar() {
     );
   };
 
-  // ── Render Event Occasion Selection (Party Hall Tab) ──
+  // ── Render Event Occasion Selection ──
   const renderOccasionContent = () => {
     return (
       <div className="flex flex-col space-y-3.5">
@@ -894,7 +918,6 @@ export function BookingBar() {
           </span>
         </div>
 
-        {/* Occasion Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           {EVENT_OCCASION_OPTIONS.map((opt) => {
             const isSelected = hallEventType === opt.title;
@@ -940,21 +963,23 @@ export function BookingBar() {
           })}
         </div>
 
-        {/* Apply footer */}
         <div className="pt-3 border-t border-[#DFD3C3] flex items-center justify-end">
           <button
             type="button"
-            onClick={closeTooltipWithAnimation}
+            onClick={() => {
+              // Automatically proceed to Event Date
+              openTooltip('hallCalendar', hallDateTileRef);
+            }}
             className="w-full sm:w-auto px-5 py-2 rounded-xl bg-gradient-to-r from-[#670E10] to-[#801417] text-[#FFF8EB] text-xs font-bold tracking-wide shadow hover:shadow-md transition cursor-pointer"
           >
-            Confirm Occasion
+            Confirm Occasion &bull; Pick Date &rarr;
           </button>
         </div>
       </div>
     );
   };
 
-  // ── Render Party Hall Capacity Chips Component ──
+  // ── Render Party Hall Capacity Chips ──
   const renderHallCapacityContent = () => {
     return (
       <div className="flex flex-col space-y-4">
@@ -965,7 +990,6 @@ export function BookingBar() {
           <span className="text-xs font-semibold text-[#670E10]">Selected: {hallCapacity}</span>
         </div>
 
-        {/* Capacity Chips Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
           {HALL_CAPACITY_OPTIONS.map((opt) => {
             const isSelected = hallCapacity.startsWith(opt.title.split(' ')[0]);
@@ -1008,7 +1032,6 @@ export function BookingBar() {
           })}
         </div>
 
-        {/* Apply footer */}
         <div className="pt-3 border-t border-[#DFD3C3] flex items-center justify-end">
           <button
             type="button"
@@ -1022,7 +1045,6 @@ export function BookingBar() {
     );
   };
 
-  // Determine horizontal alignment of tooltip dialog relative to booking bar on desktop
   const isRightAlignedPanel = activeTooltipTab === 'guests' || activeTooltipTab === 'hallCapacity';
   const panelHeader = getPanelHeader();
 
@@ -1030,7 +1052,6 @@ export function BookingBar() {
     <div ref={barRootRef} className="w-full max-w-[1080px] mx-auto relative pt-4">
       {/* ── 1. Popping-Out Tabs with Inset Fillet Curves ── */}
       <div className="relative z-20 flex flex-col sm:flex-row sm:items-end justify-between px-0">
-        {/* Popped-Out Chamber Tab Deck */}
         <div
           className="relative inline-flex items-center px-1.5 sm:px-2 pt-1.5 sm:pt-2 pb-1 rounded-t-[16px] sm:rounded-t-[22px] border-t-2 border-x-2 transition-all mx-auto sm:mx-0 sm:ml-16 md:ml-20 lg:ml-24 shadow-2xs"
           style={{
@@ -1067,7 +1088,6 @@ export function BookingBar() {
             </svg>
           </div>
 
-          {/* Bottom baseline mask */}
           <div
             className="absolute -bottom-[2px] -left-[1px] -right-[1px] h-[4px] pointer-events-none"
             style={{ backgroundColor: '#FAF7F2' }}
@@ -1115,7 +1135,6 @@ export function BookingBar() {
           </div>
         </div>
 
-        {/* Palace Direct Privileges Tag */}
         <div className="hidden md:inline-flex items-center space-x-2 text-xs font-semibold text-[#670E10] bg-[#FFF8EB] px-4 py-2 rounded-full border border-[#D8AA67]/80 shadow-md self-center mb-2 mr-4 sm:mr-8">
           <Sparkles className="w-3.5 h-3.5 text-[#B08D57]" />
           <span>Direct Palace Privilege &bull; Best Tariff Guarantee</span>
@@ -1124,7 +1143,7 @@ export function BookingBar() {
 
       {/* ── 2. Master Booking Details Card ── */}
       <div
-        className="relative z-10 w-full rounded-[22px] sm:rounded-[32px] pt-6 sm:pt-7 pb-4 sm:pb-5 px-3.5 sm:px-5 transition-all duration-300 border-2 shadow-[0_26px_65px_-10px_rgba(35,12,14,0.32),0_4px_16px_rgba(0,0,0,0.06)]"
+        className="relative z-10 w-full rounded-[22px] sm:rounded-[32px] pt-5 sm:pt-7 pb-4 sm:pb-5 px-3 sm:px-5 transition-all duration-300 border-2 shadow-[0_26px_65px_-10px_rgba(35,12,14,0.32),0_4px_16px_rgba(0,0,0,0.06)]"
         style={{
           backgroundColor: '#FAF7F2',
           borderColor: '#D8AA67',
@@ -1134,9 +1153,8 @@ export function BookingBar() {
           <form
             action="/rooms"
             method="GET"
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_auto_1fr_1.25fr_auto] gap-2.5 sm:gap-3 items-center"
+            className="grid grid-cols-2 lg:grid-cols-[1fr_auto_1fr_1.25fr_auto] gap-2.5 sm:gap-3 items-center"
           >
-            {/* Hidden inputs to guarantee query params pass to /rooms */}
             <input type="hidden" name="checkIn" value={checkIn} />
             <input type="hidden" name="checkOut" value={checkOut} />
             <input type="hidden" name="guests" value={guestsSummary} />
@@ -1145,50 +1163,50 @@ export function BookingBar() {
             <input type="hidden" name="pets" value={pets} />
             <input type="hidden" name="rooms" value={rooms} />
 
-            {/* 1. Check In Tile (Click directly switches bar and opens tooltip) */}
+            {/* 1. Check In Tile (Col-span 1 on mobile: Check In & Check Out in a row) */}
             <div
               ref={checkInTileRef}
               onClick={() => {
                 if (tooltipOpen && activeTooltipTab === 'calendar' && selectingField === 'in') {
                   closeTooltipWithAnimation();
                 } else {
-                  openTooltip('calendar', checkInTileRef, 15, 'in');
+                  openTooltip('calendar', checkInTileRef, 'in');
                 }
               }}
-              className={`relative flex items-center justify-between px-4 py-3 rounded-[18px] border bg-white transition-all cursor-pointer group h-[64px] ${
+              className={`col-span-1 relative flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 rounded-[16px] sm:rounded-[18px] border bg-white transition-all cursor-pointer group h-[60px] sm:h-[64px] ${
                 tooltipOpen && activeTooltipTab === 'calendar' && selectingField === 'in'
                   ? 'border-[#670E10] ring-2 ring-[#D8AA67] shadow-md bg-[#FFF8EB]'
                   : 'border-[#DFD3C3] hover:border-[#B08D57] hover:shadow-md'
               }`}
             >
-              <div className="flex flex-col text-left flex-1 min-w-0 mr-2">
-                <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#8F7245] leading-none mb-1">
+              <div className="flex flex-col text-left flex-1 min-w-0 mr-1 sm:mr-2">
+                <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.14em] text-[#8F7245] leading-none mb-1">
                   Check In
                 </span>
-                <div className="flex items-baseline space-x-1.5">
+                <div className="flex items-baseline space-x-1 sm:space-x-1.5">
                   <span
-                    className="text-base sm:text-lg font-bold text-[#241F1A] leading-none"
+                    className="text-sm sm:text-base lg:text-lg font-bold text-[#241F1A] leading-none truncate"
                     style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)" }}
                   >
                     {formattedCheckIn.day} {formattedCheckIn.monthYear}
                   </span>
-                  <span className="text-[11px] font-medium text-[#7A6F62] leading-none">
+                  <span className="text-[10px] sm:text-[11px] font-medium text-[#7A6F62] leading-none hidden min-[400px]:inline">
                     {formattedCheckIn.weekday}
                   </span>
                 </div>
               </div>
-              <div className="w-8 h-8 rounded-[12px] bg-[#FAF7F2] border border-[#DFD3C3] flex items-center justify-center shrink-0 group-hover:border-[#B08D57] group-hover:bg-[#FFF8EB] transition-colors">
-                <CalendarIcon className="w-4 h-4 text-[#670E10] group-hover:text-[#B08D57] transition-colors" />
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-[10px] sm:rounded-[12px] bg-[#FAF7F2] border border-[#DFD3C3] flex items-center justify-center shrink-0 group-hover:border-[#B08D57] group-hover:bg-[#FFF8EB] transition-colors">
+                <CalendarIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#670E10] group-hover:text-[#B08D57] transition-colors" />
               </div>
             </div>
 
-            {/* 2. Nights Separator Pill (Desktop only, click opens calendar) */}
+            {/* 2. Nights Separator Pill (Desktop only) */}
             <div
               onClick={() => {
                 if (tooltipOpen && activeTooltipTab === 'calendar') {
                   closeTooltipWithAnimation();
                 } else {
-                  openTooltip('calendar', checkOutTileRef, 38, 'out');
+                  openTooltip('calendar', checkOutTileRef, 'out');
                 }
               }}
               className="hidden lg:flex flex-col items-center justify-center px-0.5 cursor-pointer group"
@@ -1201,54 +1219,54 @@ export function BookingBar() {
               </span>
             </div>
 
-            {/* 3. Check Out Tile (Click directly switches bar and opens tooltip) */}
+            {/* 3. Check Out Tile (Col-span 1 on mobile: Check In & Check Out in a row) */}
             <div
               ref={checkOutTileRef}
               onClick={() => {
                 if (tooltipOpen && activeTooltipTab === 'calendar' && selectingField === 'out') {
                   closeTooltipWithAnimation();
                 } else {
-                  openTooltip('calendar', checkOutTileRef, 38, 'out');
+                  openTooltip('calendar', checkOutTileRef, 'out');
                 }
               }}
-              className={`relative flex items-center justify-between px-4 py-3 rounded-[18px] border bg-white transition-all cursor-pointer group h-[64px] ${
+              className={`col-span-1 relative flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 rounded-[16px] sm:rounded-[18px] border bg-white transition-all cursor-pointer group h-[60px] sm:h-[64px] ${
                 tooltipOpen && activeTooltipTab === 'calendar' && selectingField === 'out'
                   ? 'border-[#670E10] ring-2 ring-[#D8AA67] shadow-md bg-[#FFF8EB]'
                   : 'border-[#DFD3C3] hover:border-[#B08D57] hover:shadow-md'
               }`}
             >
-              <div className="flex flex-col text-left flex-1 min-w-0 mr-2">
-                <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#8F7245] leading-none mb-1">
+              <div className="flex flex-col text-left flex-1 min-w-0 mr-1 sm:mr-2">
+                <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.14em] text-[#8F7245] leading-none mb-1">
                   Check Out
                 </span>
-                <div className="flex items-baseline space-x-1.5">
+                <div className="flex items-baseline space-x-1 sm:space-x-1.5">
                   <span
-                    className="text-base sm:text-lg font-bold text-[#241F1A] leading-none"
+                    className="text-sm sm:text-base lg:text-lg font-bold text-[#241F1A] leading-none truncate"
                     style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)" }}
                   >
                     {formattedCheckOut.day} {formattedCheckOut.monthYear}
                   </span>
-                  <span className="text-[11px] font-medium text-[#7A6F62] leading-none">
+                  <span className="text-[10px] sm:text-[11px] font-medium text-[#7A6F62] leading-none hidden min-[400px]:inline">
                     {formattedCheckOut.weekday}
                   </span>
                 </div>
               </div>
-              <div className="w-8 h-8 rounded-[12px] bg-[#FAF7F2] border border-[#DFD3C3] flex items-center justify-center shrink-0 group-hover:border-[#B08D57] group-hover:bg-[#FFF8EB] transition-colors">
-                <CalendarIcon className="w-4 h-4 text-[#670E10] group-hover:text-[#B08D57] transition-colors" />
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-[10px] sm:rounded-[12px] bg-[#FAF7F2] border border-[#DFD3C3] flex items-center justify-center shrink-0 group-hover:border-[#B08D57] group-hover:bg-[#FFF8EB] transition-colors">
+                <CalendarIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#670E10] group-hover:text-[#B08D57] transition-colors" />
               </div>
             </div>
 
-            {/* 4. Guests & Chambers Tile (Click directly switches bar and opens tooltip) */}
+            {/* 4. Guests & Chambers Tile (Col-span 2 on mobile: full width row) */}
             <div
               ref={guestsTileRef}
               onClick={() => {
                 if (tooltipOpen && activeTooltipTab === 'guests') {
                   closeTooltipWithAnimation();
                 } else {
-                  openTooltip('guests', guestsTileRef, 72);
+                  openTooltip('guests', guestsTileRef);
                 }
               }}
-              className={`relative flex items-center justify-between px-4 py-3 rounded-[18px] border bg-white transition-all cursor-pointer group h-[64px] ${
+              className={`col-span-2 lg:col-span-1 relative flex items-center justify-between px-4 py-2.5 sm:py-3 rounded-[16px] sm:rounded-[18px] border bg-white transition-all cursor-pointer group h-[60px] sm:h-[64px] ${
                 tooltipOpen && activeTooltipTab === 'guests'
                   ? 'border-[#670E10] ring-2 ring-[#D8AA67] shadow-md bg-[#FFF8EB]'
                   : 'border-[#DFD3C3] hover:border-[#B08D57] hover:shadow-md'
@@ -1271,11 +1289,11 @@ export function BookingBar() {
               </div>
             </div>
 
-            {/* 5. Search Chambers Button */}
-            <div className="sm:col-span-2 lg:col-span-1">
+            {/* 5. Search Chambers Button (Col-span 2 on mobile: full width row) */}
+            <div className="col-span-2 lg:col-span-1">
               <button
                 type="submit"
-                className="w-full h-[64px] px-8 rounded-[18px] font-bold tracking-wide transition-all duration-300 shadow-lg hover:shadow-xl active:scale-[0.98] flex items-center justify-center space-x-2.5 cursor-pointer text-[#FFF8EB] border border-[#D8AA67]/80 group"
+                className="w-full h-[58px] sm:h-[64px] px-8 rounded-[16px] sm:rounded-[18px] font-bold tracking-wide transition-all duration-300 shadow-lg hover:shadow-xl active:scale-[0.98] flex items-center justify-center space-x-2.5 cursor-pointer text-[#FFF8EB] border border-[#D8AA67]/80 group"
                 style={{
                   background: 'linear-gradient(135deg, #670E10 0%, #7E1418 50%, #52090B 100%)',
                   fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
@@ -1291,88 +1309,88 @@ export function BookingBar() {
           /* ── Content Area: Party Hall Form ── */
           <form
             onSubmit={handleHallSearch}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.1fr_1fr_1.2fr_auto] gap-2.5 sm:gap-3 items-center"
+            className="grid grid-cols-2 lg:grid-cols-[1.1fr_1fr_1.2fr_auto] gap-2.5 sm:gap-3 items-center"
           >
-            {/* 1. Event Occasion (Click opens rich tooltip dialog / drawer) */}
+            {/* 1. Event Occasion (Col-span 1 on mobile: Occasion & Date in a row) */}
             <div
               ref={hallOccasionTileRef}
               onClick={() => {
                 if (tooltipOpen && activeTooltipTab === 'hallOccasion') {
                   closeTooltipWithAnimation();
                 } else {
-                  openTooltip('hallOccasion', hallOccasionTileRef, 16);
+                  openTooltip('hallOccasion', hallOccasionTileRef);
                 }
               }}
-              className={`relative flex items-center justify-between px-4 py-3 rounded-[18px] border bg-white transition-all cursor-pointer group h-[64px] ${
+              className={`col-span-1 relative flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 rounded-[16px] sm:rounded-[18px] border bg-white transition-all cursor-pointer group h-[60px] sm:h-[64px] ${
                 tooltipOpen && activeTooltipTab === 'hallOccasion'
                   ? 'border-[#670E10] ring-2 ring-[#D8AA67] shadow-md bg-[#FFF8EB]'
                   : 'border-[#DFD3C3] hover:border-[#B08D57] hover:shadow-md'
               }`}
             >
-              <div className="flex flex-col text-left flex-1 min-w-0 mr-2">
-                <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#8F7245] leading-none mb-1">
-                  Event Occasion
+              <div className="flex flex-col text-left flex-1 min-w-0 mr-1 sm:mr-2">
+                <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.14em] text-[#8F7245] leading-none mb-1">
+                  Occasion
                 </span>
                 <span
-                  className="text-sm sm:text-base font-bold text-[#241F1A] leading-none truncate"
+                  className="text-xs sm:text-base font-bold text-[#241F1A] leading-none truncate"
                   style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)" }}
                 >
                   {hallEventType}
                 </span>
               </div>
-              <div className="w-8 h-8 rounded-[12px] bg-[#FAF7F2] border border-[#DFD3C3] flex items-center justify-center shrink-0 group-hover:border-[#B08D57] group-hover:bg-[#FFF8EB] transition-colors">
-                <PartyPopper className="w-4 h-4 text-[#670E10] group-hover:text-[#B08D57] transition-colors" />
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-[10px] sm:rounded-[12px] bg-[#FAF7F2] border border-[#DFD3C3] flex items-center justify-center shrink-0 group-hover:border-[#B08D57] group-hover:bg-[#FFF8EB] transition-colors">
+                <PartyPopper className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#670E10] group-hover:text-[#B08D57] transition-colors" />
               </div>
             </div>
 
-            {/* 2. Event Date (Click opens floating tooltip dialog / drawer) */}
+            {/* 2. Event Date (Col-span 1 on mobile: Occasion & Date in a row) */}
             <div
               ref={hallDateTileRef}
               onClick={() => {
                 if (tooltipOpen && activeTooltipTab === 'hallCalendar') {
                   closeTooltipWithAnimation();
                 } else {
-                  openTooltip('hallCalendar', hallDateTileRef, 42);
+                  openTooltip('hallCalendar', hallDateTileRef);
                 }
               }}
-              className={`relative flex items-center justify-between px-4 py-3 rounded-[18px] border bg-white transition-all cursor-pointer group h-[64px] ${
+              className={`col-span-1 relative flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 rounded-[16px] sm:rounded-[18px] border bg-white transition-all cursor-pointer group h-[60px] sm:h-[64px] ${
                 tooltipOpen && activeTooltipTab === 'hallCalendar'
                   ? 'border-[#670E10] ring-2 ring-[#D8AA67] shadow-md bg-[#FFF8EB]'
                   : 'border-[#DFD3C3] hover:border-[#B08D57] hover:shadow-md'
               }`}
             >
-              <div className="flex flex-col text-left flex-1 min-w-0 mr-2">
-                <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#8F7245] leading-none mb-1">
+              <div className="flex flex-col text-left flex-1 min-w-0 mr-1 sm:mr-2">
+                <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.14em] text-[#8F7245] leading-none mb-1">
                   Event Date
                 </span>
-                <div className="flex items-baseline space-x-1.5">
+                <div className="flex items-baseline space-x-1 sm:space-x-1.5">
                   <span
-                    className="text-base sm:text-lg font-bold text-[#241F1A] leading-none"
+                    className="text-xs sm:text-base lg:text-lg font-bold text-[#241F1A] leading-none truncate"
                     style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)" }}
                   >
                     {formattedHallDate.day} {formattedHallDate.monthYear}
                   </span>
-                  <span className="text-[11px] font-medium text-[#7A6F62] leading-none">
+                  <span className="text-[10px] sm:text-[11px] font-medium text-[#7A6F62] leading-none hidden min-[400px]:inline">
                     {formattedHallDate.weekday}
                   </span>
                 </div>
               </div>
-              <div className="w-8 h-8 rounded-[12px] bg-[#FAF7F2] border border-[#DFD3C3] flex items-center justify-center shrink-0 group-hover:border-[#B08D57] group-hover:bg-[#FFF8EB] transition-colors">
-                <CalendarIcon className="w-4 h-4 text-[#670E10] group-hover:text-[#B08D57] transition-colors" />
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-[10px] sm:rounded-[12px] bg-[#FAF7F2] border border-[#DFD3C3] flex items-center justify-center shrink-0 group-hover:border-[#B08D57] group-hover:bg-[#FFF8EB] transition-colors">
+                <CalendarIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#670E10] group-hover:text-[#B08D57] transition-colors" />
               </div>
             </div>
 
-            {/* 3. Hall Capacity (Click opens floating tooltip dialog / drawer) */}
+            {/* 3. Hall Capacity (Col-span 2 on mobile: full width row) */}
             <div
               ref={hallCapacityTileRef}
               onClick={() => {
                 if (tooltipOpen && activeTooltipTab === 'hallCapacity') {
                   closeTooltipWithAnimation();
                 } else {
-                  openTooltip('hallCapacity', hallCapacityTileRef, 72);
+                  openTooltip('hallCapacity', hallCapacityTileRef);
                 }
               }}
-              className={`relative flex items-center justify-between px-4 py-3 rounded-[18px] border bg-white transition-all cursor-pointer group h-[64px] ${
+              className={`col-span-2 lg:col-span-1 relative flex items-center justify-between px-4 py-2.5 sm:py-3 rounded-[16px] sm:rounded-[18px] border bg-white transition-all cursor-pointer group h-[60px] sm:h-[64px] ${
                 tooltipOpen && activeTooltipTab === 'hallCapacity'
                   ? 'border-[#670E10] ring-2 ring-[#D8AA67] shadow-md bg-[#FFF8EB]'
                   : 'border-[#DFD3C3] hover:border-[#B08D57] hover:shadow-md'
@@ -1394,11 +1412,11 @@ export function BookingBar() {
               </div>
             </div>
 
-            {/* Check Hall Button */}
-            <div className="sm:col-span-2 lg:col-span-1">
+            {/* 4. Check Hall Button (Col-span 2 on mobile: full width row) */}
+            <div className="col-span-2 lg:col-span-1">
               <button
                 type="submit"
-                className="w-full h-[64px] px-8 rounded-[18px] font-bold tracking-wide transition-all duration-300 shadow-lg hover:shadow-xl active:scale-[0.98] flex items-center justify-center space-x-2.5 cursor-pointer text-[#FFF8EB] border border-[#D8AA67]/80 group"
+                className="w-full h-[58px] sm:h-[64px] px-8 rounded-[16px] sm:rounded-[18px] font-bold tracking-wide transition-all duration-300 shadow-lg hover:shadow-xl active:scale-[0.98] flex items-center justify-center space-x-2.5 cursor-pointer text-[#FFF8EB] border border-[#D8AA67]/80 group"
                 style={{
                   background: 'linear-gradient(135deg, #670E10 0%, #7E1418 50%, #52090B 100%)',
                   fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
@@ -1413,98 +1431,84 @@ export function BookingBar() {
         )}
       </div>
 
-      {/* ── 3. Desktop Floating Tooltip Dialog (Display Aware & Collision Resilient) ── */}
+      {/* ── 3. Desktop Floating Tooltip Dialog (Anchored directly under the bar with exact beak alignment) ── */}
       {!isMobile && tooltipOpen && (
-        <>
-          {/* Subtle click-outside backdrop overlay to dismiss tooltip without blocking view */}
-          <div
-            onClick={closeTooltipWithAnimation}
-            className={`fixed inset-0 z-40 bg-black/10 backdrop-blur-[0.5px] transition-opacity ${
-              isClosing ? 'animate-fade-out-backdrop' : 'animate-fade-in-backdrop'
-            }`}
-          />
-
-          {/* Floating Tooltip Dialog Container */}
-          <div
-            className={`absolute z-50 ${
-              placement === 'top'
-                ? 'bottom-[calc(100%+14px)] origin-bottom'
-                : 'top-[calc(100%+14px)] origin-top'
-            } ${
-              isRightAlignedPanel
-                ? 'right-0 sm:right-4 w-full max-w-[540px]'
-                : activeTooltipTab === 'hallOccasion'
-                ? 'left-0 sm:left-4 w-full max-w-[620px]'
-                : 'left-0 sm:left-4 w-full max-w-[720px]'
-            } rounded-[24px] border-2 border-[#D8AA67] bg-[#FAF7F2] shadow-[0_24px_70px_-10px_rgba(35,10,14,0.38),0_6px_20px_rgba(0,0,0,0.08)] flex flex-col overflow-hidden ${
-              placement === 'top'
-                ? isClosing
-                  ? 'animate-tooltip-collapse-top'
-                  : 'animate-tooltip-expand-top'
-                : isClosing
-                ? 'animate-tooltip-collapse'
-                : 'animate-tooltip-expand'
-            }`}
-          >
-            {/* Tooltip Pointing Arrow / Beak pointing to the active tile */}
-            {placement === 'bottom' ? (
-              <div
-                className="absolute -top-[9px] w-4 h-4 rotate-45 border-t-2 border-l-2 border-[#D8AA67] bg-[#FAF7F2] -translate-x-1/2 pointer-events-none z-20 shadow-xs transition-all duration-200"
-                style={{
-                  left: `${beakLeftPercent}%`,
-                }}
-              />
-            ) : (
-              <div
-                className="absolute -bottom-[9px] w-4 h-4 rotate-45 border-b-2 border-r-2 border-[#D8AA67] bg-[#FAF7F2] -translate-x-1/2 pointer-events-none z-20 shadow-xs transition-all duration-200"
-                style={{
-                  left: `${beakLeftPercent}%`,
-                }}
-              />
-            )}
-
-            {/* Tooltip Dialog Clean Header (No redundant attached tabs) */}
-            <div className="px-5 py-3 border-b border-[#DFD3C3] flex items-center justify-between bg-[#F5F0E6]/90">
-              <div className="flex items-center space-x-2.5">
-                <div className="w-7 h-7 rounded-lg bg-[#FAF7F2] border border-[#D8AA67]/60 flex items-center justify-center shrink-0">
-                  {panelHeader.icon}
-                </div>
-                <div className="flex flex-col text-left">
-                  <span
-                    className="text-base font-bold text-[#670E10] leading-none"
-                    style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)" }}
-                  >
-                    {panelHeader.title}
-                  </span>
-                  <span className="text-[11px] text-[#7A6F62] mt-0.5">
-                    {panelHeader.subtitle}
-                  </span>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={closeTooltipWithAnimation}
-                className="p-1.5 rounded-full bg-black/5 hover:bg-black/10 text-[#670E10] transition cursor-pointer"
-                aria-label="Close tooltip dialog"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Tooltip Dialog Scrollable Content with Display-Aware Max Height */}
+        <div
+          ref={dialogCardRef}
+          className={`absolute z-50 ${
+            placement === 'top'
+              ? 'bottom-[calc(100%+14px)] origin-bottom'
+              : 'top-[calc(100%+14px)] origin-top'
+          } ${
+            isRightAlignedPanel
+              ? 'right-0 sm:right-4 w-full max-w-[540px]'
+              : activeTooltipTab === 'hallOccasion'
+              ? 'left-0 sm:left-4 w-full max-w-[620px]'
+              : 'left-0 sm:left-4 w-full max-w-[720px]'
+          } rounded-[24px] border-2 border-[#D8AA67] bg-[#FAF7F2] shadow-[0_24px_70px_-10px_rgba(35,10,14,0.38),0_6px_20px_rgba(0,0,0,0.08)] flex flex-col overflow-hidden ${
+            placement === 'top'
+              ? isClosing
+                ? 'animate-tooltip-collapse-top'
+                : 'animate-tooltip-expand-top'
+              : isClosing
+              ? 'animate-tooltip-collapse'
+              : 'animate-tooltip-expand'
+          }`}
+        >
+          {/* Tooltip Pointing Arrow / Beak pointing with pixel precision */}
+          {placement === 'bottom' ? (
             <div
-              className="p-5 overflow-y-auto"
-              style={{ maxHeight: `${maxContentHeight}px` }}
-            >
-              {(activeTooltipTab === 'calendar' || activeTooltipTab === 'hallCalendar') &&
-                renderCalendarContent()}
-              {activeTooltipTab === 'guests' && renderGuestsStepperContent()}
-              {activeTooltipTab === 'hallOccasion' && renderOccasionContent()}
-              {activeTooltipTab === 'hallCapacity' && renderHallCapacityContent()}
+              className="absolute -top-[9px] w-4 h-4 rotate-45 border-t-2 border-l-2 border-[#D8AA67] bg-[#FAF7F2] -translate-x-1/2 pointer-events-none z-20 shadow-xs transition-all duration-200"
+              style={{ left: `${beakLeftPx}px` }}
+            />
+          ) : (
+            <div
+              className="absolute -bottom-[9px] w-4 h-4 rotate-45 border-b-2 border-r-2 border-[#D8AA67] bg-[#FAF7F2] -translate-x-1/2 pointer-events-none z-20 shadow-xs transition-all duration-200"
+              style={{ left: `${beakLeftPx}px` }}
+            />
+          )}
+
+          {/* Tooltip Dialog Clean Header */}
+          <div className="px-5 py-3 border-b border-[#DFD3C3] flex items-center justify-between bg-[#F5F0E6]/90">
+            <div className="flex items-center space-x-2.5">
+              <div className="w-7 h-7 rounded-lg bg-[#FAF7F2] border border-[#D8AA67]/60 flex items-center justify-center shrink-0">
+                {panelHeader.icon}
+              </div>
+              <div className="flex flex-col text-left">
+                <span
+                  className="text-base font-bold text-[#670E10] leading-none"
+                  style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)" }}
+                >
+                  {panelHeader.title}
+                </span>
+                <span className="text-[11px] text-[#7A6F62] mt-0.5">
+                  {panelHeader.subtitle}
+                </span>
+              </div>
             </div>
+
+            <button
+              type="button"
+              onClick={closeTooltipWithAnimation}
+              className="p-1.5 rounded-full bg-black/5 hover:bg-black/10 text-[#670E10] transition cursor-pointer"
+              aria-label="Close tooltip dialog"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
-        </>
+
+          {/* Tooltip Dialog Scrollable Content */}
+          <div
+            className="p-5 overflow-y-auto"
+            style={{ maxHeight: `${maxContentHeight}px` }}
+          >
+            {(activeTooltipTab === 'calendar' || activeTooltipTab === 'hallCalendar') &&
+              renderCalendarContent()}
+            {activeTooltipTab === 'guests' && renderGuestsStepperContent()}
+            {activeTooltipTab === 'hallOccasion' && renderOccasionContent()}
+            {activeTooltipTab === 'hallCapacity' && renderHallCapacityContent()}
+          </div>
+        </div>
       )}
 
       {/* ── 4. Mobile Bottom Sheet Dialog / Drawer ── */}
@@ -1525,10 +1529,8 @@ export function BookingBar() {
                 isClosing ? 'animate-slide-down-modal' : 'animate-slide-up-modal'
               }`}
             >
-              {/* Drag Handle on Mobile */}
               <div className="w-12 h-1 bg-[#D8AA67]/50 rounded-full mx-auto mt-2.5 mb-1" />
 
-              {/* Mobile Dialog Clean Header */}
               <div className="px-5 py-3 border-b border-[#DFD3C3] flex items-center justify-between bg-[#F5F0E6]/90">
                 <div className="flex items-center space-x-2.5">
                   <div className="w-7 h-7 rounded-lg bg-[#FAF7F2] border border-[#D8AA67]/60 flex items-center justify-center shrink-0">
@@ -1557,7 +1559,6 @@ export function BookingBar() {
                 </button>
               </div>
 
-              {/* Mobile Dialog Content */}
               <div className="p-4 sm:p-5 overflow-y-auto max-h-[68vh]">
                 {(activeTooltipTab === 'calendar' || activeTooltipTab === 'hallCalendar') &&
                   renderCalendarContent()}
@@ -1566,7 +1567,6 @@ export function BookingBar() {
                 {activeTooltipTab === 'hallCapacity' && renderHallCapacityContent()}
               </div>
 
-              {/* Mobile Action Bottom Bar */}
               <div className="p-3.5 border-t border-[#DFD3C3] bg-[#F5F0E6] flex items-center justify-between">
                 <button
                   type="button"

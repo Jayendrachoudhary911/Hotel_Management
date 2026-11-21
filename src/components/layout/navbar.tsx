@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -25,12 +26,12 @@ import type { User } from '@supabase/supabase-js';
 function PalaceMark() {
   return (
 <svg
-  className="palace-mark w-5 h-5 sm:w-6 sm:h-6 shrink-0"
+  className="palace-mark w-1 h-1 sm:w-1 sm:h-1 shrink-0"
   viewBox="0 0 52 58"
   aria-hidden="true"
   fill="none"
   stroke="#D8AA67"
-  strokeWidth="1.75"
+  strokeWidth="1"
   strokeLinecap="round"
   strokeLinejoin="round"
 >
@@ -70,11 +71,54 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [internalScrolled, setInternalScrolled] = useState(false);
   const isScrolled = propIsScrolled !== undefined ? propIsScrolled : internalScrolled;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isMenuClosing, setIsMenuClosing] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [language, setLanguage] = useState<'Eng' | 'हिन्दी'>('Eng');
   const [user, setUser] = useState<User | null>(null);
   const [isStaff, setIsStaff] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Swipe gesture state for mobile bottom drawer
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
+  const [touchDeltaY, setTouchDeltaY] = useState<number>(0);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const closeMobileMenu = () => {
+    setIsMenuClosing(true);
+    setTimeout(() => {
+      setMobileMenuOpen(false);
+      setIsMenuClosing(false);
+      setTouchDeltaY(0);
+      setTouchStartY(null);
+    }, 200);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartY(e.touches[0].clientY);
+    setTouchDeltaY(0);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStartY === null) return;
+    const currentY = e.touches[0].clientY;
+    const diff = currentY - touchStartY;
+    if (diff > 0) {
+      setTouchDeltaY(diff);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (touchDeltaY > 70) {
+      closeMobileMenu();
+    } else {
+      setTouchDeltaY(0);
+    }
+    setTouchStartY(null);
+  };
 
   // Window scroll event listener to track scrolled status
   useEffect(() => {
@@ -245,32 +289,36 @@ export const Navbar: React.FC<NavbarProps> = ({
         data-scrolled={isScrolled}
         className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 ease-in-out flex items-center ${
           isScrolled
-            ? 'h-[66px] sm:h-[70px] bg-[#0A0203]/00'
-            : 'h-[72px] sm:h-[78px] bg-[#0E0304]/00'
+            ? 'h-[66px] sm:h-[70px] bg-[#4F0809]/00'
+            : 'h-[62px] sm:h-[100px] bg-[#EFEBE3]/00'
         } px-3.5 sm:px-6 lg:px-8 xl:px-10 ${className}`}
       >
-        <div className="w-full max-w-8xl mx-auto flex items-center justify-between">
+        <div className="w-full max-w-7xl mx-auto flex items-center justify-between">
           {/* ── 1. Left: Brand Capsule Pill (Matches reference [BunkMates] capsule) ── */}
           <Link
             href="/"
-            className="inline-flex items-center space-x-2.5 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#D8AA67]/60 backdrop-blur-md transition-all shadow-sm group shrink-0 active:scale-95"
+            className={`inline-flex items-center space-x-2.5 px-3.5 sm:px-4 py-1 sm:py-1.5 rounded-full ${
+              isScrolled
+                ? 'bg-[#4F0809] text-[#FFF8EB]'
+                : 'bg-[#EFEBE3] text-[#4F0809]'
+            } border border-white/10 hover:border-[#D8AA67]/10 backdrop-blur-md transition-all shadow-sm group shrink-0 active:scale-95`}
           >
-            <PalaceMark />
+            {/* <PalaceMark /> */}
             <div className="flex flex-col text-left">
               <span
-                className="font-bold tracking-[0.01em] uppercase text-xs sm:text-base text-[#FFF8EB] group-hover:text-[#D8AA67] transition-colors leading-none"
+                className={`font-bold tracking-[0.1em] sm:text-[15px] uppercase text-xs sm:text-base ${isScrolled ? 'text-[#FFF8EB]' : 'text-[#4F0809]'} group-hover:text-[#D8AA67] transition-colors leading-none`}
                 style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)" }}
               >
                 Rajmahal
               </span>
-              <span className="text-[5.5px] sm:text-[8px] font-semibold tracking-[0.28em] uppercase text-[#D8AA67] leading-none mt-0.5">
+              <span className={`text-[5.5px] sm:text-[7px] font-semibold tracking-[0.28em] uppercase ${isScrolled ? 'text-[#D8AA67]' : 'text-[#4F0809]'} leading-none mt-0.5`}>
                 Heritage Hotel
               </span>
             </div>
           </Link>
 
           {/* ── 2. Center: Nav Island Capsule (Matches reference pill island with [HOME] active pill) ── */}
-          <nav className="hidden lg:inline-flex items-center p-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-md shadow-inner space-x-1">
+          <nav className={`hidden lg:inline-flex items-center p-1 rounded-full ${isScrolled ? 'bg-[#4F0809]' : 'bg-[#EFEBE3]'} border border-white/10 backdrop-blur-md shadow-inner space-x-1`}>
             {navLinks.map((link) => {
               const isActive =
                 link.href === '/'
@@ -487,7 +535,13 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Mobile Menu Button with Menu Icon Capsule (Matches Reference Image 2) */}
             <button
               type="button"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              onClick={() => {
+                if (mobileMenuOpen) {
+                  closeMobileMenu();
+                } else {
+                  setMobileMenuOpen(true);
+                }
+              }}
               className="inline-flex items-center space-x-1 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/15 text-[11px] font-bold uppercase tracking-wider text-[#FFF8EB] active:scale-95 transition cursor-pointer focus:outline-none"
               aria-label="Toggle navigation menu"
               aria-expanded={mobileMenuOpen}
@@ -506,120 +560,188 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           </div>
         </div>
+      </header>
 
-        {/* ── 5. Mobile Menu Drawer ── */}
-        {mobileMenuOpen && (
-          <div className="absolute top-full left-0 right-0 w-full p-4 sm:hidden bg-[#0F0304]/98 backdrop-blur-xl border-b border-[#D8AA67]/35 shadow-[0_20px_50px_rgba(0,0,0,0.7)] z-50 animate-fade-in-up">
-            {/* Staff Admin Panel Link */}
-            {user && isStaff && (
-              <div className="mb-3">
-                <Link
-                  href="/dashboard"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-[#D8AA67] via-[#E1B46F] to-[#B78A48] text-[#2B0507] font-bold text-xs uppercase tracking-wider shadow-md transition group"
-                >
-                  <div className="flex items-center space-x-2">
-                    <ShieldCheck className="w-4 h-4 text-[#2B0507]" />
-                    <span>Access Admin Panel</span>
-                  </div>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </Link>
+      {/* ── 5. Mobile Swipeable Bottom Floating Drawer ── */}
+      {mounted &&
+        mobileMenuOpen &&
+        createPortal(
+          <div
+            onClick={(e) => {
+              if (e.target === e.currentTarget) closeMobileMenu();
+            }}
+            className={`fixed inset-0 z-[150] sm:hidden bg-black/70 backdrop-blur-xs flex items-end justify-center p-0 transition-opacity ${
+              isMenuClosing ? 'animate-fade-out-backdrop' : 'animate-fade-in-backdrop'
+            }`}
+          >
+            <div
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              style={{
+                transform: touchDeltaY > 0 ? `translateY(${touchDeltaY}px)` : undefined,
+                transition: touchStartY !== null ? 'none' : 'transform 0.2s ease-out',
+              }}
+              className={`relative w-full max-h-[85vh] rounded-t-[28px] border-t-2 border-x-2 border-[#D8AA67] bg-[#0E0304]/98 backdrop-blur-2xl shadow-[0_-15px_50px_rgba(0,0,0,0.85)] flex flex-col overflow-hidden ${
+                isMenuClosing ? 'animate-slide-down-modal' : 'animate-slide-up-modal'
+              }`}
+            >
+              {/* Top Drag Handle Bar (Swipe down affordance) */}
+              <div className="pt-3 pb-2 cursor-grab active:cursor-grabbing flex justify-center items-center">
+                <div className="w-12 h-1.5 bg-[#D8AA67]/60 rounded-full" />
               </div>
-            )}
 
-            {/* User Profile Quick Info */}
-            {user && (
-              <div className="mb-3 pb-3 border-b border-[#D8AA67]/20 flex items-center justify-between px-2">
-                <div className="flex items-center space-x-2.5">
-                  <div className="w-8 h-8 rounded-full bg-[#D8AA67] text-[#2B0507] font-bold text-xs flex items-center justify-center">
-                    {initial}
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-[#FFF8EB] leading-tight">{displayName}</p>
-                    <p className="text-[10px] text-[#D8AA67] truncate max-w-[200px]">{user.email}</p>
-                  </div>
-                </div>
-                <Link
-                  href="/profile"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-xs text-[#D8AA67] underline font-semibold"
-                >
-                  View Profile
-                </Link>
-              </div>
-            )}
-
-            {/* Primary Action Button on Mobile */}
-            <div className="mb-3">
-              <Link
-                href="/rooms"
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#D8AA67] to-[#C89B55] text-[#2B0507] font-bold text-xs uppercase tracking-wider flex items-center justify-center space-x-2 shadow-md active:scale-98 transition"
-              >
-                <BedDouble className="w-3.5 h-3.5 text-[#2B0507]" />
-                <span>Book A Stay &bull; Suites &amp; Rooms</span>
-              </Link>
-            </div>
-
-            {/* Nav Links Stack */}
-            <div className="space-y-1">
-              {navLinks.map((link) => {
-                const isActive =
-                  link.href === '/'
-                    ? pathname === '/'
-                    : pathname === link.href || pathname.startsWith(link.href + '/');
-
-                return (
-                  <Link
-                    key={link.label}
-                    href={link.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`block px-3.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors ${
-                      isActive
-                        ? 'bg-white/15 text-[#D8AA67] font-bold'
-                        : 'text-[#FFF8EB]/80 hover:bg-white/5 hover:text-[#FFF8EB]'
-                    }`}
+              {/* Drawer Header */}
+              <div className="px-5 py-2.5 border-b border-[#D8AA67]/20 flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 rounded-full bg-[#D8AA67] animate-pulse" />
+                  <span
+                    className="font-bold uppercase tracking-wider text-[#D8AA67]"
+                    style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)", fontSize: '17px' }}
                   >
-                    {link.label}
-                  </Link>
-                );
-              })}
-            </div>
-
-            {/* Footer in Mobile Menu */}
-            <div className="mt-3.5 pt-3.5 border-t border-[#D8AA67]/20 flex items-center justify-between text-xs px-2">
-              <button
-                type="button"
-                onClick={() => setLanguage(language === 'Eng' ? 'हिन्दी' : 'Eng')}
-                className="flex items-center space-x-1.5 text-[#FFF8EB]/80 py-1"
-              >
-                <Globe className="w-3.5 h-3.5 text-[#D8AA67]" />
-                <span>Language: {language}</span>
-              </button>
-
-              {user ? (
+                    Palace Navigation
+                  </span>
+                </div>
                 <button
                   type="button"
-                  onClick={handleSignOut}
-                  className="text-red-400 hover:text-red-300 font-semibold flex items-center py-1 cursor-pointer"
+                  onClick={closeMobileMenu}
+                  className="p-1.5 rounded-full bg-white/5 hover:bg-white/10 text-[#FFF8EB] transition cursor-pointer"
+                  aria-label="Close menu"
                 >
-                  <LogOut className="w-3.5 h-3.5 mr-1" />
-                  <span>Sign Out</span>
+                  <X className="w-4 h-4 text-[#D8AA67]" />
                 </button>
-              ) : (
-                <Link
-                  href="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-[#D8AA67] font-semibold flex items-center py-1"
-                >
-                  <span>Sign Up / Login</span>
-                  <ArrowRight className="w-3.5 h-3.5 ml-1" />
-                </Link>
-              )}
+              </div>
+
+              {/* Drawer Scrollable Content */}
+              <div className="p-4 overflow-y-auto max-h-[calc(85vh-130px)] space-y-3">
+                {/* Staff Admin Panel Link */}
+                {user && isStaff && (
+                  <div>
+                    <Link
+                      href="/dashboard"
+                      onClick={closeMobileMenu}
+                      className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-[#D8AA67] via-[#E1B46F] to-[#B78A48] text-[#2B0507] font-bold text-xs uppercase tracking-wider shadow-md transition group"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <ShieldCheck className="w-4 h-4 text-[#2B0507]" />
+                        <span>Access Admin Panel</span>
+                      </div>
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                  </div>
+                )}
+
+                {/* User Profile Quick Info */}
+                {user && (
+                  <div className="p-3 rounded-2xl bg-white/5 border border-[#D8AA67]/20 flex items-center justify-between">
+                    <div className="flex items-center space-x-2.5">
+                      <div className="w-9 h-9 rounded-full bg-[#D8AA67] text-[#2B0507] font-bold text-xs flex items-center justify-center">
+                        {initial}
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-[#FFF8EB] leading-tight">{displayName}</p>
+                        <p className="text-[10px] text-[#D8AA67] truncate max-w-[190px]">{user.email}</p>
+                      </div>
+                    </div>
+                    <Link
+                      href="/profile"
+                      onClick={closeMobileMenu}
+                      className="text-xs text-[#D8AA67] underline font-semibold"
+                    >
+                      Profile
+                    </Link>
+                  </div>
+                )}
+
+                {/* Primary Action Button on Mobile */}
+                <div>
+                  <Link
+                    href="/rooms"
+                    onClick={closeMobileMenu}
+                    className="w-full py-3 rounded-xl bg-gradient-to-r from-[#D8AA67] to-[#C89B55] text-[#2B0507] font-bold text-xs uppercase tracking-wider flex items-center justify-center space-x-2 shadow-md active:scale-98 transition"
+                  >
+                    <BedDouble className="w-4 h-4 text-[#2B0507]" />
+                    <span>Book A Stay &bull; Suites &amp; Rooms</span>
+                  </Link>
+                </div>
+
+                {/* Nav Links Stack */}
+                <div className="space-y-1">
+                  {navLinks.map((link) => {
+                    const isActive =
+                      link.href === '/'
+                        ? pathname === '/'
+                        : pathname === link.href || pathname.startsWith(link.href + '/');
+
+                    return (
+                      <div key={link.label} className="flex flex-col">
+                        <Link
+                          href={link.href}
+                          onClick={closeMobileMenu}
+                          className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors ${
+                            isActive
+                              ? 'bg-white/15 text-[#D8AA67] font-bold'
+                              : 'text-[#FFF8EB]/80 hover:bg-white/5 hover:text-[#FFF8EB]'
+                          }`}
+                        >
+                          <span>{link.label}</span>
+                          <ArrowRight className="w-3.5 h-3.5 opacity-60" />
+                        </Link>
+                        {link.hasDropdown && link.dropdownItems && (
+                          <div className="pl-4 pr-1 py-1 space-y-1">
+                            {link.dropdownItems.map((sub) => (
+                              <Link
+                                key={sub.label}
+                                href={sub.href}
+                                onClick={closeMobileMenu}
+                                className="block px-3 py-1.5 rounded-lg text-[11px] text-[#C5B8A5] hover:text-[#FFF8EB] hover:bg-white/5 transition"
+                              >
+                                {sub.label}
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Footer in Mobile Menu */}
+                <div className="mt-3.5 pt-3.5 border-t border-[#D8AA67]/20 flex items-center justify-between text-xs px-2">
+                  <button
+                    type="button"
+                    onClick={() => setLanguage(language === 'Eng' ? 'हिन्दी' : 'Eng')}
+                    className="flex items-center space-x-1.5 text-[#FFF8EB]/80 py-1"
+                  >
+                    <Globe className="w-3.5 h-3.5 text-[#D8AA67]" />
+                    <span>Language: {language}</span>
+                  </button>
+
+                  {user ? (
+                    <button
+                      type="button"
+                      onClick={handleSignOut}
+                      className="text-red-400 hover:text-red-300 font-semibold flex items-center py-1 cursor-pointer"
+                    >
+                      <LogOut className="w-3.5 h-3.5 mr-1" />
+                      <span>Sign Out</span>
+                    </button>
+                  ) : (
+                    <Link
+                      href="/login"
+                      onClick={closeMobileMenu}
+                      className="text-[#D8AA67] font-semibold flex items-center py-1"
+                    >
+                      <span>Sign Up / Login</span>
+                      <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                    </Link>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
-      </header>
 
       {/* Structural spacer so non-hero pages are never covered by the fixed floating header */}
       <div

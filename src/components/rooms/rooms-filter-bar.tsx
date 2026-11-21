@@ -81,7 +81,7 @@ export function RoomsFilterBar({
   const [tooltipOpen, setTooltipOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [activePanel, setActivePanel] = useState<PanelType>('calendar');
-  const [beakLeftPercent, setBeakLeftPercent] = useState<number>(20);
+  const [beakLeftPx, setBeakLeftPx] = useState<number>(100);
 
   // Display Awareness State
   const [placement, setPlacement] = useState<'bottom' | 'top'>('bottom');
@@ -97,6 +97,8 @@ export function RoomsFilterBar({
   const checkInTileRef = useRef<HTMLDivElement>(null);
   const checkOutTileRef = useRef<HTMLDivElement>(null);
   const guestsTileRef = useRef<HTMLDivElement>(null);
+  const dialogCardRef = useRef<HTMLDivElement>(null);
+  const activeTileRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -175,27 +177,28 @@ export function RoomsFilterBar({
     setMaxContentHeight(availableH);
   }, []);
 
-  // ── Calibrate Beak / Arrow Position ──
-  const calibrateBeak = useCallback(
-    (targetTileRef: React.RefObject<HTMLDivElement | null>, defaultPct: number) => {
-      if (targetTileRef.current && barRootRef.current) {
-        const tileRect = targetTileRef.current.getBoundingClientRect();
-        const barRect = barRootRef.current.getBoundingClientRect();
-        const relativeX = tileRect.left - barRect.left + tileRect.width / 2;
-        const pct = Math.max(8, Math.min(92, (relativeX / barRect.width) * 100));
-        setBeakLeftPercent(pct);
-      } else {
-        setBeakLeftPercent(defaultPct);
+  // ── Calibrate Beak / Arrow Position (Sub-pixel exact tile alignment) ──
+  const calibrateBeak = useCallback((targetTile: HTMLDivElement | null) => {
+    if (targetTile) {
+      activeTileRef.current = targetTile;
+    }
+    requestAnimationFrame(() => {
+      const tile = activeTileRef.current;
+      if (tile && dialogCardRef.current) {
+        const tileRect = tile.getBoundingClientRect();
+        const dialogRect = dialogCardRef.current.getBoundingClientRect();
+        const tileCenterX = tileRect.left + tileRect.width / 2;
+        const leftInDialog = tileCenterX - dialogRect.left;
+        const clampedPx = Math.max(20, Math.min(dialogRect.width - 20, leftInDialog));
+        setBeakLeftPx(clampedPx);
       }
-    },
-    []
-  );
+    });
+  }, []);
 
-  // ── Open Tooltip Dialog with Beak Alignment ──
+  // ── Open Tooltip Dialog with Beak Alignment (No page scroll) ──
   const openTooltip = (
     panel: PanelType,
     targetTileRef: React.RefObject<HTMLDivElement | null>,
-    defaultBeakPct: number,
     targetDateField?: 'in' | 'out'
   ) => {
     setActivePanel(panel);
@@ -203,22 +206,15 @@ export function RoomsFilterBar({
       setSelectingField(targetDateField);
     }
 
-    calibrateBeak(targetTileRef, defaultBeakPct);
+    if (targetTileRef.current) {
+      activeTileRef.current = targetTileRef.current;
+    }
+
     updateDisplayAwareness();
     setIsClosing(false);
     setTooltipOpen(true);
 
-    // Auto-scroll slightly into view if near screen bottom
-    setTimeout(() => {
-      if (barRootRef.current) {
-        const barRect = barRootRef.current.getBoundingClientRect();
-        const spaceBelow = window.innerHeight - barRect.bottom;
-        if (spaceBelow < 350 && barRect.top > 120) {
-          const needed = 350 - spaceBelow + 18;
-          window.scrollBy({ top: needed, behavior: 'smooth' });
-        }
-      }
-    }, 40);
+    calibrateBeak(targetTileRef.current);
   };
 
   const closeTooltipWithAnimation = () => {
@@ -228,6 +224,34 @@ export function RoomsFilterBar({
       setIsClosing(false);
     }, 180);
   };
+
+  // Re-calibrate beak whenever open state, panel, or field changes
+  useEffect(() => {
+    if (tooltipOpen) {
+      calibrateBeak(activeTileRef.current);
+    }
+  }, [tooltipOpen, activePanel, selectingField, calibrateBeak]);
+
+  // Handle outside clicks: Keep bar operatable, only close when clicking outside both bar & dialog
+  useEffect(() => {
+    if (!tooltipOpen) return;
+
+    const handleOutsideClick = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (dialogCardRef.current && dialogCardRef.current.contains(target)) {
+        return;
+      }
+      if (barRootRef.current && barRootRef.current.contains(target)) {
+        return;
+      }
+      closeTooltipWithAnimation();
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, [tooltipOpen]);
 
   // Keep tooltip aligned & check scroll bounds
   useEffect(() => {
@@ -241,6 +265,7 @@ export function RoomsFilterBar({
         return;
       }
       updateDisplayAwareness();
+      calibrateBeak(activeTileRef.current);
     };
 
     window.addEventListener('scroll', handleScrollOrResize, { passive: true });
@@ -250,7 +275,7 @@ export function RoomsFilterBar({
       window.removeEventListener('scroll', handleScrollOrResize);
       window.removeEventListener('resize', handleScrollOrResize);
     };
-  }, [tooltipOpen, updateDisplayAwareness]);
+  }, [tooltipOpen, updateDisplayAwareness, calibrateBeak]);
 
   // ── Adults & Rooms Logic ──
   const handleAdultsChange = (newAdults: number) => {
@@ -284,7 +309,7 @@ export function RoomsFilterBar({
     if (nights === 0) {
       setIsCustomMode(true);
       setSelectingField('in');
-      calibrateBeak(checkInTileRef, 15);
+      calibrateBeak(checkInTileRef.current);
       return;
     }
 
@@ -295,7 +320,7 @@ export function RoomsFilterBar({
     setCheckIn(newCheckIn);
     setCheckOut(newCheckOut);
     setSelectingField('out');
-    calibrateBeak(checkOutTileRef, 38);
+    calibrateBeak(checkOutTileRef.current);
   };
 
   // ── Date Picking State Machine with Bar Auto-Switching ──
@@ -311,7 +336,7 @@ export function RoomsFilterBar({
         setCheckOut(nextDay);
       }
       setSelectingField('out');
-      calibrateBeak(checkOutTileRef, 38);
+      calibrateBeak(checkOutTileRef.current);
     } else {
       if (dateStr > checkIn) {
         setCheckOut(dateStr);
@@ -322,7 +347,7 @@ export function RoomsFilterBar({
         setCheckOut(nextDay);
         setIsCustomMode(true);
         setSelectingField('out');
-        calibrateBeak(checkOutTileRef, 38);
+        calibrateBeak(checkOutTileRef.current);
       }
     }
   };
@@ -442,7 +467,7 @@ export function RoomsFilterBar({
                   )}
                 </div>
 
-                <div className="grid grid-cols-7 gap-1 text-center mb-1 text-[11px] font-semibold text-[#8F7245]">
+                <div className="grid grid-cols-7 text-center mb-1 text-[11px] font-semibold text-[#8F7245]">
                   <span>Su</span>
                   <span>Mo</span>
                   <span>Tu</span>
@@ -452,38 +477,48 @@ export function RoomsFilterBar({
                   <span>Sa</span>
                 </div>
 
-                <div className="grid grid-cols-7 gap-1 text-center">
+                {/* Days Grid with Continuous Ribbon Design */}
+                <div className="grid grid-cols-7 gap-y-1 text-center">
                   {days.map((d, dIdx) => {
                     const isPast = d.dateStr < todayStr;
                     const isCheckInDay = d.dateStr === checkIn;
                     const isCheckOutDay = d.dateStr === checkOut;
                     const isInRange = checkIn && checkOut && d.dateStr > checkIn && d.dateStr < checkOut;
-
-                    let btnClasses =
-                      'h-8 w-8 mx-auto rounded-full text-xs font-semibold flex items-center justify-center transition-all cursor-pointer ';
-
-                    if (isPast) {
-                      btnClasses += 'text-[#C5B8A5] opacity-40 cursor-not-allowed ';
-                    } else if (isCheckInDay || isCheckOutDay) {
-                      btnClasses += 'bg-[#670E10] text-[#FFF8EB] font-bold shadow-xs scale-105 ring-2 ring-[#D8AA67] ';
-                    } else if (isInRange) {
-                      btnClasses += 'bg-[#D8AA67]/25 text-[#4A0A0C] font-semibold rounded-none ';
-                    } else if (!d.isCurrentMonth) {
-                      btnClasses += 'text-[#B0A290] hover:bg-black/5 ';
-                    } else {
-                      btnClasses += 'text-[#241F1A] hover:bg-[#FFF8EB] hover:text-[#670E10] hover:ring-1 hover:ring-[#D8AA67] ';
-                    }
+                    const hasRange = Boolean(checkIn && checkOut && checkOut > checkIn);
 
                     return (
-                      <button
-                        key={`${d.dateStr}-${dIdx}`}
-                        type="button"
-                        disabled={isPast}
-                        onClick={() => handleDateClick(d.dateStr)}
-                        className={btnClasses}
-                      >
-                        {d.dayNumber}
-                      </button>
+                      <div key={`${d.dateStr}-${dIdx}`} className="relative h-8 flex items-center justify-center">
+                        {/* Continuous connected range ribbon background */}
+                        {hasRange && isCheckInDay && (
+                          <div className="absolute inset-y-0.5 right-0 w-1/2 bg-[#EBDDC7] pointer-events-none" />
+                        )}
+                        {hasRange && isCheckOutDay && (
+                          <div className="absolute inset-y-0.5 left-0 w-1/2 bg-[#EBDDC7] pointer-events-none" />
+                        )}
+                        {hasRange && isInRange && (
+                          <div className="absolute inset-y-0.5 inset-x-0 bg-[#EBDDC7] pointer-events-none" />
+                        )}
+
+                        {/* Interactive Day Cell Button */}
+                        <button
+                          type="button"
+                          disabled={isPast}
+                          onClick={() => handleDateClick(d.dateStr)}
+                          className={`relative z-10 text-xs font-semibold flex items-center justify-center transition-all cursor-pointer ${
+                            isPast
+                              ? 'h-8 w-8 rounded-full text-[#C5B8A5] opacity-40 cursor-not-allowed'
+                              : isCheckInDay || isCheckOutDay
+                              ? 'h-8 w-8 rounded-full bg-[#670E10] text-[#FFF8EB] font-bold shadow-xs ring-2 ring-[#D8AA67] scale-105'
+                              : isInRange
+                              ? 'w-full h-8 text-[#4A0A0C] font-bold hover:bg-[#D8AA67]/40'
+                              : !d.isCurrentMonth
+                              ? 'h-8 w-8 rounded-full text-[#B0A290] hover:bg-black/5'
+                              : 'h-8 w-8 rounded-full text-[#241F1A] hover:bg-[#FFF8EB] hover:text-[#670E10] hover:ring-1 hover:ring-[#D8AA67]'
+                          }`}
+                        >
+                          {d.dayNumber}
+                        </button>
+                      </div>
                     );
                   })}
                 </div>
@@ -505,10 +540,10 @@ export function RoomsFilterBar({
 
           <button
             type="button"
-            onClick={closeTooltipWithAnimation}
-            className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#670E10] to-[#801417] text-[#FFF8EB] text-xs font-bold tracking-wide shadow hover:shadow-md transition cursor-pointer"
+            onClick={() => openTooltip('guests', guestsTileRef)}
+            className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#670E10] to-[#801417] text-[#FFF8EB] text-xs font-bold tracking-wide shadow hover:shadow-md transition cursor-pointer flex items-center space-x-1.5"
           >
-            Confirm Dates
+            <span>Confirm Dates &bull; Select Guests &rarr;</span>
           </button>
         </div>
       </div>
@@ -700,74 +735,74 @@ export function RoomsFilterBar({
     <div ref={barRootRef} className="relative w-full max-w-4xl mx-auto mb-12">
       {/* ── Filter Bar Card (Styled to match rooms page image) ── */}
       <div className="bg-white rounded-xl border border-[#D4CBBB]/70 shadow-sm p-3 sm:p-4">
-        <form onSubmit={handleFormSubmit} className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-center">
-          {/* 1. Check In Tile */}
+        <form onSubmit={handleFormSubmit} className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 items-center">
+          {/* 1. Check In Tile (Col-span 1 on mobile: Check In & Check Out in a row) */}
           <div
             ref={checkInTileRef}
             onClick={() => {
               if (tooltipOpen && activePanel === 'calendar' && selectingField === 'in') {
                 closeTooltipWithAnimation();
               } else {
-                openTooltip('calendar', checkInTileRef, 16, 'in');
+                openTooltip('calendar', checkInTileRef, 'in');
               }
             }}
-            className={`flex items-center space-x-2.5 px-3 py-2 rounded-lg border transition-all cursor-pointer ${
+            className={`col-span-1 flex items-center space-x-2.5 px-3 py-2 rounded-lg border transition-all cursor-pointer ${
               tooltipOpen && activePanel === 'calendar' && selectingField === 'in'
                 ? 'border-[#670E10] ring-2 ring-[#D8AA67] bg-[#FFF8EB] shadow-xs'
                 : 'border-[#E5DFD5] bg-[#FAF8F3]/60 hover:border-[#D8AA67]'
             }`}
           >
             <CalendarIcon className="w-4 h-4 text-[#8F7245] shrink-0" />
-            <div className="w-full text-left">
+            <div className="w-full text-left min-w-0">
               <span className="block text-[10px] uppercase font-bold text-[#7A6F62] leading-none mb-1">
                 Check In
               </span>
-              <span className="block text-xs text-[#670E10] font-semibold leading-tight">
+              <span className="block text-xs text-[#670E10] font-semibold leading-tight truncate">
                 {formattedCheckIn.dateFormatted}
               </span>
             </div>
-            <CalendarIcon className="w-3.5 h-3.5 text-[#B08D57]/60 ml-auto" />
+            <CalendarIcon className="w-3.5 h-3.5 text-[#B08D57]/60 ml-auto hidden min-[360px]:block" />
           </div>
 
-          {/* 2. Check Out Tile */}
+          {/* 2. Check Out Tile (Col-span 1 on mobile: Check In & Check Out in a row) */}
           <div
             ref={checkOutTileRef}
             onClick={() => {
               if (tooltipOpen && activePanel === 'calendar' && selectingField === 'out') {
                 closeTooltipWithAnimation();
               } else {
-                openTooltip('calendar', checkOutTileRef, 40, 'out');
+                openTooltip('calendar', checkOutTileRef, 'out');
               }
             }}
-            className={`flex items-center space-x-2.5 px-3 py-2 rounded-lg border transition-all cursor-pointer ${
+            className={`col-span-1 flex items-center space-x-2.5 px-3 py-2 rounded-lg border transition-all cursor-pointer ${
               tooltipOpen && activePanel === 'calendar' && selectingField === 'out'
                 ? 'border-[#670E10] ring-2 ring-[#D8AA67] bg-[#FFF8EB] shadow-xs'
                 : 'border-[#E5DFD5] bg-[#FAF8F3]/60 hover:border-[#D8AA67]'
             }`}
           >
             <CalendarIcon className="w-4 h-4 text-[#8F7245] shrink-0" />
-            <div className="w-full text-left">
+            <div className="w-full text-left min-w-0">
               <span className="block text-[10px] uppercase font-bold text-[#7A6F62] leading-none mb-1">
                 Check Out
               </span>
-              <span className="block text-xs text-[#670E10] font-semibold leading-tight">
+              <span className="block text-xs text-[#670E10] font-semibold leading-tight truncate">
                 {formattedCheckOut.dateFormatted}
               </span>
             </div>
-            <CalendarIcon className="w-3.5 h-3.5 text-[#B08D57]/60 ml-auto" />
+            <CalendarIcon className="w-3.5 h-3.5 text-[#B08D57]/60 ml-auto hidden min-[360px]:block" />
           </div>
 
-          {/* 3. Guests Tile */}
+          {/* 3. Guests Tile (Col-span 2 on mobile: full width row) */}
           <div
             ref={guestsTileRef}
             onClick={() => {
               if (tooltipOpen && activePanel === 'guests') {
                 closeTooltipWithAnimation();
               } else {
-                openTooltip('guests', guestsTileRef, 66);
+                openTooltip('guests', guestsTileRef);
               }
             }}
-            className={`flex items-center space-x-2.5 px-3 py-2 rounded-lg border transition-all cursor-pointer ${
+            className={`col-span-2 sm:col-span-1 flex items-center space-x-2.5 px-3 py-2 rounded-lg border transition-all cursor-pointer ${
               tooltipOpen && activePanel === 'guests'
                 ? 'border-[#670E10] ring-2 ring-[#D8AA67] bg-[#FFF8EB] shadow-xs'
                 : 'border-[#E5DFD5] bg-[#FAF8F3]/60 hover:border-[#D8AA67]'
@@ -785,8 +820,8 @@ export function RoomsFilterBar({
             <ChevronDown className="w-3.5 h-3.5 text-[#670E10] ml-auto shrink-0" />
           </div>
 
-          {/* 4. Search Rooms Button */}
-          <div>
+          {/* 4. Search Rooms Button (Col-span 2 on mobile: full width row) */}
+          <div className="col-span-2 sm:col-span-1">
             <button
               type="submit"
               className="w-full py-3 px-4 rounded-lg bg-[#670E10] hover:bg-[#821215] text-[#FAF8F3] font-medium text-xs tracking-wide transition-all shadow flex items-center justify-center space-x-1.5 cursor-pointer active:scale-98"
@@ -798,47 +833,40 @@ export function RoomsFilterBar({
         </form>
       </div>
 
-      {/* ── Desktop Floating Tooltip Popover ── */}
+      {/* ── Desktop Floating Tooltip Popover (Anchored with pixel-precision beak) ── */}
       {!isMobile && tooltipOpen && (
-        <>
-          <div
-            onClick={closeTooltipWithAnimation}
-            className={`fixed inset-0 z-40 bg-black/10 backdrop-blur-[0.5px] transition-opacity ${
-              isClosing ? 'animate-fade-out-backdrop' : 'animate-fade-in-backdrop'
-            }`}
-          />
-
-          <div
-            className={`absolute z-50 ${
-              placement === 'top'
-                ? 'bottom-[calc(100%+12px)] origin-bottom'
-                : 'top-[calc(100%+12px)] origin-top'
-            } ${
-              activePanel === 'guests'
-                ? 'right-0 sm:right-2 w-full max-w-[540px]'
-                : 'left-0 sm:left-2 w-full max-w-[700px]'
-            } rounded-[22px] border-2 border-[#D8AA67] bg-[#FAF7F2] shadow-[0_24px_70px_-10px_rgba(35,10,14,0.38),0_6px_20px_rgba(0,0,0,0.08)] flex flex-col overflow-hidden ${
-              placement === 'top'
-                ? isClosing
-                  ? 'animate-tooltip-collapse-top'
-                  : 'animate-tooltip-expand-top'
-                : isClosing
-                ? 'animate-tooltip-collapse'
-                : 'animate-tooltip-expand'
-            }`}
-          >
-            {/* Beak Arrow */}
-            {placement === 'bottom' ? (
-              <div
-                className="absolute -top-[9px] w-4 h-4 rotate-45 border-t-2 border-l-2 border-[#D8AA67] bg-[#FAF7F2] -translate-x-1/2 pointer-events-none z-20 shadow-xs transition-all duration-200"
-                style={{ left: `${beakLeftPercent}%` }}
-              />
-            ) : (
-              <div
-                className="absolute -bottom-[9px] w-4 h-4 rotate-45 border-b-2 border-r-2 border-[#D8AA67] bg-[#FAF7F2] -translate-x-1/2 pointer-events-none z-20 shadow-xs transition-all duration-200"
-                style={{ left: `${beakLeftPercent}%` }}
-              />
-            )}
+        <div
+          ref={dialogCardRef}
+          className={`absolute z-50 ${
+            placement === 'top'
+              ? 'bottom-[calc(100%+12px)] origin-bottom'
+              : 'top-[calc(100%+12px)] origin-top'
+          } ${
+            activePanel === 'guests'
+              ? 'right-0 sm:right-2 w-full max-w-[540px]'
+              : 'left-0 sm:left-2 w-full max-w-[700px]'
+          } rounded-[22px] border-2 border-[#D8AA67] bg-[#FAF7F2] shadow-[0_24px_70px_-10px_rgba(35,10,14,0.38),0_6px_20px_rgba(0,0,0,0.08)] flex flex-col overflow-hidden ${
+            placement === 'top'
+              ? isClosing
+                ? 'animate-tooltip-collapse-top'
+                : 'animate-tooltip-expand-top'
+              : isClosing
+              ? 'animate-tooltip-collapse'
+              : 'animate-tooltip-expand'
+          }`}
+        >
+          {/* Beak Arrow */}
+          {placement === 'bottom' ? (
+            <div
+              className="absolute -top-[9px] w-4 h-4 rotate-45 border-t-2 border-l-2 border-[#D8AA67] bg-[#FAF7F2] -translate-x-1/2 pointer-events-none z-20 shadow-xs transition-all duration-200"
+              style={{ left: `${beakLeftPx}px` }}
+            />
+          ) : (
+            <div
+              className="absolute -bottom-[9px] w-4 h-4 rotate-45 border-b-2 border-r-2 border-[#D8AA67] bg-[#FAF7F2] -translate-x-1/2 pointer-events-none z-20 shadow-xs transition-all duration-200"
+              style={{ left: `${beakLeftPx}px` }}
+            />
+          )}
 
             {/* Header */}
             <div className="px-5 py-3 border-b border-[#DFD3C3] flex items-center justify-between bg-[#F5F0E6]/90">
@@ -878,8 +906,8 @@ export function RoomsFilterBar({
               {activePanel === 'guests' && renderGuestsStepperContent()}
             </div>
           </div>
-        </>
-      )}
+        )
+      }
 
       {/* ── Mobile Bottom Sheet Drawer ── */}
       {isMobile &&
