@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -16,6 +15,9 @@ import {
   BedDouble,
   UtensilsCrossed,
   ShieldCheck,
+  Calendar,
+  PhoneCall,
+  Home as HomeIcon,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
@@ -23,12 +25,12 @@ import type { User } from '@supabase/supabase-js';
 function PalaceMark() {
   return (
     <svg
-      className="palace-mark w-9 h-10 sm:w-10 sm:h-11 shrink-0"
+      className="palace-mark w-7 h-7 sm:w-8 sm:h-8 shrink-0"
       viewBox="0 0 52 58"
       aria-hidden="true"
       fill="none"
       stroke="#D8AA67"
-      strokeWidth="1.5"
+      strokeWidth="1.75"
       strokeLinecap="round"
       strokeLinejoin="round"
     >
@@ -41,12 +43,21 @@ function PalaceMark() {
 }
 
 export interface NavbarProps {
-  /**
-   * Optional manual override for the scrolled state.
-   * If omitted, Navbar automatically listens to window scroll and updates `isScrolled`.
-   */
   isScrolled?: boolean;
   className?: string;
+}
+
+interface DropdownItem {
+  label: string;
+  href: string;
+  desc?: string;
+}
+
+interface NavLinkItem {
+  label: string;
+  href: string;
+  hasDropdown?: boolean;
+  dropdownItems?: DropdownItem[];
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -59,77 +70,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [internalScrolled, setInternalScrolled] = useState(false);
   const isScrolled = propIsScrolled !== undefined ? propIsScrolled : internalScrolled;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isDrawerClosing, setIsDrawerClosing] = useState(false);
-  const [dragY, setDragY] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const touchStartY = useRef(0);
-  const touchCurrentY = useRef(0);
   const [language, setLanguage] = useState<'Eng' | 'हिन्दी'>('Eng');
   const [user, setUser] = useState<User | null>(null);
   const [isStaff, setIsStaff] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const openMobileMenu = () => {
-    setIsDrawerClosing(false);
-    setDragY(0);
-    setMobileMenuOpen(true);
-  };
-
-  const closeMobileMenu = () => {
-    setIsDrawerClosing(true);
-    setTimeout(() => {
-      setMobileMenuOpen(false);
-      setIsDrawerClosing(false);
-      setDragY(0);
-    }, 200);
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartY.current = e.touches[0].clientY;
-    touchCurrentY.current = e.touches[0].clientY;
-    setIsDragging(true);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging) return;
-    touchCurrentY.current = e.touches[0].clientY;
-    const deltaY = touchCurrentY.current - touchStartY.current;
-    if (deltaY > 0) {
-      setDragY(deltaY);
-    }
-  };
-
-  const handleTouchEnd = () => {
-    if (!isDragging) return;
-    setIsDragging(false);
-    const deltaY = touchCurrentY.current - touchStartY.current;
-    if (deltaY > 70) {
-      closeMobileMenu();
-    } else {
-      setDragY(0);
-    }
-  };
-
-  // Global listeners so other triggers can toggle the bottom mobile nav drawer
-  useEffect(() => {
-    const handleOpen = () => openMobileMenu();
-    const handleToggle = () => {
-      if (mobileMenuOpen) closeMobileMenu();
-      else openMobileMenu();
-    };
-    window.addEventListener('open-mobile-nav', handleOpen);
-    window.addEventListener('toggle-mobile-nav', handleToggle);
-    return () => {
-      window.removeEventListener('open-mobile-nav', handleOpen);
-      window.removeEventListener('toggle-mobile-nav', handleToggle);
-    };
-  }, [mobileMenuOpen]);
 
   // Window scroll event listener to track scrolled status
   useEffect(() => {
@@ -153,7 +98,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   useEffect(() => {
     const supabase = createClient();
 
-    // Initial check
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user ?? null);
       if (!data.user) {
@@ -161,7 +105,6 @@ export const Navbar: React.FC<NavbarProps> = ({
       }
     });
 
-    // Listen for realtime auth changes (login, logout, token refresh)
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -213,7 +156,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           }
         }
       } catch {
-        // Fallback to metadata check
+        // Fallback to metadata
       }
     };
 
@@ -237,6 +180,11 @@ export const Navbar: React.FC<NavbarProps> = ({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [profileOpen]);
+
+  // Close mobile menu when pathname changes
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
 
   // Hide public header on dashboard and dedicated auth pages
   if (
@@ -264,12 +212,31 @@ export const Navbar: React.FC<NavbarProps> = ({
     'Royal Guest';
   const initial = displayName.charAt(0).toUpperCase();
 
-  const navLinks = [
-    { label: 'Home', href: '/' },
-    { label: 'Hotel', href: '/hotel' },
-    { label: 'Restaurant & Café', href: '/restaurant' },
-    { label: 'Menu', href: '/menu' },
-    { label: 'Contact', href: '/#contact' },
+  const navLinks: NavLinkItem[] = [
+    { label: 'HOME', href: '/' },
+    {
+      label: 'HOTEL',
+      href: '/hotel',
+      hasDropdown: true,
+      dropdownItems: [
+        { label: 'Rooms & Chambers', href: '/rooms', desc: 'Luxury heritage suites with lake views' },
+        { label: 'Party Hall (25–50 Pax)', href: '/hotel#party-hall-enquiry', desc: 'Royal banquet, gatherings & celebrations' },
+        { label: 'Heritage & Palace Grounds', href: '/hotel', desc: 'Architecture, royal courtyards & history' },
+      ],
+    },
+    {
+      label: 'RESTAURANT & CAFÉ',
+      href: '/restaurant',
+      hasDropdown: true,
+      dropdownItems: [
+        { label: 'Royal Dining Courtyard', href: '/restaurant', desc: 'Authentic Rajasthani fine dining' },
+        { label: 'Jharokha Café & Lounge', href: '/restaurant#cafe', desc: 'Artisanal coffee, tea & lake sunset' },
+        { label: 'Palace Menu & Thali', href: '/menu', desc: 'Curated royal culinary delicacies' },
+        { label: 'Reserve A Table', href: '/restaurant#reserve', desc: 'Book your private dining experience' },
+      ],
+    },
+    { label: 'MENU', href: '/menu' },
+    { label: 'CONTACT', href: '/#contact' },
   ];
 
   return (
@@ -278,453 +245,389 @@ export const Navbar: React.FC<NavbarProps> = ({
         data-scrolled={isScrolled}
         className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 ease-in-out flex items-center ${
           isScrolled
-            ? 'h-[68px] sm:h-[72px] shadow-[0_10px_30px_rgba(20,3,4,0.7)] backdrop-blur-md'
-            : 'h-[80px] sm:h-[86px] shadow-2xl backdrop-blur-sm'
-        } px-4 sm:px-8 md:px-12 lg:px-16 ${className}`}
-        style={{
-          backgroundColor: isScrolled
-            ? 'rgba(56, 5, 6, 0.96)'
-            : 'var(--forest-deep, #4f0809)',
-          boxShadow: isScrolled
-            ? '0 10px 30px rgba(20, 3, 4, 0.7)'
-            : '0 4px 24px rgba(40, 5, 6, 0.4)',
-          borderBottom: isScrolled
-            ? '1px solid rgba(216, 170, 103, 0.45)'
-            : '1px solid rgba(216, 170, 103, 0.25)',
-        }}
+            ? 'h-[66px] sm:h-[70px] bg-[#0A0203]/95 shadow-[0_10px_35px_rgba(0,0,0,0.7)] border-b border-[#D8AA67]/25'
+            : 'h-[72px] sm:h-[78px] bg-[#0E0304]/90 backdrop-blur-sm border-b border-[#D8AA67]/15'
+        } px-3.5 sm:px-6 lg:px-8 xl:px-10 ${className}`}
       >
-      <div className="w-full flex items-center justify-between">
-        {/* Brand Logo & Title */}
-        <Link href="/" className="flex items-center space-x-3 sm:space-x-4 group shrink-0">
-          <PalaceMark />
-          <div className="flex flex-col text-left">
-            <span
-              className={`font-bold tracking-[0.11em] uppercase leading-none transition-all duration-300 ${
-                isScrolled ? 'text-lg sm:text-xl' : 'text-xl sm:text-2xl'
-              }`}
-              style={{
-                fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
-                color: 'var(--gold-bright, #e1b46f)',
-              }}
-            >
-              Rajmahal
-            </span>
-            <span
-              className="text-[8px] sm:text-[9px] font-semibold tracking-[0.34em] uppercase mt-1 transition-opacity duration-300"
-              style={{ color: 'var(--gold-bright, #e1b46f)' }}
-            >
-              Heritage Hotel.
-            </span>
-          </div>
-        </Link>
-
-        {/* Desktop Nav Links */}
-        <nav className="hidden lg:flex items-center space-x-7 xl:space-x-8">
-          {navLinks.map((link) => {
-            const isActive =
-              pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href));
-            return (
-              <Link
-                key={link.label}
-                href={link.href}
-                className={`text-[13px] font-medium tracking-wide transition-all relative py-2 ${
-                  isActive
-                    ? 'text-[#FFF8EB] font-semibold'
-                    : 'text-[#FFF8EB]/80 hover:text-[#D8AA67]'
-                }`}
-              >
-                {link.label}
-                {isActive && (
-                  <span
-                    className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full"
-                    style={{ backgroundColor: 'var(--antique-gold, #d8aa67)' }}
-                  />
-                )}
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* Right Actions: Language + Staff Admin Badge + Auth State Button */}
-        <div className="hidden sm:flex items-center space-x-4 md:space-x-5 shrink-0">
-          {/* Language selector toggle */}
-          <button
-            type="button"
-            onClick={() => setLanguage(language === 'Eng' ? 'हिन्दी' : 'Eng')}
-            className="flex items-center space-x-1.5 text-xs text-[#FFF8EB]/90 hover:text-[#D8AA67] cursor-pointer transition-colors py-1 focus:outline-none"
-            title="Toggle Language"
+        <div className="w-full max-w-7xl mx-auto flex items-center justify-between">
+          {/* ── 1. Left: Brand Capsule Pill (Matches reference [BunkMates] capsule) ── */}
+          <Link
+            href="/"
+            className="inline-flex items-center space-x-2.5 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#D8AA67]/60 backdrop-blur-md transition-all shadow-sm group shrink-0 active:scale-95"
           >
-            <Globe className="w-3.5 h-3.5 text-[#D8AA67]" />
-            <span className="font-medium">{language}</span>
-            <ChevronDown className="w-3 h-3 text-[#FFF8EB]/60" />
-          </button>
-
-          {/* ADMIN PANEL LOGO BUTTON - SHOWN STRICTLY AFTER LOGIN FOR REGISTERED STAFF */}
-          {user && isStaff && (
-            <Link
-              href="/dashboard"
-              id="navbar-admin-panel-btn"
-              className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-[#D8AA67] via-[#E1B46F] to-[#B78A48] text-[#380506] font-bold text-xs tracking-wide shadow-[0_2px_14px_rgba(216,170,103,0.45)] hover:shadow-[0_4px_20px_rgba(216,170,103,0.65)] hover:scale-105 active:scale-95 transition-all duration-200 border border-[#FFF8EB]/60 group"
-              title="Access Hotel & Outlets Admin Panel"
-            >
-              <div className="w-5 h-5 rounded-full bg-[#4F0809] text-[#D8AA67] flex items-center justify-center shrink-0 shadow-inner group-hover:rotate-12 transition-transform">
-                <ShieldCheck className="w-3.5 h-3.5" />
-              </div>
-              <span className="tracking-wider uppercase text-[11px] font-bold whitespace-nowrap">
-                Admin Panel
-              </span>
-              <ArrowRight className="w-3.5 h-3.5 text-[#380506] group-hover:translate-x-0.5 transition-transform" />
-            </Link>
-          )}
-
-          {/* Conditional Auth Rendering: Profile Dropdown or Sign Up / Login */}
-          {user ? (
-            <div className="relative" ref={dropdownRef}>
-              <button
-                type="button"
-                onClick={() => setProfileOpen(!profileOpen)}
-                className="flex items-center space-x-2.5 px-3.5 py-1.5 rounded-full bg-[#3d0607]/80 hover:bg-[#380506] border border-[#D8AA67]/40 hover:border-[#D8AA67] transition-all cursor-pointer focus:outline-none group shadow-md"
-                aria-label="User profile menu"
-                aria-expanded={profileOpen}
+            <PalaceMark />
+            <div className="flex flex-col text-left">
+              <span
+                className="font-bold tracking-[0.14em] uppercase text-sm sm:text-base text-[#FFF8EB] group-hover:text-[#D8AA67] transition-colors leading-none"
+                style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)" }}
               >
-                {/* Monogram Avatar */}
-                <div className="w-8 h-8 rounded-full bg-[#D8AA67] text-[#380506] font-bold text-xs flex items-center justify-center shadow-inner ring-1 ring-[#FFF8EB]/30">
-                  {initial}
-                </div>
-                <div className="flex flex-col text-left pr-1">
-                  <span className="text-[12px] font-medium text-[#FFF8EB] leading-tight max-w-[110px] truncate">
-                    {displayName}
-                  </span>
-                  <span className="text-[9px] text-[#D8AA67] leading-none uppercase tracking-wider flex items-center gap-0.5">
-                    <Sparkles className="w-2.5 h-2.5 text-[#D8AA67]" />
-                    {isStaff ? 'Staff' : 'Profile'}
-                  </span>
-                </div>
-                <ChevronDown
-                  className={`w-3.5 h-3.5 text-[#D8AA67] transition-transform duration-200 ${
-                    profileOpen ? 'rotate-180' : ''
-                  }`}
-                />
-              </button>
+                Rajmahal
+              </span>
+              <span className="text-[7.5px] sm:text-[8px] font-semibold tracking-[0.28em] uppercase text-[#D8AA67] leading-none mt-0.5">
+                Heritage Hotel
+              </span>
+            </div>
+          </Link>
 
-              {/* Profile Dropdown Menu */}
-              {profileOpen && (
-                <div className="absolute right-0 mt-2 w-64 bg-[#FFFBF4] rounded-2xl shadow-[0_12px_40px_rgba(20,5,5,0.35)] border border-[#E8DFCE] py-2 z-50 animate-fade-in-up divide-y divide-[#EFE7D8]">
-                  {/* Guest Header */}
-                  <div className="px-4 py-3">
-                    <p className="text-[10px] uppercase tracking-widest text-[#9C7A45] font-semibold">
-                      {isStaff ? 'Rajmahal Staff Member' : 'Rajmahal Guest'}
-                    </p>
-                    <p className="text-sm font-bold text-[#380506] truncate mt-0.5">
-                      {displayName}
-                    </p>
-                    <p className="text-xs text-[#6B5E51] truncate mt-0.5">
-                      {user.email || 'Verified User'}
-                    </p>
-                  </div>
+          {/* ── 2. Center: Nav Island Capsule (Matches reference pill island with [HOME] active pill) ── */}
+          <nav className="hidden lg:inline-flex items-center p-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-md shadow-inner space-x-1">
+            {navLinks.map((link) => {
+              const isActive =
+                link.href === '/'
+                  ? pathname === '/'
+                  : pathname === link.href || pathname.startsWith(link.href + '/');
 
-                  {/* Staff Admin Panel Quick Link */}
-                  {isStaff && (
-                    <div className="p-2 bg-gradient-to-r from-[#4F0809]/10 via-[#D8AA67]/15 to-[#4F0809]/10">
-                      <Link
-                        href="/dashboard"
-                        onClick={() => setProfileOpen(false)}
-                        className="flex items-center justify-between px-3 py-2 rounded-xl bg-[#4F0809] text-[#D8AA67] hover:bg-[#680b0c] font-semibold text-xs transition shadow-sm group"
-                      >
-                        <div className="flex items-center gap-2">
-                          <ShieldCheck className="w-4 h-4 text-[#D8AA67]" />
-                          <span>Enter Admin Panel</span>
-                        </div>
-                        <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                      </Link>
+              return (
+                <div key={link.label} className="relative group">
+                  <Link
+                    href={link.href}
+                    className={`flex items-center space-x-1 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                      isActive
+                        ? 'bg-white/15 text-[#FFF8EB] shadow-xs ring-1 ring-white/15'
+                        : 'text-[#FFF8EB]/75 hover:text-[#FFF8EB] hover:bg-white/5'
+                    }`}
+                  >
+                    <span>{link.label}</span>
+                    {link.hasDropdown && (
+                      <ChevronDown className="w-3 h-3 text-[#FFF8EB]/60 group-hover:text-[#D8AA67] transition-transform group-hover:rotate-180 duration-200 ml-0.5" />
+                    )}
+                  </Link>
+
+                  {/* Dropdown Menu on Hover */}
+                  {link.hasDropdown && link.dropdownItems && (
+                    <div className="absolute top-full left-0 mt-2.5 w-64 rounded-2xl bg-[#140304]/98 backdrop-blur-md border border-[#D8AA67]/30 shadow-[0_16px_40px_rgba(0,0,0,0.6)] p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none group-hover:pointer-events-auto z-50">
+                      {link.dropdownItems.map((item) => (
+                        <Link
+                          key={item.label}
+                          href={item.href}
+                          className="flex flex-col p-2.5 rounded-xl hover:bg-white/5 text-left transition-colors group/item"
+                        >
+                          <span className="text-xs font-bold text-[#FFF8EB] group-hover/item:text-[#D8AA67] transition-colors flex items-center justify-between">
+                            <span>{item.label}</span>
+                            <ArrowRight className="w-3 h-3 opacity-0 group-hover/item:opacity-100 -translate-x-1 group-hover/item:translate-x-0 transition-all text-[#D8AA67]" />
+                          </span>
+                          {item.desc && (
+                            <span className="text-[10px] text-[#C5B8A5]/80 mt-0.5 line-clamp-1">
+                              {item.desc}
+                            </span>
+                          )}
+                        </Link>
+                      ))}
                     </div>
                   )}
-
-                  {/* Menu Links */}
-                  <div className="py-1.5 text-xs">
-                    <Link
-                      href="/profile"
-                      onClick={() => setProfileOpen(false)}
-                      className="flex items-center space-x-3 px-4 py-2.5 text-[#380506] hover:bg-[#F5EFE6] transition-colors"
-                    >
-                      <UserIcon className="w-4 h-4 text-[#D8AA67]" />
-                      <span className="font-medium">My Profile &amp; Account</span>
-                    </Link>
-
-                    <Link
-                      href="/rooms"
-                      onClick={() => setProfileOpen(false)}
-                      className="flex items-center space-x-3 px-4 py-2.5 text-[#380506] hover:bg-[#F5EFE6] transition-colors"
-                    >
-                      <BedDouble className="w-4 h-4 text-[#D8AA67]" />
-                      <span className="font-medium">Book a Suite</span>
-                    </Link>
-
-                    <Link
-                      href="/restaurant"
-                      onClick={() => setProfileOpen(false)}
-                      className="flex items-center space-x-3 px-4 py-2.5 text-[#380506] hover:bg-[#F5EFE6] transition-colors"
-                    >
-                      <UtensilsCrossed className="w-4 h-4 text-[#D8AA67]" />
-                      <span className="font-medium">Dining &amp; Table Booking</span>
-                    </Link>
-                  </div>
-
-                  {/* Sign Out Action */}
-                  <div className="py-1">
-                    <button
-                      type="button"
-                      onClick={handleSignOut}
-                      className="w-full flex items-center space-x-3 px-4 py-2 text-left text-xs font-semibold text-red-700 hover:bg-red-50/80 transition-colors cursor-pointer"
-                    >
-                      <LogOut className="w-4 h-4 text-red-600" />
-                      <span>Sign Out</span>
-                    </button>
-                  </div>
                 </div>
-              )}
-            </div>
-          ) : (
+              );
+            })}
+          </nav>
+
+          {/* ── 3. Right: Desktop Action Pills (Matches reference [DOWNLOAD APP] & [SIGN IN]) ── */}
+          <div className="hidden sm:flex items-center space-x-2.5 md:space-x-3 shrink-0">
+            {/* Primary Accent CTA Pill: Book A Stay */}
             <Link
-              href="/login"
-              className="inline-flex items-center space-x-2 px-6 py-2.5 rounded-[6px] text-sm font-semibold tracking-wide transition-all duration-200 shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
-              style={{
-                backgroundColor: 'var(--antique-gold, #d8aa67)',
-                color: 'var(--forest-ink, #380506)',
-                fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
-                fontSize: '15px',
-              }}
+              href="/rooms"
+              className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-full bg-gradient-to-r from-[#D8AA67] via-[#E1B46F] to-[#C89B55] hover:brightness-110 text-[#2B0507] font-bold text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all active:scale-95 cursor-pointer shrink-0"
             >
-              <span>Sign Up / Login</span>
-              <ArrowRight className="w-4 h-4 ml-1 stroke-[1.75]" />
+              <BedDouble className="w-3.5 h-3.5 text-[#2B0507]" />
+              <span>Book A Stay</span>
             </Link>
-          )}
-        </div>
 
-        {/* Mobile menu button & quick profile */}
-        <div className="flex sm:hidden items-center space-x-2">
-          {user && isStaff && (
-            <Link
-              href="/dashboard"
-              className="flex items-center space-x-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-[#D8AA67] to-[#B78A48] text-[#380506] text-xs font-bold shadow-md active:scale-95 transition"
-              title="Admin Panel"
+            {/* Language Selector Pill */}
+            <button
+              type="button"
+              onClick={() => setLanguage(language === 'Eng' ? 'हिन्दी' : 'Eng')}
+              className="hidden xl:inline-flex items-center space-x-1 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-[#FFF8EB]/80 hover:text-[#D8AA67] transition cursor-pointer"
+              title="Toggle Language"
             >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span className="text-[10px] uppercase font-bold">Admin</span>
-            </Link>
-          )}
+              <Globe className="w-3 h-3 text-[#D8AA67]" />
+              <span>{language}</span>
+            </button>
 
-          {user ? (
-            <Link
-              href="/profile"
-              className="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-[#3d0607] border border-[#D8AA67]/40 text-[#FFF8EB] text-xs font-medium"
-            >
-              <div className="w-5 h-5 rounded-full bg-[#D8AA67] text-[#380506] font-bold text-[10px] flex items-center justify-center">
-                {initial}
-              </div>
-              <span className="text-[11px] text-[#D8AA67] font-semibold">Profile</span>
-            </Link>
-          ) : (
-            <Link
-              href="/login"
-              className="px-3.5 py-1.5 rounded-[5px] text-xs font-semibold tracking-wide shadow"
-              style={{
-                backgroundColor: 'var(--antique-gold, #d8aa67)',
-                color: 'var(--forest-ink, #380506)',
-              }}
-            >
-              Login
-            </Link>
-          )}
-          <button
-            onClick={() => {
-              if (mobileMenuOpen) closeMobileMenu();
-              else openMobileMenu();
-            }}
-            className="p-1.5 rounded-md text-[#FFF8EB] hover:text-[#D8AA67] focus:outline-none cursor-pointer"
-            aria-label="Toggle menu"
-          >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
-        </div>
-      </div>
+            {/* Staff Admin Panel Badge Button */}
+            {user && isStaff && (
+              <Link
+                href="/dashboard"
+                id="navbar-admin-panel-btn"
+                className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-[#D8AA67] to-[#B78A48] text-[#2B0507] font-bold text-xs uppercase tracking-wider shadow-md hover:brightness-105 transition shrink-0"
+                title="Enter Staff Admin Panel"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-[#2B0507]" />
+                <span>Admin</span>
+              </Link>
+            )}
 
-      {/* ── Mobile Nav Menu: Bottom Swipeable Floating Drawer ── */}
-      {mobileMenuOpen &&
-        mounted &&
-        createPortal(
-          <div
-            onClick={(e) => {
-              if (e.target === e.currentTarget) closeMobileMenu();
-            }}
-            className={`fixed inset-0 z-[150] bg-black/65 backdrop-blur-xs flex items-end justify-center p-0 transition-opacity duration-200 ${
-              isDrawerClosing ? 'opacity-0' : 'opacity-100'
-            }`}
-          >
-            <div
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-              style={{
-                transform: `translateY(${dragY}px)`,
-                transition: isDragging ? 'none' : 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
-              }}
-              className={`w-full max-w-lg mx-auto rounded-t-[32px] border-t-2 border-x-2 border-[#D8AA67] bg-gradient-to-b from-[#4F0809] via-[#3E0608] to-[#2B0405] text-[#FFF8EB] shadow-[0_-20px_60px_rgba(20,3,4,0.85)] flex flex-col max-h-[85vh] overflow-hidden ${
-                isDrawerClosing ? 'animate-slide-down-modal' : 'animate-slide-up-modal'
-              }`}
-            >
-              {/* Swipe Drag Handle */}
-              <div className="w-full pt-3 pb-1 flex flex-col items-center justify-center cursor-grab active:cursor-grabbing select-none">
-                <div className="w-12 h-1.5 rounded-full bg-[#D8AA67]/60 hover:bg-[#D8AA67] transition-colors" />
-                <span className="text-[9px] uppercase tracking-widest text-[#D8AA67]/75 font-semibold mt-1">
-                  Swipe down to close
-                </span>
-              </div>
-
-              {/* Drawer Header */}
-              <div className="px-5 py-3 border-b border-[#D8AA67]/25 flex items-center justify-between">
-                <div className="flex items-center space-x-2.5">
-                  <PalaceMark />
-                  <div className="flex flex-col text-left">
-                    <span
-                      className="text-lg font-bold text-[#E1B46F] tracking-wide leading-none"
-                      style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)" }}
-                    >
-                      Rajmahal
-                    </span>
-                    <span className="text-[8px] uppercase tracking-[0.28em] text-[#D8AA67] mt-0.5 font-semibold">
-                      Heritage Hotel
-                    </span>
-                  </div>
-                </div>
-
+            {/* Secondary Capsule Pill: Sign In / Profile */}
+            {user ? (
+              <div className="relative" ref={dropdownRef}>
                 <button
                   type="button"
-                  onClick={closeMobileMenu}
-                  className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-[#FFF8EB] transition-colors cursor-pointer"
-                  aria-label="Close menu"
+                  onClick={() => setProfileOpen(!profileOpen)}
+                  className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/15 hover:border-[#D8AA67]/60 text-xs font-bold uppercase tracking-wider text-[#FFF8EB] transition cursor-pointer"
+                  aria-label="User profile menu"
+                  aria-expanded={profileOpen}
                 >
-                  <X className="w-5 h-5" />
+                  <div className="w-5 h-5 rounded-full bg-[#D8AA67] text-[#2B0507] font-bold text-[10px] flex items-center justify-center">
+                    {initial}
+                  </div>
+                  <span className="max-w-[85px] truncate text-[11px] font-medium text-[#FFF8EB] capitalize">
+                    {displayName}
+                  </span>
+                  <ChevronDown
+                    className={`w-3 h-3 text-[#D8AA67] transition-transform duration-200 ${
+                      profileOpen ? 'rotate-180' : ''
+                    }`}
+                  />
                 </button>
-              </div>
 
-              {/* Drawer Scrollable Content */}
-              <div className="p-4 sm:p-5 overflow-y-auto space-y-3.5 max-h-[68vh]">
-                {/* Admin Panel Quick Banner for Staff */}
-                {user && isStaff && (
-                  <Link
-                    href="/dashboard"
-                    onClick={closeMobileMenu}
-                    className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-[#D8AA67] via-[#E1B46F] to-[#B78A48] text-[#380506] font-bold text-xs shadow-md transition group"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <ShieldCheck className="w-4 h-4 text-[#380506]" />
-                      <span className="uppercase tracking-wider">Access Admin Panel</span>
+                {/* Profile Dropdown Menu */}
+                {profileOpen && (
+                  <div className="absolute right-0 mt-2 w-64 bg-[#FFFBF4] rounded-2xl shadow-[0_12px_40px_rgba(20,5,5,0.35)] border border-[#E8DFCE] py-2 z-50 animate-fade-in-up divide-y divide-[#EFE7D8]">
+                    <div className="px-4 py-3">
+                      <p className="text-[10px] uppercase tracking-widest text-[#9C7A45] font-semibold">
+                        {isStaff ? 'Rajmahal Staff Member' : 'Rajmahal Guest'}
+                      </p>
+                      <p className="text-sm font-bold text-[#380506] truncate mt-0.5">
+                        {displayName}
+                      </p>
+                      <p className="text-xs text-[#6B5E51] truncate mt-0.5">
+                        {user.email || 'Verified User'}
+                      </p>
                     </div>
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                  </Link>
-                )}
 
-                {/* Profile Banner */}
-                {user && (
-                  <div className="p-3 rounded-2xl bg-[#3D0607]/80 border border-[#D8AA67]/30 flex items-center justify-between">
-                    <div className="flex items-center space-x-2.5">
-                      <div className="w-9 h-9 rounded-full bg-[#D8AA67] text-[#380506] font-bold text-sm flex items-center justify-center shadow-inner">
-                        {initial}
+                    {isStaff && (
+                      <div className="p-2 bg-gradient-to-r from-[#4F0809]/10 via-[#D8AA67]/15 to-[#4F0809]/10">
+                        <Link
+                          href="/dashboard"
+                          onClick={() => setProfileOpen(false)}
+                          className="flex items-center justify-between px-3 py-2 rounded-xl bg-[#4F0809] text-[#D8AA67] hover:bg-[#680b0c] font-semibold text-xs transition shadow-sm group"
+                        >
+                          <div className="flex items-center gap-2">
+                            <ShieldCheck className="w-4 h-4 text-[#D8AA67]" />
+                            <span>Enter Admin Panel</span>
+                          </div>
+                          <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                        </Link>
                       </div>
-                      <div className="flex flex-col text-left">
-                        <p className="text-xs font-bold text-[#FFF8EB] leading-tight">{displayName}</p>
-                        <p className="text-[10px] text-[#D8AA67]">{user.email}</p>
-                      </div>
+                    )}
+
+                    <div className="py-1.5 text-xs">
+                      <Link
+                        href="/profile"
+                        onClick={() => setProfileOpen(false)}
+                        className="flex items-center space-x-3 px-4 py-2.5 text-[#380506] hover:bg-[#F5EFE6] transition-colors"
+                      >
+                        <UserIcon className="w-4 h-4 text-[#D8AA67]" />
+                        <span className="font-medium">My Profile &amp; Account</span>
+                      </Link>
+
+                      <Link
+                        href="/rooms"
+                        onClick={() => setProfileOpen(false)}
+                        className="flex items-center space-x-3 px-4 py-2.5 text-[#380506] hover:bg-[#F5EFE6] transition-colors"
+                      >
+                        <BedDouble className="w-4 h-4 text-[#D8AA67]" />
+                        <span className="font-medium">Book a Suite</span>
+                      </Link>
+
+                      <Link
+                        href="/restaurant"
+                        onClick={() => setProfileOpen(false)}
+                        className="flex items-center space-x-3 px-4 py-2.5 text-[#380506] hover:bg-[#F5EFE6] transition-colors"
+                      >
+                        <UtensilsCrossed className="w-4 h-4 text-[#D8AA67]" />
+                        <span className="font-medium">Dining &amp; Table Booking</span>
+                      </Link>
                     </div>
-                    <Link
-                      href="/profile"
-                      onClick={closeMobileMenu}
-                      className="text-xs text-[#D8AA67] underline font-semibold px-2 py-1"
-                    >
-                      Account
-                    </Link>
+
+                    <div className="py-1">
+                      <button
+                        type="button"
+                        onClick={handleSignOut}
+                        className="w-full flex items-center space-x-3 px-4 py-2 text-left text-xs font-semibold text-red-700 hover:bg-red-50/80 transition-colors cursor-pointer"
+                      >
+                        <LogOut className="w-4 h-4 text-red-600" />
+                        <span>Sign Out</span>
+                      </button>
+                    </div>
                   </div>
                 )}
-
-                {/* Navigation Links */}
-                <div className="space-y-1">
-                  {navLinks.map((link) => {
-                    const isActive =
-                      pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href));
-                    return (
-                      <Link
-                        key={link.label}
-                        href={link.href}
-                        onClick={closeMobileMenu}
-                        className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                          isActive
-                            ? 'bg-[#680B0C] text-[#FFF8EB] border border-[#D8AA67]/50 font-bold'
-                            : 'text-[#FFF8EB]/90 hover:bg-[#5E0A0B] hover:text-[#D8AA67]'
-                        }`}
-                      >
-                        <span>{link.label}</span>
-                        <ArrowRight className="w-3.5 h-3.5 text-[#D8AA67] opacity-60" />
-                      </Link>
-                    );
-                  })}
-                </div>
-
-                {/* Quick Reservation Action */}
-                <div className="pt-2 border-t border-[#D8AA67]/20">
-                  <Link
-                    href="/rooms"
-                    onClick={closeMobileMenu}
-                    className="w-full py-3 rounded-xl bg-gradient-to-r from-[#D8AA67] via-[#E1B46F] to-[#B78A48] text-[#380506] font-bold text-xs uppercase tracking-wider flex items-center justify-center space-x-2 shadow-md hover:shadow-lg transition"
-                    style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)", fontSize: '15px' }}
-                  >
-                    <BedDouble className="w-4 h-4 text-[#380506]" />
-                    <span>Reserve a Royal Suite</span>
-                  </Link>
-                </div>
-
-                {/* Language & Auth Footer */}
-                <div className="pt-2 flex items-center justify-between text-xs px-1 text-[#FFF8EB]/80">
-                  <button
-                    type="button"
-                    onClick={() => setLanguage(language === 'Eng' ? 'हिन्दी' : 'Eng')}
-                    className="flex items-center space-x-1.5 py-1 text-xs hover:text-[#D8AA67] cursor-pointer"
-                  >
-                    <Globe className="w-3.5 h-3.5 text-[#D8AA67]" />
-                    <span>Language: {language}</span>
-                  </button>
-
-                  {user ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        closeMobileMenu();
-                        handleSignOut();
-                      }}
-                      className="text-red-300 hover:text-red-200 font-semibold flex items-center py-1 cursor-pointer"
-                    >
-                      <LogOut className="w-3.5 h-3.5 mr-1" />
-                      <span>Sign Out</span>
-                    </button>
-                  ) : (
-                    <Link
-                      href="/login"
-                      onClick={closeMobileMenu}
-                      className="text-[#D8AA67] font-semibold flex items-center py-1 hover:underline"
-                    >
-                      <span>Sign Up / Login</span>
-                      <ArrowRight className="w-3.5 h-3.5 ml-1" />
-                    </Link>
-                  )}
-                </div>
               </div>
+            ) : (
+              <Link
+                href="/login"
+                className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/15 text-[#FFF8EB] font-bold text-xs uppercase tracking-wider transition-all hover:border-[#D8AA67]/60 active:scale-95 cursor-pointer shrink-0"
+              >
+                <UserIcon className="w-3.5 h-3.5 text-[#D8AA67]" />
+                <span>Sign In</span>
+              </Link>
+            )}
+          </div>
+
+          {/* ── 4. Mobile Displays: Show Login Button AND Menu Button with Menu Icon ── */}
+          <div className="flex sm:hidden items-center space-x-2">
+            {/* Mobile Login / Profile Button Capsule */}
+            {user ? (
+              <Link
+                href="/profile"
+                className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/15 text-[11px] font-bold text-[#FFF8EB] active:scale-95 transition"
+              >
+                <div className="w-4 h-4 rounded-full bg-[#D8AA67] text-[#2B0507] font-bold text-[9px] flex items-center justify-center">
+                  {initial}
+                </div>
+                <span className="text-[10px] uppercase font-bold text-[#D8AA67]">Profile</span>
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                className="inline-flex items-center px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/15 text-[11px] font-bold uppercase tracking-wider text-[#FFF8EB] active:scale-95 transition cursor-pointer"
+              >
+                <span>Sign In</span>
+              </Link>
+            )}
+
+            {/* Mobile Menu Button with Menu Icon Capsule (Matches Reference Image 2) */}
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="inline-flex items-center space-x-1 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/15 text-[11px] font-bold uppercase tracking-wider text-[#FFF8EB] active:scale-95 transition cursor-pointer focus:outline-none"
+              aria-label="Toggle navigation menu"
+              aria-expanded={mobileMenuOpen}
+            >
+              {mobileMenuOpen ? (
+                <>
+                  <X className="w-3.5 h-3.5 text-[#D8AA67]" />
+                  <span>Close</span>
+                </>
+              ) : (
+                <>
+                  <Menu className="w-3.5 h-3.5 text-[#D8AA67]" />
+                  <span>Menu</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* ── 5. Mobile Menu Drawer ── */}
+        {mobileMenuOpen && (
+          <div className="absolute top-full left-0 right-0 w-full p-4 sm:hidden bg-[#0F0304]/98 backdrop-blur-xl border-b border-[#D8AA67]/35 shadow-[0_20px_50px_rgba(0,0,0,0.7)] z-50 animate-fade-in-up">
+            {/* Staff Admin Panel Link */}
+            {user && isStaff && (
+              <div className="mb-3">
+                <Link
+                  href="/dashboard"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-[#D8AA67] via-[#E1B46F] to-[#B78A48] text-[#2B0507] font-bold text-xs uppercase tracking-wider shadow-md transition group"
+                >
+                  <div className="flex items-center space-x-2">
+                    <ShieldCheck className="w-4 h-4 text-[#2B0507]" />
+                    <span>Access Admin Panel</span>
+                  </div>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </div>
+            )}
+
+            {/* User Profile Quick Info */}
+            {user && (
+              <div className="mb-3 pb-3 border-b border-[#D8AA67]/20 flex items-center justify-between px-2">
+                <div className="flex items-center space-x-2.5">
+                  <div className="w-8 h-8 rounded-full bg-[#D8AA67] text-[#2B0507] font-bold text-xs flex items-center justify-center">
+                    {initial}
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-[#FFF8EB] leading-tight">{displayName}</p>
+                    <p className="text-[10px] text-[#D8AA67] truncate max-w-[200px]">{user.email}</p>
+                  </div>
+                </div>
+                <Link
+                  href="/profile"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-xs text-[#D8AA67] underline font-semibold"
+                >
+                  View Profile
+                </Link>
+              </div>
+            )}
+
+            {/* Primary Action Button on Mobile */}
+            <div className="mb-3">
+              <Link
+                href="/rooms"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#D8AA67] to-[#C89B55] text-[#2B0507] font-bold text-xs uppercase tracking-wider flex items-center justify-center space-x-2 shadow-md active:scale-98 transition"
+              >
+                <BedDouble className="w-3.5 h-3.5 text-[#2B0507]" />
+                <span>Book A Stay &bull; Suites &amp; Rooms</span>
+              </Link>
             </div>
-          </div>,
-          document.body
+
+            {/* Nav Links Stack */}
+            <div className="space-y-1">
+              {navLinks.map((link) => {
+                const isActive =
+                  link.href === '/'
+                    ? pathname === '/'
+                    : pathname === link.href || pathname.startsWith(link.href + '/');
+
+                return (
+                  <Link
+                    key={link.label}
+                    href={link.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`block px-3.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors ${
+                      isActive
+                        ? 'bg-white/15 text-[#D8AA67] font-bold'
+                        : 'text-[#FFF8EB]/80 hover:bg-white/5 hover:text-[#FFF8EB]'
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Footer in Mobile Menu */}
+            <div className="mt-3.5 pt-3.5 border-t border-[#D8AA67]/20 flex items-center justify-between text-xs px-2">
+              <button
+                type="button"
+                onClick={() => setLanguage(language === 'Eng' ? 'हिन्दी' : 'Eng')}
+                className="flex items-center space-x-1.5 text-[#FFF8EB]/80 py-1"
+              >
+                <Globe className="w-3.5 h-3.5 text-[#D8AA67]" />
+                <span>Language: {language}</span>
+              </button>
+
+              {user ? (
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  className="text-red-400 hover:text-red-300 font-semibold flex items-center py-1 cursor-pointer"
+                >
+                  <LogOut className="w-3.5 h-3.5 mr-1" />
+                  <span>Sign Out</span>
+                </button>
+              ) : (
+                <Link
+                  href="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-[#D8AA67] font-semibold flex items-center py-1"
+                >
+                  <span>Sign Up / Login</span>
+                  <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                </Link>
+              )}
+            </div>
+          </div>
         )}
-    </header>
-    {/* Structural spacer so non-hero pages are never covered by the fixed floating header */}
-    <div className="h-[80px] sm:h-[86px] w-full shrink-0 pointer-events-none" aria-hidden="true" />
-  </>
+      </header>
+
+      {/* Structural spacer so non-hero pages are never covered by the fixed floating header */}
+      <div
+        className={`w-full shrink-0 pointer-events-none transition-all duration-300 ${
+          isScrolled ? 'h-[66px] sm:h-[70px]' : 'h-[72px] sm:h-[78px]'
+        }`}
+        aria-hidden="true"
+      />
+    </>
   );
 };
