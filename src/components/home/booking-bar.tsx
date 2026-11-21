@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Calendar,
-  ChevronDown,
   ArrowRight,
   BedDouble,
   PartyPopper,
@@ -121,56 +120,63 @@ export function BookingBar() {
   const nightsCount = calculateNights(checkIn, checkOut);
 
   return (
-    <div className="w-full max-w-[1060px] mx-auto">
-      {/* ── Mode Switcher Tabs ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-3 px-1 sm:px-2">
-        <div className="inline-flex p-1 rounded-full bg-[#181310]/85 backdrop-blur-md border border-[#D8AA67]/45 shadow-xl">
-          <button
-            type="button"
-            onClick={() => setActiveTab('rooms')}
-            className={`flex items-center space-x-2 px-5 py-2 rounded-full text-xs sm:text-sm font-semibold tracking-wide transition-all cursor-pointer ${
-              activeTab === 'rooms'
-                ? 'bg-gradient-to-r from-[#670E10] to-[#801215] text-[#FAF8F3] shadow-md border border-[#D8AA67]/60'
-                : 'text-[#FAF8F3]/80 hover:text-[#FAF8F3] hover:bg-white/10'
-            }`}
-          >
-            <BedDouble className="w-4 h-4 text-[#D8AA67]" />
-            <span style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)", fontSize: '16px' }}>
-              Rooms &amp; Suites
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('hall')}
-            className={`flex items-center space-x-2 px-5 py-2 rounded-full text-xs sm:text-sm font-semibold tracking-wide transition-all cursor-pointer ${
-              activeTab === 'hall'
-                ? 'bg-gradient-to-r from-[#670E10] to-[#801215] text-[#FAF8F3] shadow-md border border-[#D8AA67]/60'
-                : 'text-[#FAF8F3]/80 hover:text-[#FAF8F3] hover:bg-white/10'
-            }`}
-          >
-            <PartyPopper className="w-4 h-4 text-[#D8AA67]" />
-            <span style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)", fontSize: '16px' }}>
-              Party Hall (25–50 Pax)
-            </span>
-          </button>
-        </div>
-
-        {/* Palace Direct Privileges Tag */}
-        <div className="hidden sm:inline-flex items-center space-x-2 text-xs font-medium text-[#FAF8F3] bg-black/45 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-[#D8AA67]/30 shadow-md">
-          <Sparkles className="w-3.5 h-3.5 text-[#D8AA67]" />
-          <span>Direct Palace Privilege &bull; Best Tariff Guarantee</span>
-        </div>
-      </div>
-
-      {/* ── Main Booking Bar Card ── */}
+    <div className="w-full max-w-[1080px] mx-auto">
+      {/* ── Unified Single Apple-Style Luxury Section ── */}
       <div
-        className="w-full rounded-2xl sm:rounded-3xl p-3 sm:p-4.5 transition-all border shadow-[0_22px_55px_rgba(30,10,12,0.28)]"
+        className="w-full rounded-[26px] sm:rounded-[34px] p-3 sm:p-5 transition-all border shadow-[0_24px_64px_-12px_rgba(30,10,12,0.3),0_4px_16px_rgba(0,0,0,0.06)]"
         style={{
-          backgroundColor: '#FAF7F2',
+          backgroundColor: 'rgba(250, 247, 242, 0.96)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
           borderColor: 'rgba(216, 170, 103, 0.65)',
         }}
       >
+        {/* Integrated Top Row: Segmented Switcher & Palace Privilege */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3.5 sm:mb-4 px-1">
+          {/* Apple-Style Segmented Control */}
+          <div className="inline-flex p-1 rounded-[16px] bg-[#EFE8DD]/90 border border-[#E2D8C7] shadow-inner self-start">
+            <button
+              type="button"
+              onClick={() => setActiveTab('rooms')}
+              className={`flex items-center space-x-2 px-4 sm:px-5 py-2 rounded-[13px] text-xs sm:text-sm font-semibold tracking-wide transition-all cursor-pointer ${
+                activeTab === 'rooms'
+                  ? 'bg-gradient-to-r from-[#670E10] to-[#7E1418] text-[#FAF8F3] shadow-md border border-[#D8AA67]/50'
+                  : 'text-[#6B5E4F] hover:text-[#241F1A] hover:bg-black/5'
+              }`}
+            >
+              <BedDouble className="w-4 h-4 text-[#D8AA67]" />
+              <span style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)", fontSize: '16px' }}>
+                Rooms &amp; Suites
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('hall')}
+              className={`flex items-center space-x-2 px-4 sm:px-5 py-2 rounded-[13px] text-xs sm:text-sm font-semibold tracking-wide transition-all cursor-pointer ${
+                activeTab === 'hall'
+                  ? 'bg-gradient-to-r from-[#670E10] to-[#7E1418] text-[#FAF8F3] shadow-md border border-[#D8AA67]/50'
+                  : 'text-[#6B5E4F] hover:text-[#241F1A] hover:bg-black/5'
+              }`}
+            >
+              <PartyPopper className="w-4 h-4 text-[#D8AA67]" />
+              <span style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)", fontSize: '16px' }}>
+                Party Hall (25–50 Pax)
+              </span>
+            </button>
+          </div>
+
+          {/* Luxury Reassurance Tag */}
+          <div className="hidden sm:inline-flex items-center space-x-2 text-[11px] font-semibold text-[#670E10] bg-[#FAF3E6] px-3.5 py-1.5 rounded-[12px] border border-[#E6D7BE] shadow-2xs">
+            <Sparkles className="w-3.5 h-3.5 text-[#B08D57]" />
+            <span>Direct Palace Booking &bull; Best Tariff &bull; Welcome Drink</span>
+          </div>
+        </div>
+
+        {/* Delicate Hairline Inset Divider */}
+        <div className="w-full h-px bg-gradient-to-r from-transparent via-[#E2D8C7] to-transparent mb-3.5 sm:mb-4" />
+
+        {/* ── Content Area: Rooms & Suites ── */}
         {activeTab === 'rooms' ? (
           <form
             action="/rooms"
@@ -180,7 +186,7 @@ export function BookingBar() {
             {/* 1. Check In Tile */}
             <div
               onClick={openCheckInPicker}
-              className="relative flex items-center justify-between px-4 py-3 rounded-xl border border-[#DFD3C3] bg-white hover:border-[#B08D57] hover:shadow-md transition-all cursor-pointer group h-[64px]"
+              className="relative flex items-center justify-between px-4 py-3 rounded-[18px] border border-[#DFD3C3] bg-white hover:border-[#B08D57] hover:shadow-md transition-all cursor-pointer group h-[64px]"
             >
               <div className="flex flex-col text-left flex-1 min-w-0 mr-2">
                 <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#8F7245] leading-none mb-1">
@@ -198,7 +204,7 @@ export function BookingBar() {
                   </span>
                 </div>
               </div>
-              <div className="w-8 h-8 rounded-lg bg-[#FAF7F2] border border-[#DFD3C3] flex items-center justify-center shrink-0 group-hover:border-[#B08D57] group-hover:bg-[#FFF8EB] transition-colors">
+              <div className="w-8 h-8 rounded-[12px] bg-[#FAF7F2] border border-[#DFD3C3] flex items-center justify-center shrink-0 group-hover:border-[#B08D57] group-hover:bg-[#FFF8EB] transition-colors">
                 <Calendar className="w-4 h-4 text-[#670E10] group-hover:text-[#B08D57] transition-colors" />
               </div>
 
@@ -216,7 +222,7 @@ export function BookingBar() {
 
             {/* 2. Nights Separator Pill (Desktop only) */}
             <div className="hidden lg:flex flex-col items-center justify-center px-0.5">
-              <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#FAF7F2] border border-[#DFD3C3] text-[#670E10] whitespace-nowrap shadow-2xs flex items-center gap-1">
+              <span className="text-[10px] font-bold px-2.5 py-1 rounded-[12px] bg-[#FAF7F2] border border-[#DFD3C3] text-[#670E10] whitespace-nowrap shadow-2xs flex items-center gap-1">
                 <span>🌙</span>
                 <span>{nightsCount} {nightsCount === 1 ? 'Night' : 'Nights'}</span>
               </span>
@@ -225,7 +231,7 @@ export function BookingBar() {
             {/* 3. Check Out Tile */}
             <div
               onClick={openCheckOutPicker}
-              className="relative flex items-center justify-between px-4 py-3 rounded-xl border border-[#DFD3C3] bg-white hover:border-[#B08D57] hover:shadow-md transition-all cursor-pointer group h-[64px]"
+              className="relative flex items-center justify-between px-4 py-3 rounded-[18px] border border-[#DFD3C3] bg-white hover:border-[#B08D57] hover:shadow-md transition-all cursor-pointer group h-[64px]"
             >
               <div className="flex flex-col text-left flex-1 min-w-0 mr-2">
                 <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#8F7245] leading-none mb-1">
@@ -243,7 +249,7 @@ export function BookingBar() {
                   </span>
                 </div>
               </div>
-              <div className="w-8 h-8 rounded-lg bg-[#FAF7F2] border border-[#DFD3C3] flex items-center justify-center shrink-0 group-hover:border-[#B08D57] group-hover:bg-[#FFF8EB] transition-colors">
+              <div className="w-8 h-8 rounded-[12px] bg-[#FAF7F2] border border-[#DFD3C3] flex items-center justify-center shrink-0 group-hover:border-[#B08D57] group-hover:bg-[#FFF8EB] transition-colors">
                 <Calendar className="w-4 h-4 text-[#670E10] group-hover:text-[#B08D57] transition-colors" />
               </div>
 
@@ -260,22 +266,20 @@ export function BookingBar() {
             </div>
 
             {/* 4. Guests & Chambers Tile */}
-            <div className="relative flex items-center justify-between px-4 py-3 rounded-xl border border-[#DFD3C3] bg-white hover:border-[#B08D57] hover:shadow-md transition-all h-[64px] group">
+            <div className="relative flex items-center justify-between px-4 py-3 rounded-[18px] border border-[#DFD3C3] bg-white hover:border-[#B08D57] hover:shadow-md transition-all h-[64px] group">
               <div className="flex flex-col text-left flex-1 min-w-0 mr-2 pointer-events-none">
                 <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#8F7245] leading-none mb-1">
                   Guests &amp; Chambers
                 </span>
-                <div className="flex items-center justify-between">
-                  <span
-                    className="text-sm sm:text-base font-bold text-[#241F1A] leading-none truncate"
-                    style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)" }}
-                  >
-                    {guests}
-                  </span>
-                </div>
+                <span
+                  className="text-sm sm:text-base font-bold text-[#241F1A] leading-none truncate"
+                  style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)" }}
+                >
+                  {guests}
+                </span>
               </div>
 
-              <div className="w-8 h-8 rounded-lg bg-[#FAF7F2] border border-[#DFD3C3] flex items-center justify-center shrink-0 group-hover:border-[#B08D57] group-hover:bg-[#FFF8EB] transition-colors">
+              <div className="w-8 h-8 rounded-[12px] bg-[#FAF7F2] border border-[#DFD3C3] flex items-center justify-center shrink-0 group-hover:border-[#B08D57] group-hover:bg-[#FFF8EB] transition-colors">
                 <Users className="w-4 h-4 text-[#670E10] group-hover:text-[#B08D57] transition-colors" />
               </div>
 
@@ -299,7 +303,7 @@ export function BookingBar() {
             <div className="sm:col-span-2 lg:col-span-1">
               <button
                 type="submit"
-                className="w-full h-[64px] px-8 rounded-xl font-bold tracking-wide transition-all duration-300 shadow-lg hover:shadow-xl active:scale-[0.98] flex items-center justify-center space-x-2.5 cursor-pointer text-[#FFF8EB] border border-[#D8AA67]/80 group"
+                className="w-full h-[64px] px-8 rounded-[18px] font-bold tracking-wide transition-all duration-300 shadow-lg hover:shadow-xl active:scale-[0.98] flex items-center justify-center space-x-2.5 cursor-pointer text-[#FFF8EB] border border-[#D8AA67]/80 group"
                 style={{
                   background: 'linear-gradient(135deg, #670E10 0%, #7E1418 50%, #52090B 100%)',
                   fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
@@ -312,13 +316,13 @@ export function BookingBar() {
             </div>
           </form>
         ) : (
-          /* ── Party Hall Form ── */
+          /* ── Content Area: Party Hall Form ── */
           <form
             onSubmit={handleHallSearch}
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.1fr_1fr_1.2fr_auto] gap-2.5 sm:gap-3 items-center"
           >
             {/* Event Occasion */}
-            <div className="relative flex items-center justify-between px-4 py-3 rounded-xl border border-[#DFD3C3] bg-white hover:border-[#B08D57] hover:shadow-md transition-all h-[64px] group">
+            <div className="relative flex items-center justify-between px-4 py-3 rounded-[18px] border border-[#DFD3C3] bg-white hover:border-[#B08D57] hover:shadow-md transition-all h-[64px] group">
               <div className="flex flex-col text-left flex-1 min-w-0 mr-2 pointer-events-none">
                 <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#8F7245] leading-none mb-1">
                   Event Occasion
@@ -330,7 +334,7 @@ export function BookingBar() {
                   {hallEventType}
                 </span>
               </div>
-              <div className="w-8 h-8 rounded-lg bg-[#FAF7F2] border border-[#DFD3C3] flex items-center justify-center shrink-0 group-hover:border-[#B08D57] group-hover:bg-[#FFF8EB] transition-colors">
+              <div className="w-8 h-8 rounded-[12px] bg-[#FAF7F2] border border-[#DFD3C3] flex items-center justify-center shrink-0 group-hover:border-[#B08D57] group-hover:bg-[#FFF8EB] transition-colors">
                 <PartyPopper className="w-4 h-4 text-[#670E10] group-hover:text-[#B08D57] transition-colors" />
               </div>
 
@@ -350,7 +354,7 @@ export function BookingBar() {
             {/* Event Date */}
             <div
               onClick={openHallDatePicker}
-              className="relative flex items-center justify-between px-4 py-3 rounded-xl border border-[#DFD3C3] bg-white hover:border-[#B08D57] hover:shadow-md transition-all cursor-pointer group h-[64px]"
+              className="relative flex items-center justify-between px-4 py-3 rounded-[18px] border border-[#DFD3C3] bg-white hover:border-[#B08D57] hover:shadow-md transition-all cursor-pointer group h-[64px]"
             >
               <div className="flex flex-col text-left flex-1 min-w-0 mr-2">
                 <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#8F7245] leading-none mb-1">
@@ -368,7 +372,7 @@ export function BookingBar() {
                   </span>
                 </div>
               </div>
-              <div className="w-8 h-8 rounded-lg bg-[#FAF7F2] border border-[#DFD3C3] flex items-center justify-center shrink-0 group-hover:border-[#B08D57] group-hover:bg-[#FFF8EB] transition-colors">
+              <div className="w-8 h-8 rounded-[12px] bg-[#FAF7F2] border border-[#DFD3C3] flex items-center justify-center shrink-0 group-hover:border-[#B08D57] group-hover:bg-[#FFF8EB] transition-colors">
                 <Calendar className="w-4 h-4 text-[#670E10] group-hover:text-[#B08D57] transition-colors" />
               </div>
 
@@ -383,7 +387,7 @@ export function BookingBar() {
             </div>
 
             {/* Hall Capacity */}
-            <div className="relative flex items-center justify-between px-4 py-3 rounded-xl border border-[#DFD3C3] bg-white hover:border-[#B08D57] hover:shadow-md transition-all h-[64px] group">
+            <div className="relative flex items-center justify-between px-4 py-3 rounded-[18px] border border-[#DFD3C3] bg-white hover:border-[#B08D57] hover:shadow-md transition-all h-[64px] group">
               <div className="flex flex-col text-left flex-1 min-w-0 mr-2 pointer-events-none">
                 <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#8F7245] leading-none mb-1">
                   Capacity (25–50 People)
@@ -395,7 +399,7 @@ export function BookingBar() {
                   {hallGuests}
                 </span>
               </div>
-              <div className="w-8 h-8 rounded-lg bg-[#FAF7F2] border border-[#DFD3C3] flex items-center justify-center shrink-0 group-hover:border-[#B08D57] group-hover:bg-[#FFF8EB] transition-colors">
+              <div className="w-8 h-8 rounded-[12px] bg-[#FAF7F2] border border-[#DFD3C3] flex items-center justify-center shrink-0 group-hover:border-[#B08D57] group-hover:bg-[#FFF8EB] transition-colors">
                 <Users className="w-4 h-4 text-[#670E10] group-hover:text-[#B08D57] transition-colors" />
               </div>
 
@@ -415,7 +419,7 @@ export function BookingBar() {
             <div className="sm:col-span-2 lg:col-span-1">
               <button
                 type="submit"
-                className="w-full h-[64px] px-8 rounded-xl font-bold tracking-wide transition-all duration-300 shadow-lg hover:shadow-xl active:scale-[0.98] flex items-center justify-center space-x-2.5 cursor-pointer text-[#FFF8EB] border border-[#D8AA67]/80 group"
+                className="w-full h-[64px] px-8 rounded-[18px] font-bold tracking-wide transition-all duration-300 shadow-lg hover:shadow-xl active:scale-[0.98] flex items-center justify-center space-x-2.5 cursor-pointer text-[#FFF8EB] border border-[#D8AA67]/80 group"
                 style={{
                   background: 'linear-gradient(135deg, #670E10 0%, #7E1418 50%, #52090B 100%)',
                   fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
