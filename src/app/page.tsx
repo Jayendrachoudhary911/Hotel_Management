@@ -124,9 +124,9 @@ async function HomeContent() {
   return (
     <div className="flex flex-col w-full text-[#151c1a]" style={{ backgroundColor: 'var(--cream, #fbf5e9)' }}>
       {/* ── 1. HERO SECTION (FIGMA SPEC) ── */}
-      <section className="relative z-20 min-h-[620px] lg:min-h-[680px] flex flex-col justify-between -mt-[82px] sm:-mt-[88px]">
-        {/* Background Palace Image */}
-        <div className="absolute inset-0 z-0 overflow-hidden">
+      <section className="relative z-20 min-h-[620px] lg:min-h-[700px] flex flex-col justify-between -mt-[82px] sm:-mt-[88px]">
+        {/* Background Palace Image with Corner Radius & Framing Inset */}
+        <div className="absolute inset-x-2.5 sm:inset-x-4 lg:inset-x-6 top-2 sm:top-3.5 bottom-0 z-0 overflow-hidden rounded-[24px] sm:rounded-[36px] lg:rounded-[42px] border border-[#D8AA67]/40 shadow-[0_24px_60px_-10px_rgba(20,8,10,0.22)]">
           <Image
             src="/images/palace-interior.jpg"
             alt="Rajmahal Heritage Hotel Grand Palace Interior"
@@ -139,6 +139,7 @@ async function HomeContent() {
           <div className="hero-warmth pointer-events-none" />
           {/* Hero Shade overlay */}
           <div className="hero-shade pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/25 pointer-events-none" />
         </div>
 
         {/* Hero Content Left Aligned */}

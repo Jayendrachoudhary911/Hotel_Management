@@ -23,8 +23,8 @@ export default function HotelPage() {
       <div className="flex flex-col w-full text-[#151c1a]" style={{ backgroundColor: 'var(--cream, #fbf5e9)' }}>
         {/* ── 1. HOTEL HERO SECTION (EXACT MOCKUP MATCH) ── */}
         <section className="relative z-20 min-h-[640px] lg:min-h-[720px] flex flex-col justify-between -mt-[82px] sm:-mt-[88px]">
-          {/* Background Palace Image with warm overlay */}
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          {/* Background Palace Image with Corner Radius & Framing Inset */}
+          <div className="absolute inset-x-2.5 sm:inset-x-4 lg:inset-x-6 top-2 sm:top-3.5 bottom-0 z-0 overflow-hidden rounded-[24px] sm:rounded-[36px] lg:rounded-[42px] border border-[#D8AA67]/40 shadow-[0_24px_60px_-10px_rgba(20,8,10,0.22)]">
             <Image
               src="/images/palace-interior.jpg"
               alt="Rajmahal Heritage Grand Palace Suite"
