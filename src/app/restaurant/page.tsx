@@ -359,13 +359,18 @@ async function RestaurantAndCafeContent() {
                   <span>Open Daily: 8:00 AM – 11:00 PM</span>
                 </div>
 
-                <div>
+                <div className="flex flex-wrap items-center justify-center gap-3">
                   <a
                     href="#cafe-menu"
                     className="px-6 py-2.5 rounded-md bg-[#C59B63] hover:bg-[#B88E55] text-[#4A0A0C] font-semibold text-sm tracking-wide transition-all shadow"
                   >
                     View Café Menu
                   </a>
+                  <RestaurantReservationCTA
+                    venue="cafe"
+                    label="Reserve Café Table"
+                    className="!rounded-md !px-6 !py-2.5 !bg-[#670E10] !border !border-[#B08D57]/60 hover:!bg-[#821215] !text-[#FAF8F3]"
+                  />
                 </div>
               </div>
             </div>

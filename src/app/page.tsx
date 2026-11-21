@@ -9,6 +9,7 @@ import { InstaLookbook } from '@/components/home/insta-lookbook';
 import { EventMemories } from '@/components/home/event-memories';
 import { Testimonials } from '@/components/home/testimonials';
 import { Promotions } from '@/components/home/promotions';
+import { RestaurantReservationCTA } from '@/components/restaurant/restaurant-reservation-cta';
 
 export const metadata = {
   title: 'Rajmahal Heritage Hotel | A Royal Stay Rooted in Rajasthan',
@@ -479,16 +480,11 @@ async function HomeContent() {
                     <span>View Menu</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
-                  <Link
-                    href="/book"
-                    className="flex items-center justify-center h-11 rounded-[6px] text-xs sm:text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md hover:bg-[#680b0c] hover:-translate-y-0.5 active:translate-y-0"
-                    style={{
-                      backgroundColor: 'var(--forest-deep, #4f0809)',
-                      color: 'var(--ivory, #fff8eb)',
-                    }}
-                  >
-                    <span>Reserve a Table</span>
-                  </Link>
+                  <RestaurantReservationCTA
+                    venue="restaurant"
+                    variant="card"
+                    label="Reserve a Table"
+                  />
                 </div>
               </div>
             </article>
