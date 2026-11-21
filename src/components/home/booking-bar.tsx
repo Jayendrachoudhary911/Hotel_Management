@@ -120,63 +120,63 @@ export function BookingBar() {
   const nightsCount = calculateNights(checkIn, checkOut);
 
   return (
-    <div className="w-full max-w-[1080px] mx-auto">
-      {/* ── Unified Single Apple-Style Luxury Section ── */}
+    <div className="w-full max-w-[1080px] mx-auto relative pt-2 sm:pt-4">
+      {/* ── 1. Popping-Out Tabs: Stacked Over the Details Section ── */}
+      <div className="relative z-20 -mb-4 sm:-mb-5 px-3 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+        {/* Apple-Style Popped-Out Control Deck */}
+        <div
+          className="inline-flex p-1.5 rounded-[20px] sm:rounded-[22px] border-2 shadow-[0_16px_36px_rgba(20,8,10,0.42),0_2px_8px_rgba(0,0,0,0.15)] backdrop-blur-xl self-start transition-all"
+          style={{
+            backgroundColor: 'rgba(28, 22, 18, 0.94)',
+            borderColor: '#D8AA67',
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => setActiveTab('rooms')}
+            className={`flex items-center space-x-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-[15px] sm:rounded-[17px] text-xs sm:text-sm font-semibold tracking-wide transition-all cursor-pointer ${
+              activeTab === 'rooms'
+                ? 'bg-gradient-to-r from-[#670E10] via-[#7B1316] to-[#550B0D] text-[#FFF8EB] shadow-lg border border-[#D8AA67]/70 scale-[1.02]'
+                : 'text-[#D4C8B8] hover:text-[#FFF8EB] hover:bg-white/10'
+            }`}
+          >
+            <BedDouble className="w-4 h-4 text-[#D8AA67]" />
+            <span style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)", fontSize: '16px' }}>
+              Rooms &amp; Suites
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('hall')}
+            className={`flex items-center space-x-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-[15px] sm:rounded-[17px] text-xs sm:text-sm font-semibold tracking-wide transition-all cursor-pointer ${
+              activeTab === 'hall'
+                ? 'bg-gradient-to-r from-[#670E10] via-[#7B1316] to-[#550B0D] text-[#FFF8EB] shadow-lg border border-[#D8AA67]/70 scale-[1.02]'
+                : 'text-[#D4C8B8] hover:text-[#FFF8EB] hover:bg-white/10'
+            }`}
+          >
+            <PartyPopper className="w-4 h-4 text-[#D8AA67]" />
+            <span style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)", fontSize: '16px' }}>
+              Party Hall (25–50 Pax)
+            </span>
+          </button>
+        </div>
+
+        {/* Popped-Out Direct Privilege Chip */}
+        <div className="hidden sm:inline-flex items-center space-x-2 text-xs font-semibold text-[#670E10] bg-[#FFF8EB] px-4 py-2 rounded-full border border-[#D8AA67]/80 shadow-[0_10px_24px_rgba(20,8,10,0.2)] self-center">
+          <Sparkles className="w-3.5 h-3.5 text-[#B08D57]" />
+          <span>Direct Palace Privilege &bull; Best Tariff &bull; Welcome Drink</span>
+        </div>
+      </div>
+
+      {/* ── 2. Booking Details Section: Apple-Style Curved Base ── */}
       <div
-        className="w-full rounded-[26px] sm:rounded-[34px] p-3 sm:p-5 transition-all border shadow-[0_24px_64px_-12px_rgba(30,10,12,0.3),0_4px_16px_rgba(0,0,0,0.06)]"
+        className="relative z-10 w-full rounded-[26px] sm:rounded-[34px] pt-8 sm:pt-9 pb-4 sm:pb-5 px-3.5 sm:px-5 transition-all border-2 shadow-[0_26px_65px_-10px_rgba(35,12,14,0.32),0_4px_16px_rgba(0,0,0,0.06)]"
         style={{
-          backgroundColor: 'rgba(250, 247, 242, 0.96)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
+          backgroundColor: '#FAF7F2',
           borderColor: 'rgba(216, 170, 103, 0.65)',
         }}
       >
-        {/* Integrated Top Row: Segmented Switcher & Palace Privilege */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3.5 sm:mb-4 px-1">
-          {/* Apple-Style Segmented Control */}
-          <div className="inline-flex p-1 rounded-[16px] bg-[#EFE8DD]/90 border border-[#E2D8C7] shadow-inner self-start">
-            <button
-              type="button"
-              onClick={() => setActiveTab('rooms')}
-              className={`flex items-center space-x-2 px-4 sm:px-5 py-2 rounded-[13px] text-xs sm:text-sm font-semibold tracking-wide transition-all cursor-pointer ${
-                activeTab === 'rooms'
-                  ? 'bg-gradient-to-r from-[#670E10] to-[#7E1418] text-[#FAF8F3] shadow-md border border-[#D8AA67]/50'
-                  : 'text-[#6B5E4F] hover:text-[#241F1A] hover:bg-black/5'
-              }`}
-            >
-              <BedDouble className="w-4 h-4 text-[#D8AA67]" />
-              <span style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)", fontSize: '16px' }}>
-                Rooms &amp; Suites
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('hall')}
-              className={`flex items-center space-x-2 px-4 sm:px-5 py-2 rounded-[13px] text-xs sm:text-sm font-semibold tracking-wide transition-all cursor-pointer ${
-                activeTab === 'hall'
-                  ? 'bg-gradient-to-r from-[#670E10] to-[#7E1418] text-[#FAF8F3] shadow-md border border-[#D8AA67]/50'
-                  : 'text-[#6B5E4F] hover:text-[#241F1A] hover:bg-black/5'
-              }`}
-            >
-              <PartyPopper className="w-4 h-4 text-[#D8AA67]" />
-              <span style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)", fontSize: '16px' }}>
-                Party Hall (25–50 Pax)
-              </span>
-            </button>
-          </div>
-
-          {/* Luxury Reassurance Tag */}
-          <div className="hidden sm:inline-flex items-center space-x-2 text-[11px] font-semibold text-[#670E10] bg-[#FAF3E6] px-3.5 py-1.5 rounded-[12px] border border-[#E6D7BE] shadow-2xs">
-            <Sparkles className="w-3.5 h-3.5 text-[#B08D57]" />
-            <span>Direct Palace Booking &bull; Best Tariff &bull; Welcome Drink</span>
-          </div>
-        </div>
-
-        {/* Delicate Hairline Inset Divider */}
-        <div className="w-full h-px bg-gradient-to-r from-transparent via-[#E2D8C7] to-transparent mb-3.5 sm:mb-4" />
-
-        {/* ── Content Area: Rooms & Suites ── */}
         {activeTab === 'rooms' ? (
           <form
             action="/rooms"
