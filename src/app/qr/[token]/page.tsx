@@ -21,6 +21,9 @@ import {
   ArrowRight,
   Clock,
   MapPin,
+  Bell,
+  Receipt,
+  Check,
 } from 'lucide-react';
 
 interface CartItemState {
@@ -41,6 +44,20 @@ function QRTableOrderContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [dietFilter, setDietFilter] = useState<'all' | 'veg' | 'non_veg' | 'jain'>('all');
+  const [serviceNotice, setServiceNotice] = useState<string | null>(null);
+
+  const handleCallSteward = (type: 'water' | 'bill' | 'steward') => {
+    const text =
+      type === 'water'
+        ? `Water request dispatched for Table ${table?.table_number}. Steward will arrive shortly!`
+        : type === 'bill'
+        ? `Bill request dispatched for Table ${table?.table_number}. Steward is preparing your invoice.`
+        : `Floor steward called for Table ${table?.table_number}. Attending shortly!`;
+
+    setServiceNotice(text);
+    setTimeout(() => setServiceNotice(null), 5000);
+  };
 
   useEffect(() => {
     // Resolve token
@@ -208,81 +225,191 @@ function QRTableOrderContent() {
           </button>
         </div>
 
+        {/* Steward / Water / Bill Service Dispatch Notice */}
+        {serviceNotice && (
+          <div className="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 flex items-center space-x-3 shadow-xs animate-in fade-in duration-200">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+            <p className="text-xs sm:text-sm font-semibold">{serviceNotice}</p>
+          </div>
+        )}
+
+        {/* Quick Floor Service Bar */}
+        <div className="heritage-card bg-[#FAF8F3] p-3 sm:p-4 rounded-xl border border-[#D4CBBB] mb-8 flex flex-wrap items-center justify-between gap-3">
+          <span className="text-xs font-bold text-[#6B6155] uppercase tracking-wider flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-[#B08D57]" /> Table Services:
+          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => handleCallSteward('steward')}
+              className="px-3 py-1.5 rounded-lg bg-white border border-[#D4CBBB] hover:border-[#670E10] text-[#241F1A] hover:text-[#670E10] text-xs font-semibold flex items-center space-x-1.5 transition-all shadow-2xs cursor-pointer"
+            >
+              <Bell className="w-3.5 h-3.5 text-[#670E10]" />
+              <span>Call Steward</span>
+            </button>
+            <button
+              onClick={() => handleCallSteward('water')}
+              className="px-3 py-1.5 rounded-lg bg-white border border-[#D4CBBB] hover:border-[#670E10] text-[#241F1A] hover:text-[#670E10] text-xs font-semibold flex items-center space-x-1.5 transition-all shadow-2xs cursor-pointer"
+            >
+              <span>💧 Water Refill</span>
+            </button>
+            <button
+              onClick={() => handleCallSteward('bill')}
+              className="px-3 py-1.5 rounded-lg bg-white border border-[#D4CBBB] hover:border-[#670E10] text-[#241F1A] hover:text-[#670E10] text-xs font-semibold flex items-center space-x-1.5 transition-all shadow-2xs cursor-pointer"
+            >
+              <Receipt className="w-3.5 h-3.5 text-[#B08D57]" />
+              <span>Request Bill</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Dietary Filter Strip */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-6">
+          <button
+            onClick={() => setDietFilter('all')}
+            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+              dietFilter === 'all'
+                ? 'bg-[#670E10] text-[#FAF8F3] shadow-xs'
+                : 'bg-white text-[#6B6155] border border-[#D4CBBB] hover:border-[#670E10]'
+            }`}
+          >
+            All Items
+          </button>
+          <button
+            onClick={() => setDietFilter('veg')}
+            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center space-x-1 ${
+              dietFilter === 'veg'
+                ? 'bg-emerald-800 text-white shadow-xs'
+                : 'bg-white text-emerald-800 border border-emerald-300 hover:bg-emerald-50'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
+            <span>Pure Veg</span>
+          </button>
+          <button
+            onClick={() => setDietFilter('jain')}
+            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center space-x-1 ${
+              dietFilter === 'jain'
+                ? 'bg-amber-800 text-white shadow-xs'
+                : 'bg-white text-amber-800 border border-amber-300 hover:bg-amber-50'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />
+            <span>Jain Friendly</span>
+          </button>
+          <button
+            onClick={() => setDietFilter('non_veg')}
+            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center space-x-1 ${
+              dietFilter === 'non_veg'
+                ? 'bg-rose-900 text-white shadow-xs'
+                : 'bg-white text-rose-800 border border-rose-300 hover:bg-rose-50'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-rose-500 inline-block" />
+            <span>Non-Veg</span>
+          </button>
+        </div>
+
         {/* Menu Items Categories */}
         <div className="space-y-12">
-          {categories.map((category) => (
-            <div key={category.id} className="space-y-4">
-              <div className="flex items-center justify-between border-b-2 border-[#D4CBBB] pb-2">
-                <h2 className="font-heritage text-2xl font-bold text-[#241F1A]">{category.name}</h2>
-                <span className="text-xs text-[#8F7245] font-semibold">{category.items?.length || 0} Specialties</span>
-              </div>
+          {categories
+            .map((category) => {
+              const filteredItems = (category.items || []).filter((item) => {
+                if (dietFilter === 'all') return true;
+                const labels = (item.dietary_labels || []).map((l) => l.toLowerCase());
+                if (dietFilter === 'veg') {
+                  return labels.some((l) => l.includes('veg') && !l.includes('non'));
+                }
+                if (dietFilter === 'jain') {
+                  return labels.some((l) => l.includes('jain'));
+                }
+                if (dietFilter === 'non_veg') {
+                  return labels.some((l) => l.includes('non-veg') || l.includes('non veg'));
+                }
+                return true;
+              });
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {category.items?.map((item) => {
-                  const cartQty = cart[item.id]?.quantity || 0;
-                  return (
-                    <div
-                      key={item.id}
-                      className="heritage-card bg-white p-5 rounded-xl border border-[#D4CBBB] flex flex-col justify-between shadow-xs hover:border-[#670E10] transition-colors"
-                    >
-                      <div>
-                        <div className="flex justify-between items-start gap-3 mb-1">
-                          <div className="flex items-center space-x-2">
-                            <span className="w-3.5 h-3.5 rounded-sm border border-emerald-600 flex items-center justify-center p-0.5 shrink-0">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+              return { ...category, filteredItems };
+            })
+            .filter((cat) => cat.filteredItems.length > 0)
+            .map((category) => (
+              <div key={category.id} className="space-y-4">
+                <div className="flex items-center justify-between border-b-2 border-[#D4CBBB] pb-2">
+                  <h2 className="font-heritage text-2xl font-bold text-[#241F1A]">{category.name}</h2>
+                  <span className="text-xs text-[#8F7245] font-semibold">{category.filteredItems.length} Specialties</span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {category.filteredItems.map((item) => {
+                    const cartQty = cart[item.id]?.quantity || 0;
+                    const isVeg = item.dietary_labels?.some((l) => l.toLowerCase().includes('veg') && !l.toLowerCase().includes('non'));
+                    const isNonVeg = item.dietary_labels?.some((l) => l.toLowerCase().includes('non'));
+                    return (
+                      <div
+                        key={item.id}
+                        className="heritage-card bg-white p-5 rounded-xl border border-[#D4CBBB] flex flex-col justify-between shadow-xs hover:border-[#670E10] transition-colors"
+                      >
+                        <div>
+                          <div className="flex justify-between items-start gap-3 mb-1">
+                            <div className="flex items-center space-x-2">
+                              <span className={`w-3.5 h-3.5 rounded-sm border flex items-center justify-center p-0.5 shrink-0 ${
+                                isNonVeg ? 'border-rose-600' : 'border-emerald-600'
+                              }`}>
+                                <span className={`w-1.5 h-1.5 rounded-full ${
+                                  isNonVeg ? 'bg-rose-600' : 'bg-emerald-600'
+                                }`} />
+                              </span>
+                              <h3 className="font-bold text-[#241F1A] text-sm">{item.name}</h3>
+                            </div>
+                            <span className="font-heritage font-bold text-[#670E10] whitespace-nowrap">
+                              {formatMoney(item.price_minor)}
                             </span>
-                            <h3 className="font-bold text-[#241F1A] text-sm">{item.name}</h3>
                           </div>
-                          <span className="font-heritage font-bold text-[#670E10] whitespace-nowrap">
-                            {formatMoney(item.price_minor)}
-                          </span>
+
+                          <p className="text-xs text-[#6B6155] mb-3 pl-5 leading-relaxed">{item.description}</p>
                         </div>
 
-                        <p className="text-xs text-[#6B6155] mb-3 pl-5 leading-relaxed">{item.description}</p>
-                      </div>
+                        <div className="flex items-center justify-between pt-3 border-t border-[#D4CBBB] pl-5">
+                          <div className="flex flex-wrap gap-1">
+                            {item.dietary_labels.map((label, idx) => (
+                              <span key={idx} className="text-[10px] px-2 py-0.5 rounded bg-[#FAF8F3] border border-[#D4CBBB] text-[#8F7245] uppercase font-bold">
+                                {label}
+                              </span>
+                            ))}
+                          </div>
 
-                      <div className="flex items-center justify-between pt-3 border-t border-[#D4CBBB] pl-5">
-                        <div className="flex flex-wrap gap-1">
-                          {item.dietary_labels.map((label, idx) => (
-                            <span key={idx} className="text-[10px] px-2 py-0.5 rounded bg-[#FAF8F3] border border-[#D4CBBB] text-[#8F7245] uppercase font-bold">
-                              {label}
-                            </span>
-                          ))}
-                        </div>
-
-                        {cartQty === 0 ? (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => addToCart(item)}
-                            className="text-xs px-3 py-1.5"
-                          >
-                            <Plus className="w-3.5 h-3.5 mr-1" /> Add
-                          </Button>
-                        ) : (
-                          <div className="flex items-center space-x-2 bg-[#FAF8F3] px-2 py-1 rounded-xl border border-[#D4CBBB]">
-                            <button
-                              onClick={() => removeFromCart(item.id)}
-                              className="p-1 text-[#670E10] hover:text-[#8A1518] cursor-pointer"
-                            >
-                              <Minus className="w-3.5 h-3.5" />
-                            </button>
-                            <span className="text-xs font-bold text-[#241F1A] px-1">{cartQty}</span>
-                            <button
+                          {cartQty === 0 ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
                               onClick={() => addToCart(item)}
-                              className="p-1 text-[#670E10] hover:text-[#8A1518] cursor-pointer"
+                              className="text-xs px-3 py-1.5"
                             >
-                              <Plus className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        )}
+                              <Plus className="w-3.5 h-3.5 mr-1" /> Add
+                            </Button>
+                          ) : (
+                            <div className="flex items-center space-x-2 bg-[#FAF8F3] px-2 py-1 rounded-xl border border-[#D4CBBB]">
+                              <button
+                                onClick={() => removeFromCart(item.id)}
+                                className="p-1 text-[#670E10] hover:text-[#8A1518] cursor-pointer"
+                              >
+                                <Minus className="w-3.5 h-3.5" />
+                              </button>
+                              <span className="text-xs font-bold text-[#241F1A] px-1">{cartQty}</span>
+                              <button
+                                onClick={() => addToCart(item)}
+                                className="p-1 text-[#670E10] hover:text-[#8A1518] cursor-pointer"
+                              >
+                                <Plus className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
         </div>
 
         {/* Floating Sticky Cart Bar (Mobile/Dine-In) */}

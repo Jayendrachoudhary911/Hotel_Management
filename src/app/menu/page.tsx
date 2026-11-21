@@ -148,6 +148,19 @@ export default function MenuPage() {
             matchesDiet = (item.dietary_labels || []).some((l) =>
               l.toLowerCase().includes('non-veg')
             );
+          } else if (selectedDiet === 'jain') {
+            matchesDiet =
+              (item.dietary_labels || []).some((l) => l.toLowerCase().includes('jain')) ||
+              (!item.description?.toLowerCase().includes('onion') &&
+                !item.description?.toLowerCase().includes('garlic'));
+          } else if (selectedDiet === 'signature') {
+            matchesDiet =
+              (item.dietary_labels || []).some(
+                (l) =>
+                  l.toLowerCase().includes('signature') ||
+                  l.toLowerCase().includes('royal') ||
+                  l.toLowerCase().includes('special')
+              ) || item.price_minor >= 40000;
           }
 
           return matchesSearch && matchesDiet;
@@ -761,8 +774,10 @@ export default function MenuPage() {
             <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 sm:pb-0">
               {[
                 { id: 'all', label: 'All Items' },
-                { id: 'veg', label: '🌱 Pure Veg' },
-                { id: 'non-veg', label: '🍗 Non-Veg' },
+                { id: 'veg', label: '🟢 Pure Veg' },
+                { id: 'jain', label: '🟡 Jain Friendly' },
+                { id: 'non-veg', label: '🔴 Non-Veg' },
+                { id: 'signature', label: '👑 Royal Signature' },
               ].map((diet) => (
                 <button
                   key={diet.id}

@@ -70,6 +70,7 @@ function BookRoomForm() {
   const [guestPhone, setGuestPhone] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
   const [notes, setNotes] = useState('');
+  const [provideIdNow, setProvideIdNow] = useState(false);
 
   // Aadhaar details for all adult guests
   const [guestAadhaars, setGuestAadhaars] = useState<Array<{ fullName: string; aadhaarNumber: string; aadhaarImage: string }>>([
@@ -215,33 +216,33 @@ function BookRoomForm() {
       return;
     }
 
-    // Validation: All partySize adult guests must have valid Aadhaar Number and Image
-    for (let i = 0; i < partySize; i++) {
-      const g = guestAadhaars[i];
-      const gName = (i === 0 ? guestName : g?.fullName)?.trim() || '';
-      const cleanAadhaar = (g?.aadhaarNumber || '').replace(/\D/g, '');
+    let aadhaarDetailsPayload: any[] = [];
 
-      if (!gName) {
-        setErrorMsg(`Adult ${i + 1}: Full Name is mandatory for Government ID verification.`);
-        return;
+    // Optional upfront Government ID validation (only if guest opted to upload now)
+    if (provideIdNow) {
+      for (let i = 0; i < partySize; i++) {
+        const g = guestAadhaars[i];
+        const gName = (i === 0 ? guestName : g?.fullName)?.trim() || '';
+        const cleanAadhaar = (g?.aadhaarNumber || '').replace(/\D/g, '');
+
+        if (!gName) {
+          setErrorMsg(`Adult ${i + 1}: Full Name is mandatory for Government ID.`);
+          return;
+        }
+        if (cleanAadhaar && cleanAadhaar.length !== 12) {
+          setErrorMsg(`Adult ${i + 1} (${gName}): Valid 12-digit Aadhaar Number is required (Currently ${cleanAadhaar.length} digits).`);
+          return;
+        }
       }
-      if (cleanAadhaar.length !== 12) {
-        setErrorMsg(`Adult ${i + 1} (${gName}): Valid 12-digit Aadhaar Number is mandatory (Currently ${cleanAadhaar.length} digits).`);
-        return;
-      }
-      if (!g?.aadhaarImage) {
-        setErrorMsg(`Adult ${i + 1} (${gName}): Aadhaar card photo/document upload is mandatory.`);
-        return;
-      }
+
+      aadhaarDetailsPayload = guestAadhaars.slice(0, partySize).map((g, idx) => ({
+        guest_index: idx + 1,
+        full_name: (idx === 0 ? guestName : g.fullName).trim(),
+        aadhaar_number: (g.aadhaarNumber || '').trim(),
+        aadhaar_image_url: g.aadhaarImage || '',
+        is_verified: Boolean(g.aadhaarImage && g.aadhaarNumber),
+      }));
     }
-
-    const aadhaarDetailsPayload = guestAadhaars.slice(0, partySize).map((g, idx) => ({
-      guest_index: idx + 1,
-      full_name: (idx === 0 ? guestName : g.fullName).trim(),
-      aadhaar_number: g.aadhaarNumber.trim(),
-      aadhaar_image_url: g.aadhaarImage,
-      is_verified: true,
-    }));
 
     setIsSubmitting(true);
 
@@ -324,12 +325,33 @@ function BookRoomForm() {
             <p className="text-xs text-[#7A6F62]">
               A confirmation dispatch has been logged. Our royal concierge looks forward to welcoming you to Udaipur.
             </p>
-            <div className="pt-2 flex justify-center space-x-4">
+
+            {/* Post-Booking Action Ribbon */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const msg = `*Rajmahal Heritage Hotel - Room Booking Voucher* 🏰\nBooking Ref: ${confirmedReservation.referenceCode}\nGuest: ${guestName}\nSuite: ${confirmedReservation.roomName}\nStay: ${checkIn} to ${checkOut} (${confirmedReservation.nights} nights)\nTotal Amount: ${formatMoney(confirmedReservation.totalAmount)}\n\nPadharo Mhare Desh! We look forward to welcoming you to Udaipur.`;
+                  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank', 'noopener,noreferrer');
+                }}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#20BD5A] text-white text-xs font-bold shadow-md flex items-center justify-center space-x-2 transition cursor-pointer"
+              >
+                <span>Share Voucher on WhatsApp</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-white border border-[#D8AA67] hover:bg-[#FAF8F3] text-[#4F0809] text-xs font-bold shadow-xs transition cursor-pointer"
+              >
+                Print / Save PDF
+              </button>
+
               <Link
                 href="/rooms"
-                className="px-6 py-2.5 rounded-lg bg-[#670E10] hover:bg-[#821215] text-[#FAF8F3] text-xs font-medium transition-all"
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#670E10] hover:bg-[#821215] text-[#FAF8F3] text-xs font-semibold transition"
               >
-                Back to Chambers
+                Explore More Chambers
               </Link>
             </div>
           </div>
@@ -445,6 +467,26 @@ function BookRoomForm() {
               </div>
             </div>
 
+            {/* Direct Booking Privilege Guarantee Banner */}
+            <div className="bg-gradient-to-r from-[#4F0809] via-[#670E10] to-[#4F0809] text-[#FFF8EB] rounded-2xl p-4 sm:p-5 border border-[#D8AA67]/50 shadow-md flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-full bg-[#D8AA67]/20 border border-[#D8AA67] flex items-center justify-center text-[#D8AA67] shrink-0">
+                  <Sparkles className="w-5 h-5 text-[#E1B46F]" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-sm text-[#E1B46F] leading-tight" style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)" }}>
+                    Palace Direct Booking Privileges Included
+                  </h4>
+                  <p className="text-[11px] text-[#FFF8EB]/80 mt-0.5">
+                    Best Rate Guarantee • Complimentary Royal Breakfast • Courtyard Evening Tea • 10% Dining Privilege
+                  </p>
+                </div>
+              </div>
+              <span className="text-[10px] uppercase font-bold tracking-wider px-3 py-1 rounded-full bg-[#D8AA67] text-[#380506] shadow-sm">
+                Zero Booking Fees
+              </span>
+            </div>
+
             {/* 3. Guest Details & Confirmation Form */}
             <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-[#D4CBBB]/70 p-6 sm:p-8 shadow-sm text-left space-y-4">
               <h3 className="font-heritage text-xl font-bold text-[#670E10] mb-2">
@@ -500,24 +542,73 @@ function BookRoomForm() {
                 />
               </div>
 
-              {/* Mandatory Aadhaar Identification for All Adult Guests */}
+              {/* Government ID Preference (Frictionless 2-Stage Flow) */}
               <div className="p-4 bg-[#FAF8F3] border border-[#D8AA67]/40 rounded-xl space-y-3">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-2 border-b border-[#E5DFD5]">
                   <div>
                     <div className="flex items-center gap-1.5 font-bold text-xs text-[#670E10]">
                       <Shield className="w-4 h-4 text-[#D8AA67]" />
-                      Mandatory Guest Aadhaar Identification ({partySize} Adults)
+                      Guest Identification &amp; Check-In Preference
                     </div>
                     <p className="text-[11px] text-[#7A6F62] mt-0.5">
-                      As mandated by Rajasthan Tourism &amp; Police Regulations, 12-digit Aadhaar number &amp; card document are mandatory for every staying adult
+                      Compliant with Rajasthan Tourism &amp; Police Regulations (UIDAI / Passport accepted)
                     </p>
                   </div>
-                  <span className="text-[10px] font-bold text-[#670E10] bg-[#D8AA67]/20 border border-[#D8AA67]/40 px-2 py-0.5 rounded-full self-start sm:self-auto">
-                    UIDAI Regulated
-                  </span>
                 </div>
 
-                <div className="space-y-3">
+                {/* 2-Option Selector */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setProvideIdNow(false)}
+                    className={`p-3 rounded-xl border text-left transition cursor-pointer ${
+                      !provideIdNow
+                        ? 'border-[#2D6A4F] bg-[#D8F3DC]/30 ring-1 ring-[#2D6A4F]'
+                        : 'border-[#E5DFD5] bg-white hover:border-[#D8AA67]'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-[#2D6A4F] flex items-center gap-1.5">
+                        <Check className="w-3.5 h-3.5" /> Fast-Track Booking
+                      </span>
+                      <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#2D6A4F]/10 text-[#2D6A4F]">
+                        Recommended
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-stone-600 mt-1">
+                      Reserve instantly now. Present ID at the Front Desk or via Pre-Arrival WhatsApp link.
+                    </p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setProvideIdNow(true)}
+                    className={`p-3 rounded-xl border text-left transition cursor-pointer ${
+                      provideIdNow
+                        ? 'border-[#670E10] bg-[#FFF8EB] ring-1 ring-[#670E10]'
+                        : 'border-[#E5DFD5] bg-white hover:border-[#D8AA67]'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-[#670E10] flex items-center gap-1.5">
+                        <Upload className="w-3.5 h-3.5" /> Upload Aadhaar Now
+                      </span>
+                      <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#670E10]/10 text-[#670E10]">
+                        VIP Express
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-stone-600 mt-1">
+                      Upload cards now for pre-verified keys upon arrival.
+                    </p>
+                  </button>
+                </div>
+
+                {/* Upload Fields (Shown when provideIdNow is true) */}
+                {provideIdNow && (
+                  <div className="space-y-3 pt-2">
+                    <p className="text-[11px] text-[#670E10] font-semibold">
+                      Please enter details for all {partySize} staying adults:
+                    </p>
                   {Array.from({ length: partySize }).map((_, idx) => {
                     const g = guestAadhaars[idx] || { fullName: '', aadhaarNumber: '', aadhaarImage: '' };
                     const isPrimary = idx === 0;
@@ -661,12 +752,13 @@ function BookRoomForm() {
                     );
                   })}
                 </div>
-              </div>
+              )}
+            </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-[#670E10] mb-1">
-                  Special Requests (Optional)
-                </label>
+          <div>
+            <label className="block text-xs font-semibold text-[#670E10] mb-1">
+              Special Requests (Optional)
+            </label>
                 <textarea
                   rows={2}
                   value={notes}

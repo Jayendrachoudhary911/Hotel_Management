@@ -59,6 +59,13 @@ export async function GET(request: Request) {
     }, 0);
     const totalGrossTurnover = totalFoodTurnover + totalRoomTurnover;
 
+    // GST Tax Analysis
+    const totalFoodTax = orders.reduce((sum, o) => sum + (o.tax_minor || 0), 0);
+    const totalRoomTax = Math.round(totalRoomTurnover * 0.12); // Standard 12% GST bracket for luxury rooms
+    const totalTaxMinor = totalFoodTax + totalRoomTax;
+    const cgstMinor = Math.round(totalTaxMinor / 2);
+    const sgstMinor = totalTaxMinor - cgstMinor;
+
     // Occupancy
     const occupiedRooms = reservations.filter((r) => r.status === 'confirmed' || r.status === 'checked_in').length;
     const occupancyPercent = totalRoomsCount > 0 ? Math.min(100, Math.round((occupiedRooms / totalRoomsCount) * 100)) : 0;
@@ -205,6 +212,11 @@ export async function GET(request: Request) {
         revParMinor,
         totalOrdersCount: orders.length,
         totalReservationsCount: reservations.length,
+      },
+      taxKpis: {
+        cgstMinor,
+        sgstMinor,
+        totalTaxMinor,
       },
       outlets: outletsBreakdown,
       tenders: tendersBreakdown,

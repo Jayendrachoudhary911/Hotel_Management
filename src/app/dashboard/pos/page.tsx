@@ -41,8 +41,10 @@ import {
   Lock,
   Zap,
   ChevronDown,
+  BedDouble,
+  Hotel,
 } from 'lucide-react';
-import type { MenuItem } from '@/lib/types';
+import type { MenuItem, Reservation } from '@/lib/types';
 
 interface POSTable {
   id: string;
@@ -135,10 +137,14 @@ export default function POSBillingPage() {
 
   // ═══ Payment Gateway State ═══
   const [isPaymentGatewayOpen, setIsPaymentGatewayOpen] = useState(false);
-  const [pgTab, setPgTab] = useState<'upi' | 'card' | 'cash'>('upi');
+  const [pgTab, setPgTab] = useState<'upi' | 'card' | 'cash' | 'room_folio'>('upi');
   const [pgProcessing, setPgProcessing] = useState(false);
   const [pgSuccess, setPgSuccess] = useState(false);
   const [pgTransactionId, setPgTransactionId] = useState('');
+  // In-House Room Folio
+  const [inHouseGuests, setInHouseGuests] = useState<Reservation[]>([]);
+  const [selectedFolioResId, setSelectedFolioResId] = useState<string>('');
+  const [folioVerificationNote, setFolioVerificationNote] = useState<string>('');
   // UPI
   const [upiCountdown, setUpiCountdown] = useState(300); // 5 minutes
   const [upiId, setUpiId] = useState('rajmahal@hdfcbank');
@@ -179,10 +185,20 @@ export default function POSBillingPage() {
   useEffect(() => {
     const fetchLive = async () => {
       try {
-        const [tabRes, menuRes] = await Promise.all([
+        const [tabRes, menuRes, resRes] = await Promise.all([
           fetch('/api/tables'),
           fetch('/api/menu'),
+          fetch('/api/reservations'),
         ]);
+
+        if (resRes.ok) {
+          const resData = await resRes.json();
+          if (Array.isArray(resData.reservations)) {
+            const active = resData.reservations.filter((r: Reservation) => r.status === 'checked_in' || r.status === 'confirmed');
+            setInHouseGuests(active);
+            if (active.length > 0) setSelectedFolioResId(active[0].id);
+          }
+        }
 
         if (tabRes.ok) {
           const tabData = await tabRes.json();
@@ -418,6 +434,12 @@ export default function POSBillingPage() {
           );
         }
 
+        const folioGuest = inHouseGuests.find((r) => r.id === selectedFolioResId);
+        const methodDisplay =
+          pgTab === 'room_folio'
+            ? `ROOM FOLIO (Room ${folioGuest?.room?.room_number || 'Chamber'} - ${folioGuest?.guest?.name || 'Guest'})`
+            : pgTab.toUpperCase();
+
         setCompletedOrder({
           orderId,
           items: [...cart],
@@ -425,7 +447,7 @@ export default function POSBillingPage() {
           discount: discountAmount,
           tax,
           total: finalTotal,
-          paymentMethod: pgTab.toUpperCase(),
+          paymentMethod: methodDisplay,
           table: selectedTable ? selectedTable.number : 'Counter',
           orderType: orderType === 'dine_in' ? 'Dine-in' : orderType === 'takeaway' ? 'Takeaway' : orderType === 'room_service' ? 'Room Service' : 'Delivery',
           customer: selectedCustomer,
@@ -1375,6 +1397,7 @@ export default function POSBillingPage() {
                 { id: 'upi' as const, label: 'UPI / QR', icon: QrCode },
                 { id: 'card' as const, label: 'Card', icon: CreditCard },
                 { id: 'cash' as const, label: 'Cash', icon: Banknote },
+                { id: 'room_folio' as const, label: 'Room Folio', icon: BedDouble },
               ] as const).map((tab) => {
                 const Icon = tab.icon;
                 const isActive = pgTab === tab.id;
@@ -1699,6 +1722,85 @@ export default function POSBillingPage() {
                   >
                     <Banknote className="w-4 h-4 text-[#D8AA67]" />
                     <span>Collect Cash & Complete</span>
+                  </button>
+                </div>
+              )}
+
+              {/* ═══ ROOM FOLIO TAB ═══ */}
+              {pgTab === 'room_folio' && (
+                <div className="space-y-4">
+                  <div className="bg-[#FBF6EF] rounded-2xl p-4 border border-[#E8DCD2]">
+                    <div className="flex items-center space-x-2 text-[#4F0809] font-bold text-xs uppercase tracking-wider mb-1">
+                      <BedDouble className="w-4 h-4 text-[#B78A48]" />
+                      <span>Post Charge to In-House Chamber Folio</span>
+                    </div>
+                    <p className="text-[11px] text-[#81736D]">
+                      Charges will automatically be billed to the guest&apos;s master room folio and settled upon checkout.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#302421] mb-1">Select In-House Chamber &amp; Guest</label>
+                    {inHouseGuests.length === 0 ? (
+                      <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-800 text-xs">
+                        No active checked-in chambers found. Please tender via UPI, Card, or Cash.
+                      </div>
+                    ) : (
+                      <select
+                        value={selectedFolioResId}
+                        onChange={(e) => setSelectedFolioResId(e.target.value)}
+                        className="w-full px-3 py-2.5 text-xs font-semibold rounded-xl border border-[#E8DCD2] bg-white focus:outline-none focus:border-[#4F0809] focus:ring-1 focus:ring-[#4F0809]/20"
+                      >
+                        {inHouseGuests.map((res) => (
+                          <option key={res.id} value={res.id}>
+                            Room {res.room?.room_number || 'Suite'} — {res.guest?.name || 'In-House Guest'} ({res.reference_code})
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#302421] mb-1">Room Service Slip / Guest Verification Note</label>
+                    <input
+                      type="text"
+                      value={folioVerificationNote}
+                      onChange={(e) => setFolioVerificationNote(e.target.value)}
+                      placeholder="e.g., Guest signed room service delivery slip #502"
+                      className="w-full px-3 py-2.5 text-xs rounded-xl border border-[#E8DCD2] bg-white focus:outline-none focus:border-[#4F0809]"
+                    />
+                  </div>
+
+                  {/* Summary Callout */}
+                  <div className="p-3.5 rounded-xl bg-[#FAF8F3] border border-[#E8DCD2] flex justify-between items-center text-xs">
+                    <div>
+                      <span className="text-[#81736D] block text-[11px]">Total To Be Charged:</span>
+                      <span className="font-bold text-[#4F0809] text-base font-mono">₹{finalTotal.toFixed(2)}</span>
+                    </div>
+                    <span className="text-[10px] font-bold px-2 py-1 rounded bg-emerald-100 text-emerald-800 border border-emerald-300 uppercase">
+                      Chamber Folio Charge
+                    </span>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      const selectedRes = inHouseGuests.find((r) => r.id === selectedFolioResId);
+                      if (selectedRes) {
+                        fetch(`/api/reservations/${selectedRes.id}`, {
+                          method: 'PATCH',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            notes: `${selectedRes.notes || ''} | POS Charge: ₹${finalTotal.toFixed(2)} (${folioVerificationNote || 'Direct Charge'})`,
+                          }),
+                        }).catch(() => {});
+                      }
+                      handleProcessPayment();
+                    }}
+                    disabled={pgProcessing || inHouseGuests.length === 0}
+                    className="w-full py-3 rounded-xl bg-gradient-to-r from-[#4F0809] to-[#7A1518] hover:from-[#680b0c] hover:to-[#921a1e] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <BedDouble className="w-4 h-4 text-[#D8AA67]" />
+                    <span>Confirm &amp; Charge ₹{finalTotal.toFixed(2)} to Chamber Folio</span>
                   </button>
                 </div>
               )}
