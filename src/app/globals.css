@@ -295,6 +295,21 @@ body {
   animation: slideUpModal 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+@keyframes slideDownModal {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+}
+
+.animate-slide-down-modal {
+  animation: slideDownModal 0.22s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
 @keyframes fadeInBackdrop {
   from {
     opacity: 0;
@@ -308,11 +323,24 @@ body {
   animation: fadeInBackdrop 0.25s ease-out forwards;
 }
 
-/* ── Expanding & Collapsing Dialog Animations (Desktop & Responsive) ── */
+@keyframes fadeOutBackdrop {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.animate-fade-out-backdrop {
+  animation: fadeOutBackdrop 0.22s ease-in forwards;
+}
+
+/* ── Desktop Dialog Expanding & Collapsing Animations ── */
 @keyframes dialogExpand {
   0% {
     opacity: 0;
-    transform: scale(0.93) translateY(14px);
+    transform: scale(0.92) translateY(-10px);
   }
   100% {
     opacity: 1;
@@ -327,7 +355,7 @@ body {
   }
   100% {
     opacity: 0;
-    transform: scale(0.95) translateY(10px);
+    transform: scale(0.93) translateY(-10px);
   }
 }
 
@@ -336,20 +364,5 @@ body {
 }
 
 .animate-dialog-collapse {
-  animation: dialogCollapse 0.24s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-@keyframes panelFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-panel-fade-in {
-  animation: panelFadeIn 0.22s ease-out forwards;
+  animation: dialogCollapse 0.22s cubic-bezier(0.4, 0, 1, 1) forwards;
 }
