@@ -307,3 +307,49 @@ body {
 .animate-fade-in-backdrop {
   animation: fadeInBackdrop 0.25s ease-out forwards;
 }
+
+/* ── Expanding & Collapsing Dialog Animations (Desktop & Responsive) ── */
+@keyframes dialogExpand {
+  0% {
+    opacity: 0;
+    transform: scale(0.93) translateY(14px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes dialogCollapse {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+}
+
+.animate-dialog-expand {
+  animation: dialogExpand 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-dialog-collapse {
+  animation: dialogCollapse 0.24s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes panelFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-panel-fade-in {
+  animation: panelFadeIn 0.22s ease-out forwards;
+}

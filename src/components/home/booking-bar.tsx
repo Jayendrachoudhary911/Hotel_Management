@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useId } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Calendar as CalendarIcon,
@@ -14,15 +14,16 @@ import {
   Plus,
   Minus,
   Lock,
+  Unlock,
   X,
   Dog,
-  Baby,
   Check,
+  CalendarRange,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 type TabType = 'rooms' | 'hall';
-type ExpandedPanelType = 'calendar' | 'guests' | 'hallCalendar' | 'hallCapacity' | null;
+type DialogViewType = 'dates' | 'guests' | 'hallDate' | 'hallCapacity' | 'hallOccasion';
 
 interface StaySuggestion {
   label: string;
@@ -105,7 +106,7 @@ export function BookingBar() {
   const [mounted, setMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Tabs
+  // Active Tab
   const [activeTab, setActiveTab] = useState<TabType>('rooms');
 
   // Rooms Booking State
@@ -115,24 +116,28 @@ export function BookingBar() {
   const [children, setChildren] = useState(0);
   const [pets, setPets] = useState(0);
 
-  // Rule: 1 room for 1 adult member by default, locked
-  const rooms = adults;
+  // Rooms state:
+  // Rule:
+  // 1. When guests/adults is only 1 -> locked at 1.
+  // 2. When adults > 1 -> user can select number of rooms (min 1, max adults).
+  // 3. Do not auto-update to 2 rooms until guests reach 4, but user can update on preference regardlessly.
+  const [rooms, setRooms] = useState(1);
 
   // Party Hall Booking State
   const [hallEventType, setHallEventType] = useState('Birthday Party');
   const [hallDate, setHallDate] = useState('');
   const [hallCapacity, setHallCapacity] = useState('35 – 50 Guests');
 
-  // Active Expanded Panel (Desktop inline expansion & Mobile Dialog)
-  const [expandedPanel, setExpandedPanel] = useState<ExpandedPanelType>(null);
-  const [mobileModalOpen, setMobileModalOpen] = useState(false);
+  // Master Dialog State (Both Desktop and Mobile use the expanding/collapsing dialog)
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const [dialogView, setDialogView] = useState<DialogViewType>('dates');
 
-  // Calendar Navigation Month State
+  // Calendar State
   const [calendarMonth, setCalendarMonth] = useState<Date>(new Date());
-  // Date selection mode when clicking: 'in' or 'out'
+  // 'in' = selecting check-in date; 'out' = selecting check-out date
   const [selectingField, setSelectingField] = useState<'in' | 'out'>('in');
-
-  const cardContainerRef = useRef<HTMLDivElement>(null);
+  const [isCustomDateActive, setIsCustomDateActive] = useState(false);
 
   // Initialize dates & screen size
   useEffect(() => {
@@ -195,83 +200,126 @@ export function BookingBar() {
     pets > 0 ? ` • ${pets} ${pets === 1 ? 'Pet' : 'Pets'}` : ''
   }`;
 
-  // Open / Toggle Panel Handler
-  const handleOpenPanel = (panel: ExpandedPanelType, targetField?: 'in' | 'out') => {
+  // ── Open Dialog with specific view ──
+  const openDialog = (view: DialogViewType, targetField?: 'in' | 'out') => {
     if (targetField) {
       setSelectingField(targetField);
     }
+    setDialogView(view);
+    setIsClosing(false);
+    setDialogOpen(true);
+  };
 
-    if (isMobile) {
-      setExpandedPanel(panel);
-      setMobileModalOpen(true);
-    } else {
-      if (expandedPanel === panel && (!targetField || targetField === selectingField)) {
-        setExpandedPanel(null); // Toggle close if already open
-      } else {
-        setExpandedPanel(panel);
-      }
+  // ── Close Dialog with Collapsing Animation ──
+  const closeDialog = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      setDialogOpen(false);
+      setIsClosing(false);
+    }, 250); // Matches the 240ms dialogCollapse animation
+  };
+
+  // ── Adult Stepper Handler (Implements custom Room rules) ──
+  const updateAdults = (newAdults: number) => {
+    if (newAdults < 1) return;
+    setAdults(newAdults);
+
+    if (newAdults === 1) {
+      // Rule 1: Locked only when guest is only 1
+      setRooms(1);
+    } else if (newAdults >= 4 && rooms < 2) {
+      // Rule 3: Auto-update to 2 rooms when guests reach 4
+      setRooms(2);
+    } else if (rooms > newAdults) {
+      // Cannot exceed number of adults
+      setRooms(newAdults);
     }
   };
 
-  // Close panel
-  const handleClosePanel = () => {
-    setExpandedPanel(null);
-    setMobileModalOpen(false);
+  // ── Rooms Stepper Handler ──
+  const isRoomsLocked = adults === 1;
+  const updateRooms = (newRooms: number) => {
+    if (isRoomsLocked) return;
+    const clamped = Math.max(1, Math.min(adults, newRooms));
+    setRooms(clamped);
   };
 
-  // Apply Stay Suggestion (e.g., 2 Nights)
+  // ── Apply Stay Suggestion ──
   const applyStaySuggestion = (nights: number) => {
     const baseDate = checkIn ? parseYMD(checkIn) : new Date();
     const newCheckIn = toYMD(baseDate);
     const newCheckOut = toYMD(addDays(baseDate, nights));
     setCheckIn(newCheckIn);
     setCheckOut(newCheckOut);
+    setIsCustomDateActive(false);
     setSelectingField('out');
   };
 
-  // Date selection inside common calendar
+  // ── Date Selection Click Logic ──
+  // Rule:
+  // 1. If clicking a date before the checkin date, it counts as checkin date.
+  // 2. After clicking that date, it auto switches to checkout date mode, and the next click will be checkout date.
   const handleDateClick = (dateStr: string) => {
     const todayStr = toYMD(new Date());
-    if (dateStr < todayStr) return; // Prevent selecting past dates
+    if (dateStr < todayStr) return; // Disallow past dates
 
-    if (activeTab === 'hall' || expandedPanel === 'hallCalendar') {
+    if (activeTab === 'hall' || dialogView === 'hallDate') {
       setHallDate(dateStr);
       return;
     }
 
-    // Rooms mode (Check-in & Check-out range)
+    // Rooms mode
     if (selectingField === 'in') {
       setCheckIn(dateStr);
-      // If new checkIn is after existing checkOut, adjust checkOut to +2 nights
-      if (!checkOut || dateStr >= checkOut) {
-        setCheckOut(toYMD(addDays(parseYMD(dateStr), 2)));
+      // If current checkOut is before or same as new checkIn, clear checkOut
+      if (checkOut && dateStr >= checkOut) {
+        setCheckOut('');
       }
+      // Auto-switch to checkout date mode!
       setSelectingField('out');
     } else {
-      // Selecting Check-Out
+      // In checkout selection mode:
       if (dateStr > checkIn) {
+        // Valid checkout date!
         setCheckOut(dateStr);
+        // Completed range selection!
       } else {
-        // If clicked date is before or same as checkIn, treat as new checkIn
+        // User clicked a date before or equal to checkin date:
+        // Counts as new check-in date, then auto-switches to check-out mode!
         setCheckIn(dateStr);
-        setCheckOut(toYMD(addDays(parseYMD(dateStr), 1)));
+        setCheckOut('');
+        setSelectingField('out');
       }
-      setSelectingField('in');
     }
   };
 
-  // Hall search submit
-  const handleHallSearch = (e: React.FormEvent) => {
+  // ── Submit Handlers ──
+  const handleRoomsSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    closeDialog();
+    router.push(
+      `/rooms?checkIn=${checkIn}&checkOut=${checkOut}&adults=${adults}&children=${children}&pets=${pets}&rooms=${rooms}&guests=${encodeURIComponent(
+        guestsSummary
+      )}`
+    );
+  };
+
+  const handleHallSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    closeDialog();
     const el = document.getElementById('party-hall-enquiry');
     if (el) {
       el.scrollIntoView({ behavior: 'smooth' });
     } else {
-      router.push(`/hotel#party-hall-enquiry?date=${hallDate}&type=${encodeURIComponent(hallEventType)}&capacity=${encodeURIComponent(hallCapacity)}`);
+      router.push(
+        `/hotel#party-hall-enquiry?date=${hallDate}&type=${encodeURIComponent(
+          hallEventType
+        )}&capacity=${encodeURIComponent(hallCapacity)}`
+      );
     }
   };
 
-  // ── Month Days Generator for Custom Calendar ──
+  // ── Days Generator for Custom Calendar ──
   const getMonthDays = (baseDate: Date) => {
     const year = baseDate.getFullYear();
     const month = baseDate.getMonth();
@@ -294,7 +342,7 @@ export function BookingBar() {
       days.push({ dayNumber: i, dateStr: toYMD(currDate), isCurrentMonth: true });
     }
 
-    // Next month filler to complete 35 or 42 grid cells
+    // Next month filler
     const remaining = (7 - (days.length % 7)) % 7;
     for (let i = 1; i <= remaining; i++) {
       const nextDate = new Date(year, month + 1, i);
@@ -307,26 +355,28 @@ export function BookingBar() {
   const nextMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1);
   const todayStr = toYMD(new Date());
 
-  // ── Render Shared Calendar Component ──
+  // ── Render Shared Calendar Content ──
   const renderCalendarContent = () => {
     const monthsToDisplay = isMobile ? [calendarMonth] : [calendarMonth, nextMonth];
 
     return (
-      <div className="flex flex-col space-y-4">
-        {/* Quick Stay Suggestions Pills */}
+      <div className="flex flex-col space-y-4 animate-panel-fade-in">
+        {/* Quick Stay Suggestions & Custom Dates Option */}
         {activeTab === 'rooms' && (
-          <div className="flex flex-col space-y-1.5 pb-2 border-b border-[#DFD3C3]">
+          <div className="flex flex-col space-y-2 pb-3 border-b border-[#DFD3C3]">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#8F7245]">
-                Quick Stay Suggestions
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#8F7245] flex items-center gap-1.5">
+                <Sparkles className="w-3 h-3 text-[#D8AA67]" />
+                <span>Stay Duration Suggestions</span>
               </span>
-              <span className="text-xs text-[#670E10] font-medium">
-                {nightsCount} {nightsCount === 1 ? 'Night' : 'Nights'} Selected
+              <span className="text-xs text-[#670E10] font-semibold">
+                {checkIn && checkOut ? `${nightsCount} ${nightsCount === 1 ? 'Night' : 'Nights'} Selected` : 'Select dates'}
               </span>
             </div>
+
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
               {STAY_SUGGESTIONS.map((sug) => {
-                const isSelected = nightsCount === sug.nights;
+                const isSelected = !isCustomDateActive && nightsCount === sug.nights && checkOut;
                 return (
                   <button
                     key={sug.nights}
@@ -334,7 +384,7 @@ export function BookingBar() {
                     onClick={() => applyStaySuggestion(sug.nights)}
                     className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold tracking-wide transition-all border cursor-pointer ${
                       isSelected
-                        ? 'bg-[#670E10] text-[#FFF8EB] border-[#D8AA67] shadow-sm'
+                        ? 'bg-[#670E10] text-[#FFF8EB] border-[#D8AA67] shadow-sm scale-[1.02]'
                         : 'bg-[#FFF8EB] text-[#4A0A0C] border-[#DFD3C3] hover:border-[#D8AA67] hover:bg-[#F5F0E6]'
                     }`}
                   >
@@ -343,6 +393,61 @@ export function BookingBar() {
                   </button>
                 );
               })}
+
+              {/* Custom Dates Option Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  setIsCustomDateActive(true);
+                  setSelectingField('in');
+                }}
+                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold tracking-wide transition-all border cursor-pointer flex items-center space-x-1 ${
+                  isCustomDateActive
+                    ? 'bg-[#670E10] text-[#FFF8EB] border-[#D8AA67] shadow-sm'
+                    : 'bg-[#FFF8EB] text-[#4A0A0C] border-[#DFD3C3] hover:border-[#D8AA67]'
+                }`}
+              >
+                <CalendarRange className="w-3.5 h-3.5 mr-1" />
+                <span>Custom Dates</span>
+              </button>
+            </div>
+
+            {/* Selection Guidance Helper Pill */}
+            <div className="flex items-center justify-between text-xs px-3 py-1.5 rounded-lg bg-[#FAF5EB] border border-[#E8DFC9]">
+              <span className="text-[#670E10] font-medium flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#670E10] animate-pulse" />
+                {selectingField === 'in' ? (
+                  <span>
+                    <strong>Step 1:</strong> Click on your <strong>Check-In Date</strong>
+                  </span>
+                ) : (
+                  <span>
+                    <strong>Step 2:</strong> Next click will be your <strong>Check-Out Date</strong> (or click earlier date to reset Check-In)
+                  </span>
+                )}
+              </span>
+
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectingField('in')}
+                  className={`px-2 py-0.5 rounded text-[11px] font-semibold transition ${
+                    selectingField === 'in' ? 'bg-[#670E10] text-white' : 'text-[#8F7245] hover:underline'
+                  }`}
+                >
+                  Check In: {formattedCheckIn.day} {formattedCheckIn.monthYear}
+                </button>
+                <span className="text-gray-400">&rarr;</span>
+                <button
+                  type="button"
+                  onClick={() => setSelectingField('out')}
+                  className={`px-2 py-0.5 rounded text-[11px] font-semibold transition ${
+                    selectingField === 'out' ? 'bg-[#670E10] text-white' : 'text-[#8F7245] hover:underline'
+                  }`}
+                >
+                  Check Out: {checkOut ? `${formattedCheckOut.day} ${formattedCheckOut.monthYear}` : 'Select Date'}
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -395,7 +500,7 @@ export function BookingBar() {
                   )}
                 </div>
 
-                {/* Day of week labels */}
+                {/* Day labels */}
                 <div className="grid grid-cols-7 gap-1 text-center mb-1 text-[11px] font-semibold text-[#8F7245]">
                   <span>Su</span>
                   <span>Mo</span>
@@ -420,7 +525,7 @@ export function BookingBar() {
                     const isCheckOutDay = activeTab === 'rooms' && d.dateStr === checkOut;
                     const isBetween =
                       activeTab === 'rooms' && checkIn && checkOut && d.dateStr > checkIn && d.dateStr < checkOut;
-                    const isHallSelected = (activeTab === 'hall' || expandedPanel === 'hallCalendar') && d.dateStr === hallDate;
+                    const isHallSelected = (activeTab === 'hall' || dialogView === 'hallDate') && d.dateStr === hallDate;
 
                     let bgClass = 'bg-transparent text-[#241F1A] hover:bg-[#D8AA67]/25';
                     if (isCheckInDay || isCheckOutDay || isHallSelected) {
@@ -459,44 +564,17 @@ export function BookingBar() {
             );
           })}
         </div>
-
-        {/* Selected Dates Summary Banner & Apply Button */}
-        <div className="pt-3 border-t border-[#DFD3C3] flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center space-x-2 text-xs text-[#241F1A]">
-            <span className="font-semibold text-[#8F7245]">Selected Period:</span>
-            {activeTab === 'rooms' ? (
-              <span className="font-bold text-[#670E10]">
-                {formattedCheckIn.day} {formattedCheckIn.monthYear} &rarr; {formattedCheckOut.day}{' '}
-                {formattedCheckOut.monthYear} ({nightsCount} {nightsCount === 1 ? 'Night' : 'Nights'})
-              </span>
-            ) : (
-              <span className="font-bold text-[#670E10]">
-                {formattedHallDate.day} {formattedHallDate.monthYear} ({formattedHallDate.weekday})
-              </span>
-            )}
-          </div>
-
-          <div className="flex items-center space-x-2 w-full sm:w-auto">
-            <button
-              type="button"
-              onClick={handleClosePanel}
-              className="flex-1 sm:flex-initial px-5 py-2 rounded-xl bg-gradient-to-r from-[#670E10] to-[#801417] text-[#FFF8EB] text-xs font-bold tracking-wide shadow hover:shadow-md transition cursor-pointer"
-            >
-              Done &bull; Apply Dates
-            </button>
-          </div>
-        </div>
       </div>
     );
   };
 
-  // ── Render Guests Stepper Component (Rooms Tab) ──
+  // ── Render Guests Stepper Content (With Custom Room Locking Rules) ──
   const renderGuestsStepperContent = () => {
     return (
-      <div className="flex flex-col space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="flex flex-col space-y-4 animate-panel-fade-in">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           {/* 1. Adults Stepper */}
-          <div className="p-3.5 rounded-2xl bg-white border border-[#DFD3C3] flex items-center justify-between shadow-2xs">
+          <div className="p-4 rounded-2xl bg-white border border-[#DFD3C3] flex items-center justify-between shadow-2xs hover:border-[#D8AA67] transition">
             <div className="flex flex-col text-left">
               <span className="text-sm font-bold text-[#241F1A]">Adults</span>
               <span className="text-[11px] text-[#7A6F62]">Ages 13 and above</span>
@@ -505,7 +583,7 @@ export function BookingBar() {
               <button
                 type="button"
                 disabled={adults <= 1}
-                onClick={() => setAdults(Math.max(1, adults - 1))}
+                onClick={() => updateAdults(adults - 1)}
                 className="w-8 h-8 rounded-full border border-[#D8AA67] flex items-center justify-center text-[#670E10] hover:bg-[#FFF8EB] disabled:opacity-35 disabled:cursor-not-allowed transition cursor-pointer"
                 aria-label="Decrease adults"
               >
@@ -515,7 +593,7 @@ export function BookingBar() {
               <button
                 type="button"
                 disabled={adults >= 10}
-                onClick={() => setAdults(Math.min(10, adults + 1))}
+                onClick={() => updateAdults(adults + 1)}
                 className="w-8 h-8 rounded-full border border-[#D8AA67] flex items-center justify-center text-[#670E10] hover:bg-[#FFF8EB] disabled:opacity-35 disabled:cursor-not-allowed transition cursor-pointer"
                 aria-label="Increase adults"
               >
@@ -525,7 +603,7 @@ export function BookingBar() {
           </div>
 
           {/* 2. Children Stepper */}
-          <div className="p-3.5 rounded-2xl bg-white border border-[#DFD3C3] flex items-center justify-between shadow-2xs">
+          <div className="p-4 rounded-2xl bg-white border border-[#DFD3C3] flex items-center justify-between shadow-2xs hover:border-[#D8AA67] transition">
             <div className="flex flex-col text-left">
               <span className="text-sm font-bold text-[#241F1A]">Children</span>
               <span className="text-[11px] text-[#7A6F62]">Ages 0 to 12</span>
@@ -554,7 +632,7 @@ export function BookingBar() {
           </div>
 
           {/* 3. Pets Stepper */}
-          <div className="p-3.5 rounded-2xl bg-white border border-[#DFD3C3] flex items-center justify-between shadow-2xs">
+          <div className="p-4 rounded-2xl bg-white border border-[#DFD3C3] flex items-center justify-between shadow-2xs hover:border-[#D8AA67] transition">
             <div className="flex flex-col text-left">
               <span className="text-sm font-bold text-[#241F1A] flex items-center gap-1.5">
                 <span>Pets</span>
@@ -585,54 +663,82 @@ export function BookingBar() {
             </div>
           </div>
 
-          {/* 4. Chambers (Rooms) — Auto Allocated 1 Room per Member (Locked as specified) */}
-          <div className="p-3.5 rounded-2xl bg-[#F5EFE6] border border-[#D8AA67]/60 flex items-center justify-between shadow-2xs">
+          {/* 4. Chambers (Rooms) — Custom Room Stepper with Dynamic Locking Rule */}
+          <div
+            className={`p-4 rounded-2xl border flex items-center justify-between shadow-2xs transition ${
+              isRoomsLocked
+                ? 'bg-[#F5EFE6] border-[#D8AA67]/60'
+                : 'bg-white border-[#DFD3C3] hover:border-[#D8AA67]'
+            }`}
+          >
             <div className="flex flex-col text-left">
               <span className="text-sm font-bold text-[#670E10] flex items-center gap-1.5">
                 <span>Chambers (Rooms)</span>
-                <Lock className="w-3.5 h-3.5 text-[#D8AA67]" />
+                {isRoomsLocked ? (
+                  <span className="inline-flex items-center text-[10px] px-2 py-0.5 rounded-full bg-[#EFE8DD] text-[#8F7245] font-semibold gap-1">
+                    <Lock className="w-3 h-3 text-[#8F7245]" />
+                    <span>Locked (1 Guest)</span>
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center text-[10px] px-2 py-0.5 rounded-full bg-[#E7F3EC] text-[#2D6A4F] font-semibold gap-1">
+                    <Unlock className="w-3 h-3 text-[#2D6A4F]" />
+                    <span>Customizable</span>
+                  </span>
+                )}
               </span>
-              <span className="text-[11px] text-[#7A6F62]">1 Room / Member standard</span>
+              <span className="text-[11px] text-[#7A6F62]">
+                {isRoomsLocked
+                  ? '1 chamber fixed for 1 guest'
+                  : `Select 1 to ${adults} chambers based on preference`}
+              </span>
             </div>
-            <div className="flex items-center space-x-2">
-              <span className="px-3 py-1 rounded-full bg-white border border-[#D8AA67] text-xs font-bold text-[#670E10]">
-                {rooms} {rooms === 1 ? 'Chamber' : 'Chambers'} (Auto)
-              </span>
+
+            <div className="flex items-center space-x-3">
+              <button
+                type="button"
+                disabled={isRoomsLocked || rooms <= 1}
+                onClick={() => updateRooms(rooms - 1)}
+                className="w-8 h-8 rounded-full border border-[#D8AA67] flex items-center justify-center text-[#670E10] hover:bg-[#FFF8EB] disabled:opacity-35 disabled:cursor-not-allowed transition cursor-pointer"
+                aria-label="Decrease rooms"
+              >
+                <Minus className="w-3.5 h-3.5" />
+              </button>
+              <span className="w-6 text-center font-bold text-sm text-[#670E10]">{rooms}</span>
+              <button
+                type="button"
+                disabled={isRoomsLocked || rooms >= adults}
+                onClick={() => updateRooms(rooms + 1)}
+                className="w-8 h-8 rounded-full border border-[#D8AA67] flex items-center justify-center text-[#670E10] hover:bg-[#FFF8EB] disabled:opacity-35 disabled:cursor-not-allowed transition cursor-pointer"
+                aria-label="Increase rooms"
+              >
+                <Plus className="w-3.5 h-3.5" />
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Policy note & apply button */}
-        <div className="pt-3 border-t border-[#DFD3C3] flex flex-col sm:flex-row items-center justify-between gap-3">
-          <span className="text-xs text-[#7A6F62] italic text-center sm:text-left">
-            * Royal policy automatically allocates 1 private heritage chamber per adult guest for absolute privacy.
-          </span>
-          <button
-            type="button"
-            onClick={handleClosePanel}
-            className="w-full sm:w-auto px-5 py-2 rounded-xl bg-gradient-to-r from-[#670E10] to-[#801417] text-[#FFF8EB] text-xs font-bold tracking-wide shadow hover:shadow-md transition cursor-pointer"
-          >
-            Apply Guests &amp; Chambers
-          </button>
+        <div className="text-xs text-[#7A6F62] italic px-1">
+          {adults === 1
+            ? '* For single travelers, 1 dedicated deluxe chamber is automatically reserved.'
+            : adults < 4
+            ? '* 1 Chamber accommodates up to 3 guests comfortably. You can add extra chambers per your preference above.'
+            : '* 2 Chambers recommended for 4 or more guests. Adjust count per your party’s preferences.'}
         </div>
       </div>
     );
   };
 
-  // ── Render Party Hall Capacity Chips Component ──
+  // ── Render Party Hall Capacity Chips Content ──
   const renderHallCapacityContent = () => {
     return (
-      <div className="flex flex-col space-y-4">
+      <div className="flex flex-col space-y-4 animate-panel-fade-in">
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold uppercase tracking-wider text-[#8F7245]">
             Select Guest Capacity for Celebration Hall
           </span>
-          <span className="text-xs font-semibold text-[#670E10]">
-            Selected: {hallCapacity}
-          </span>
+          <span className="text-xs font-semibold text-[#670E10]">Selected: {hallCapacity}</span>
         </div>
 
-        {/* Capacity Chips Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
           {HALL_CAPACITY_OPTIONS.map((opt) => {
             const isSelected = hallCapacity.startsWith(opt.title.split(' ')[0]);
@@ -674,17 +780,6 @@ export function BookingBar() {
             );
           })}
         </div>
-
-        {/* Apply footer */}
-        <div className="pt-3 border-t border-[#DFD3C3] flex items-center justify-end">
-          <button
-            type="button"
-            onClick={handleClosePanel}
-            className="w-full sm:w-auto px-5 py-2 rounded-xl bg-gradient-to-r from-[#670E10] to-[#801417] text-[#FFF8EB] text-xs font-bold tracking-wide shadow hover:shadow-md transition cursor-pointer"
-          >
-            Apply Capacity
-          </button>
-        </div>
       </div>
     );
   };
@@ -693,13 +788,12 @@ export function BookingBar() {
     <div className="w-full max-w-[1080px] mx-auto relative pt-4">
       {/* ── 1. Popping-Out Tabs with Inset Fillet Curves ── */}
       <div className="relative z-20 flex flex-col sm:flex-row sm:items-end justify-between px-0">
-        {/* Popped-Out Chamber Tab Deck */}
         <div
           className="relative inline-flex items-center px-1.5 sm:px-2 pt-1.5 sm:pt-2 pb-1 rounded-t-[16px] sm:rounded-t-[22px] border-t-2 border-x-2 transition-all mx-auto sm:mx-0 sm:ml-16 md:ml-20 lg:ml-24 shadow-2xs"
           style={{
             backgroundColor: '#FAF7F2',
             borderColor: '#D8AA67',
-            marginBottom: '-2px', // Flushes seamlessly into the top border of the card
+            marginBottom: '-2px',
           }}
         >
           {/* Left Inverted Concave Fillet Curve */}
@@ -730,7 +824,6 @@ export function BookingBar() {
             </svg>
           </div>
 
-          {/* Bottom baseline mask (covers card top line beneath the tab deck) */}
           <div
             className="absolute -bottom-[2px] -left-[1px] -right-[1px] h-[4px] pointer-events-none"
             style={{ backgroundColor: '#FAF7F2' }}
@@ -740,10 +833,7 @@ export function BookingBar() {
           <div className="relative z-10 inline-flex p-1 rounded-[13px] sm:rounded-[18px] bg-[#EFE8DD]/85 border border-[#DFD3C3] shadow-inner">
             <button
               type="button"
-              onClick={() => {
-                setActiveTab('rooms');
-                setExpandedPanel(null);
-              }}
+              onClick={() => setActiveTab('rooms')}
               className={`flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-4 lg:px-5 py-1.5 sm:py-2 rounded-[10px] sm:rounded-[14px] text-xs sm:text-sm font-semibold tracking-wide transition-all cursor-pointer whitespace-nowrap ${
                 activeTab === 'rooms'
                   ? 'bg-gradient-to-r from-[#670E10] via-[#7B1316] to-[#550B0D] text-[#FFF8EB] shadow-md border border-[#D8AA67]/70 scale-[1.01]'
@@ -759,10 +849,7 @@ export function BookingBar() {
 
             <button
               type="button"
-              onClick={() => {
-                setActiveTab('hall');
-                setExpandedPanel(null);
-              }}
+              onClick={() => setActiveTab('hall')}
               className={`flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-4 lg:px-5 py-1.5 sm:py-2 rounded-[10px] sm:rounded-[14px] text-xs sm:text-sm font-semibold tracking-wide transition-all cursor-pointer whitespace-nowrap ${
                 activeTab === 'hall'
                   ? 'bg-gradient-to-r from-[#670E10] via-[#7B1316] to-[#550B0D] text-[#FFF8EB] shadow-md border border-[#D8AA67]/70 scale-[1.01]'
@@ -785,38 +872,24 @@ export function BookingBar() {
         </div>
       </div>
 
-      {/* ── 2. Master Booking Details Card (Expands when clicked on Desktop) ── */}
+      {/* ── 2. Master Booking Details Card (Clicking opens the expanding dialog) ── */}
       <div
-        ref={cardContainerRef}
-        className="relative z-10 w-full rounded-[22px] sm:rounded-[32px] pt-6 sm:pt-7 pb-4 sm:pb-5 px-3.5 sm:px-5 transition-all duration-300 border-2 shadow-[0_26px_65px_-10px_rgba(35,12,14,0.32),0_4px_16px_rgba(0,0,0,0.06)]"
+        onClick={() => openDialog(activeTab === 'rooms' ? 'dates' : 'hallDate')}
+        className="relative z-10 w-full rounded-[22px] sm:rounded-[32px] pt-6 sm:pt-7 pb-4 sm:pb-5 px-3.5 sm:px-5 transition-all duration-300 border-2 shadow-[0_26px_65px_-10px_rgba(35,12,14,0.32),0_4px_16px_rgba(0,0,0,0.06)] cursor-pointer group hover:shadow-[0_30px_70px_-10px_rgba(35,12,14,0.4)]"
         style={{
           backgroundColor: '#FAF7F2',
           borderColor: '#D8AA67',
         }}
       >
         {activeTab === 'rooms' ? (
-          <form
-            action="/rooms"
-            method="GET"
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_auto_1fr_1.25fr_auto] gap-2.5 sm:gap-3 items-center"
-          >
-            {/* Hidden inputs to guarantee query params pass to /rooms */}
-            <input type="hidden" name="checkIn" value={checkIn} />
-            <input type="hidden" name="checkOut" value={checkOut} />
-            <input type="hidden" name="guests" value={guestsSummary} />
-            <input type="hidden" name="adults" value={adults} />
-            <input type="hidden" name="children" value={children} />
-            <input type="hidden" name="pets" value={pets} />
-            <input type="hidden" name="rooms" value={rooms} />
-
-            {/* 1. Check In Tile (Click opens shared calendar) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_auto_1fr_1.25fr_auto] gap-2.5 sm:gap-3 items-center">
+            {/* 1. Check In Tile */}
             <div
-              onClick={() => handleOpenPanel('calendar', 'in')}
-              className={`relative flex items-center justify-between px-4 py-3 rounded-[18px] border bg-white transition-all cursor-pointer group h-[64px] ${
-                expandedPanel === 'calendar' && selectingField === 'in'
-                  ? 'border-[#670E10] ring-2 ring-[#D8AA67] shadow-md bg-[#FFF8EB]'
-                  : 'border-[#DFD3C3] hover:border-[#B08D57] hover:shadow-md'
-              }`}
+              onClick={(e) => {
+                e.stopPropagation();
+                openDialog('dates', 'in');
+              }}
+              className="relative flex items-center justify-between px-4 py-3 rounded-[18px] border border-[#DFD3C3] bg-white group-hover:border-[#B08D57] transition-all h-[64px]"
             >
               <div className="flex flex-col text-left flex-1 min-w-0 mr-2">
                 <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#8F7245] leading-none mb-1">
@@ -834,30 +907,28 @@ export function BookingBar() {
                   </span>
                 </div>
               </div>
-              <div className="w-8 h-8 rounded-[12px] bg-[#FAF7F2] border border-[#DFD3C3] flex items-center justify-center shrink-0 group-hover:border-[#B08D57] group-hover:bg-[#FFF8EB] transition-colors">
-                <CalendarIcon className="w-4 h-4 text-[#670E10] group-hover:text-[#B08D57] transition-colors" />
+              <div className="w-8 h-8 rounded-[12px] bg-[#FAF7F2] border border-[#DFD3C3] flex items-center justify-center shrink-0">
+                <CalendarIcon className="w-4 h-4 text-[#670E10]" />
               </div>
             </div>
 
-            {/* 2. Nights Separator Pill (Desktop only, clicks also toggle calendar) */}
-            <div
-              onClick={() => handleOpenPanel('calendar')}
-              className="hidden lg:flex flex-col items-center justify-center px-0.5 cursor-pointer group"
-            >
-              <span className="text-[10px] font-bold px-2.5 py-1 rounded-[12px] bg-[#FAF7F2] border border-[#DFD3C3] text-[#670E10] whitespace-nowrap shadow-2xs flex items-center gap-1 group-hover:border-[#B08D57] group-hover:bg-[#FFF8EB] transition">
+            {/* 2. Nights Separator Pill */}
+            <div className="hidden lg:flex flex-col items-center justify-center px-0.5">
+              <span className="text-[10px] font-bold px-2.5 py-1 rounded-[12px] bg-[#FAF7F2] border border-[#DFD3C3] text-[#670E10] whitespace-nowrap shadow-2xs flex items-center gap-1">
                 <span>🌙</span>
-                <span>{nightsCount} {nightsCount === 1 ? 'Night' : 'Nights'}</span>
+                <span>
+                  {nightsCount} {nightsCount === 1 ? 'Night' : 'Nights'}
+                </span>
               </span>
             </div>
 
-            {/* 3. Check Out Tile (Click opens shared calendar) */}
+            {/* 3. Check Out Tile */}
             <div
-              onClick={() => handleOpenPanel('calendar', 'out')}
-              className={`relative flex items-center justify-between px-4 py-3 rounded-[18px] border bg-white transition-all cursor-pointer group h-[64px] ${
-                expandedPanel === 'calendar' && selectingField === 'out'
-                  ? 'border-[#670E10] ring-2 ring-[#D8AA67] shadow-md bg-[#FFF8EB]'
-                  : 'border-[#DFD3C3] hover:border-[#B08D57] hover:shadow-md'
-              }`}
+              onClick={(e) => {
+                e.stopPropagation();
+                openDialog('dates', 'out');
+              }}
+              className="relative flex items-center justify-between px-4 py-3 rounded-[18px] border border-[#DFD3C3] bg-white group-hover:border-[#B08D57] transition-all h-[64px]"
             >
               <div className="flex flex-col text-left flex-1 min-w-0 mr-2">
                 <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#8F7245] leading-none mb-1">
@@ -875,19 +946,18 @@ export function BookingBar() {
                   </span>
                 </div>
               </div>
-              <div className="w-8 h-8 rounded-[12px] bg-[#FAF7F2] border border-[#DFD3C3] flex items-center justify-center shrink-0 group-hover:border-[#B08D57] group-hover:bg-[#FFF8EB] transition-colors">
-                <CalendarIcon className="w-4 h-4 text-[#670E10] group-hover:text-[#B08D57] transition-colors" />
+              <div className="w-8 h-8 rounded-[12px] bg-[#FAF7F2] border border-[#DFD3C3] flex items-center justify-center shrink-0">
+                <CalendarIcon className="w-4 h-4 text-[#670E10]" />
               </div>
             </div>
 
-            {/* 4. Guests & Chambers Tile (Click opens stepper) */}
+            {/* 4. Guests & Chambers Tile */}
             <div
-              onClick={() => handleOpenPanel('guests')}
-              className={`relative flex items-center justify-between px-4 py-3 rounded-[18px] border bg-white transition-all cursor-pointer group h-[64px] ${
-                expandedPanel === 'guests'
-                  ? 'border-[#670E10] ring-2 ring-[#D8AA67] shadow-md bg-[#FFF8EB]'
-                  : 'border-[#DFD3C3] hover:border-[#B08D57] hover:shadow-md'
-              }`}
+              onClick={(e) => {
+                e.stopPropagation();
+                openDialog('guests');
+              }}
+              className="relative flex items-center justify-between px-4 py-3 rounded-[18px] border border-[#DFD3C3] bg-white group-hover:border-[#B08D57] transition-all h-[64px]"
             >
               <div className="flex flex-col text-left flex-1 min-w-0 mr-2">
                 <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#8F7245] leading-none mb-1">
@@ -900,16 +970,19 @@ export function BookingBar() {
                   {guestsSummary}
                 </span>
               </div>
-
-              <div className="w-8 h-8 rounded-[12px] bg-[#FAF7F2] border border-[#DFD3C3] flex items-center justify-center shrink-0 group-hover:border-[#B08D57] group-hover:bg-[#FFF8EB] transition-colors">
-                <Users className="w-4 h-4 text-[#670E10] group-hover:text-[#B08D57] transition-colors" />
+              <div className="w-8 h-8 rounded-[12px] bg-[#FAF7F2] border border-[#DFD3C3] flex items-center justify-center shrink-0">
+                <Users className="w-4 h-4 text-[#670E10]" />
               </div>
             </div>
 
             {/* 5. Search Chambers Button */}
             <div className="sm:col-span-2 lg:col-span-1">
               <button
-                type="submit"
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openDialog('dates');
+                }}
                 className="w-full h-[64px] px-8 rounded-[18px] font-bold tracking-wide transition-all duration-300 shadow-lg hover:shadow-xl active:scale-[0.98] flex items-center justify-center space-x-2.5 cursor-pointer text-[#FFF8EB] border border-[#D8AA67]/80 group"
                 style={{
                   background: 'linear-gradient(135deg, #670E10 0%, #7E1418 50%, #52090B 100%)',
@@ -921,16 +994,19 @@ export function BookingBar() {
                 <ArrowRight className="w-4 h-4 text-[#D8AA67] group-hover:translate-x-1.5 transition-transform stroke-[2.5]" />
               </button>
             </div>
-          </form>
+          </div>
         ) : (
-          /* ── Content Area: Party Hall Form ── */
-          <form
-            onSubmit={handleHallSearch}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.1fr_1fr_1.2fr_auto] gap-2.5 sm:gap-3 items-center"
-          >
-            {/* Event Occasion */}
-            <div className="relative flex items-center justify-between px-4 py-3 rounded-[18px] border border-[#DFD3C3] bg-white hover:border-[#B08D57] hover:shadow-md transition-all h-[64px] group">
-              <div className="flex flex-col text-left flex-1 min-w-0 mr-2 pointer-events-none">
+          /* Party Hall Card View */
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.1fr_1fr_1.2fr_auto] gap-2.5 sm:gap-3 items-center">
+            {/* Occasion */}
+            <div
+              onClick={(e) => {
+                e.stopPropagation();
+                openDialog('hallOccasion');
+              }}
+              className="relative flex items-center justify-between px-4 py-3 rounded-[18px] border border-[#DFD3C3] bg-white group-hover:border-[#B08D57] transition-all h-[64px]"
+            >
+              <div className="flex flex-col text-left flex-1 min-w-0 mr-2">
                 <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#8F7245] leading-none mb-1">
                   Event Occasion
                 </span>
@@ -941,31 +1017,18 @@ export function BookingBar() {
                   {hallEventType}
                 </span>
               </div>
-              <div className="w-8 h-8 rounded-[12px] bg-[#FAF7F2] border border-[#DFD3C3] flex items-center justify-center shrink-0 group-hover:border-[#B08D57] group-hover:bg-[#FFF8EB] transition-colors">
-                <PartyPopper className="w-4 h-4 text-[#670E10] group-hover:text-[#B08D57] transition-colors" />
+              <div className="w-8 h-8 rounded-[12px] bg-[#FAF7F2] border border-[#DFD3C3] flex items-center justify-center shrink-0">
+                <PartyPopper className="w-4 h-4 text-[#670E10]" />
               </div>
-
-              <select
-                value={hallEventType}
-                onChange={(e) => setHallEventType(e.target.value)}
-                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10 text-sm font-semibold"
-              >
-                <option value="Birthday Party">Birthday Party</option>
-                <option value="Anniversary & Milestone">Anniversary &amp; Milestone Party</option>
-                <option value="Romantic Candlelight Dinner">Book for a Date (Private Dining)</option>
-                <option value="Corporate Retreat & Conference">Corporate Event / Conference</option>
-                <option value="Pre-Wedding & Sangeet Gathering">Pre-Wedding &amp; Sangeet Gathering</option>
-              </select>
             </div>
 
-            {/* Event Date (Click opens calendar) */}
+            {/* Event Date */}
             <div
-              onClick={() => handleOpenPanel('hallCalendar')}
-              className={`relative flex items-center justify-between px-4 py-3 rounded-[18px] border bg-white transition-all cursor-pointer group h-[64px] ${
-                expandedPanel === 'hallCalendar'
-                  ? 'border-[#670E10] ring-2 ring-[#D8AA67] shadow-md bg-[#FFF8EB]'
-                  : 'border-[#DFD3C3] hover:border-[#B08D57] hover:shadow-md'
-              }`}
+              onClick={(e) => {
+                e.stopPropagation();
+                openDialog('hallDate');
+              }}
+              className="relative flex items-center justify-between px-4 py-3 rounded-[18px] border border-[#DFD3C3] bg-white group-hover:border-[#B08D57] transition-all h-[64px]"
             >
               <div className="flex flex-col text-left flex-1 min-w-0 mr-2">
                 <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#8F7245] leading-none mb-1">
@@ -983,19 +1046,18 @@ export function BookingBar() {
                   </span>
                 </div>
               </div>
-              <div className="w-8 h-8 rounded-[12px] bg-[#FAF7F2] border border-[#DFD3C3] flex items-center justify-center shrink-0 group-hover:border-[#B08D57] group-hover:bg-[#FFF8EB] transition-colors">
-                <CalendarIcon className="w-4 h-4 text-[#670E10] group-hover:text-[#B08D57] transition-colors" />
+              <div className="w-8 h-8 rounded-[12px] bg-[#FAF7F2] border border-[#DFD3C3] flex items-center justify-center shrink-0">
+                <CalendarIcon className="w-4 h-4 text-[#670E10]" />
               </div>
             </div>
 
-            {/* Hall Capacity (Click opens capacity chips) */}
+            {/* Hall Capacity */}
             <div
-              onClick={() => handleOpenPanel('hallCapacity')}
-              className={`relative flex items-center justify-between px-4 py-3 rounded-[18px] border bg-white transition-all cursor-pointer group h-[64px] ${
-                expandedPanel === 'hallCapacity'
-                  ? 'border-[#670E10] ring-2 ring-[#D8AA67] shadow-md bg-[#FFF8EB]'
-                  : 'border-[#DFD3C3] hover:border-[#B08D57] hover:shadow-md'
-              }`}
+              onClick={(e) => {
+                e.stopPropagation();
+                openDialog('hallCapacity');
+              }}
+              className="relative flex items-center justify-between px-4 py-3 rounded-[18px] border border-[#DFD3C3] bg-white group-hover:border-[#B08D57] transition-all h-[64px]"
             >
               <div className="flex flex-col text-left flex-1 min-w-0 mr-2">
                 <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#8F7245] leading-none mb-1">
@@ -1008,15 +1070,19 @@ export function BookingBar() {
                   {hallCapacity}
                 </span>
               </div>
-              <div className="w-8 h-8 rounded-[12px] bg-[#FAF7F2] border border-[#DFD3C3] flex items-center justify-center shrink-0 group-hover:border-[#B08D57] group-hover:bg-[#FFF8EB] transition-colors">
-                <Users className="w-4 h-4 text-[#670E10] group-hover:text-[#B08D57] transition-colors" />
+              <div className="w-8 h-8 rounded-[12px] bg-[#FAF7F2] border border-[#DFD3C3] flex items-center justify-center shrink-0">
+                <Users className="w-4 h-4 text-[#670E10]" />
               </div>
             </div>
 
             {/* Check Hall Button */}
             <div className="sm:col-span-2 lg:col-span-1">
               <button
-                type="submit"
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openDialog('hallDate');
+                }}
                 className="w-full h-[64px] px-8 rounded-[18px] font-bold tracking-wide transition-all duration-300 shadow-lg hover:shadow-xl active:scale-[0.98] flex items-center justify-center space-x-2.5 cursor-pointer text-[#FFF8EB] border border-[#D8AA67]/80 group"
                 style={{
                   background: 'linear-gradient(135deg, #670E10 0%, #7E1418 50%, #52090B 100%)',
@@ -1028,105 +1094,236 @@ export function BookingBar() {
                 <ArrowRight className="w-4 h-4 text-[#D8AA67] group-hover:translate-x-1.5 transition-transform stroke-[2.5]" />
               </button>
             </div>
-          </form>
-        )}
-
-        {/* ── 3. Desktop Inline Expansion Panel (Expands when clicked on Desktop) ── */}
-        {!isMobile && expandedPanel && (
-          <div className="mt-5 pt-5 border-t border-[#DFD3C3] animate-fade-in transition-all">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-2">
-                <Sparkles className="w-4 h-4 text-[#D8AA67]" />
-                <h3
-                  className="text-lg font-bold text-[#670E10]"
-                  style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)" }}
-                >
-                  {expandedPanel === 'calendar' || expandedPanel === 'hallCalendar'
-                    ? 'Select Stay & Event Dates'
-                    : expandedPanel === 'guests'
-                    ? 'Guests & Chambers Selection'
-                    : 'Party Hall Guest Capacity'}
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={handleClosePanel}
-                className="p-1.5 rounded-full hover:bg-black/5 text-[#7A6F62] hover:text-[#241F1A] transition cursor-pointer"
-                aria-label="Close panel"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {(expandedPanel === 'calendar' || expandedPanel === 'hallCalendar') && renderCalendarContent()}
-            {expandedPanel === 'guests' && renderGuestsStepperContent()}
-            {expandedPanel === 'hallCapacity' && renderHallCapacityContent()}
           </div>
         )}
       </div>
 
-      {/* ── 4. Mobile Dialog / Pop-out Modal (With Opening/Closing Animations) ── */}
-      {isMobile &&
-        mobileModalOpen &&
+      {/* ── 3. Master Expanding & Collapsing Dialog (Triggered on Desktop & Mobile) ── */}
+      {dialogOpen &&
         mounted &&
         createPortal(
           <div
             onClick={(e) => {
-              if (e.target === e.currentTarget) handleClosePanel();
+              if (e.target === e.currentTarget) closeDialog();
             }}
-            className="fixed inset-0 z-[120] bg-black/60 backdrop-blur-xs flex items-end justify-center p-0 animate-fade-in-backdrop"
+            className={`fixed inset-0 z-[120] bg-black/65 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 lg:p-8 transition-opacity duration-250 ${
+              isClosing ? 'opacity-0' : 'animate-fade-in-backdrop'
+            }`}
           >
             <div
-              className="w-full max-h-[88vh] bg-[#FAF7F2] rounded-t-[28px] border-t-2 border-x-2 border-[#D8AA67] shadow-2xl flex flex-col overflow-hidden animate-slide-up-modal"
+              className={`relative w-full max-w-[1080px] bg-[#FAF7F2] rounded-[24px] sm:rounded-[32px] border-2 border-[#D8AA67] shadow-[0_30px_90px_rgba(30,8,10,0.65)] flex flex-col overflow-hidden max-h-[92vh] ${
+                isClosing ? 'animate-dialog-collapse' : 'animate-dialog-expand'
+              }`}
               style={{ backgroundColor: '#FAF7F2' }}
             >
-              {/* Drag Pill on Mobile */}
-              <div className="w-12 h-1 bg-[#D8AA67]/50 rounded-full mx-auto mt-2.5 mb-1" />
-
-              {/* Dialog Header */}
-              <div className="px-5 py-3 border-b border-[#DFD3C3] flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#8F7245] block">
-                    {activeTab === 'rooms' ? 'Palace Reservation' : 'Celebration Hall'}
-                  </span>
-                  <h3
-                    className="text-xl font-bold text-[#670E10]"
-                    style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)" }}
+              {/* Dialog Top Bar / Header */}
+              <div className="px-5 sm:px-8 pt-5 pb-4 border-b border-[#DFD3C3] flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#FAF7F2] shrink-0">
+                {/* Segmented Tab Switcher inside Dialog */}
+                <div className="inline-flex p-1 rounded-[14px] bg-[#EFE8DD] border border-[#DFD3C3] self-start">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('rooms');
+                      setDialogView('dates');
+                    }}
+                    className={`flex items-center space-x-2 px-4 py-1.5 rounded-[10px] text-xs font-bold transition-all cursor-pointer ${
+                      activeTab === 'rooms'
+                        ? 'bg-gradient-to-r from-[#670E10] to-[#801417] text-[#FFF8EB] shadow-sm'
+                        : 'text-[#6B5E4F] hover:text-[#241F1A]'
+                    }`}
                   >
-                    {expandedPanel === 'calendar' || expandedPanel === 'hallCalendar'
-                      ? 'Select Dates'
-                      : expandedPanel === 'guests'
-                      ? 'Guests & Chambers'
-                      : 'Hall Capacity'}
-                  </h3>
+                    <BedDouble className="w-3.5 h-3.5 text-[#D8AA67]" />
+                    <span>Rooms &amp; Suites</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('hall');
+                      setDialogView('hallDate');
+                    }}
+                    className={`flex items-center space-x-2 px-4 py-1.5 rounded-[10px] text-xs font-bold transition-all cursor-pointer ${
+                      activeTab === 'hall'
+                        ? 'bg-gradient-to-r from-[#670E10] to-[#801417] text-[#FFF8EB] shadow-sm'
+                        : 'text-[#6B5E4F] hover:text-[#241F1A]'
+                    }`}
+                  >
+                    <PartyPopper className="w-3.5 h-3.5 text-[#D8AA67]" />
+                    <span>Party Hall (25–50 Pax)</span>
+                  </button>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={handleClosePanel}
-                  className="p-2 rounded-full bg-black/5 hover:bg-black/10 text-[#670E10] transition cursor-pointer"
-                  aria-label="Close modal"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                {/* Sub-View Navigation Pills inside Dialog with Animated Indicator */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+                  {activeTab === 'rooms' ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setDialogView('dates')}
+                        className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer border ${
+                          dialogView === 'dates'
+                            ? 'bg-[#670E10] text-[#FFF8EB] border-[#D8AA67] shadow-xs'
+                            : 'bg-white text-[#7A6F62] border-[#DFD3C3] hover:border-[#D8AA67]'
+                        }`}
+                      >
+                        <CalendarIcon className="w-3.5 h-3.5 text-[#D8AA67]" />
+                        <span>Stay Dates</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setDialogView('guests')}
+                        className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer border ${
+                          dialogView === 'guests'
+                            ? 'bg-[#670E10] text-[#FFF8EB] border-[#D8AA67] shadow-xs'
+                            : 'bg-white text-[#7A6F62] border-[#DFD3C3] hover:border-[#D8AA67]'
+                        }`}
+                      >
+                        <Users className="w-3.5 h-3.5 text-[#D8AA67]" />
+                        <span>Guests &amp; Chambers</span>
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setDialogView('hallDate')}
+                        className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer border ${
+                          dialogView === 'hallDate'
+                            ? 'bg-[#670E10] text-[#FFF8EB] border-[#D8AA67] shadow-xs'
+                            : 'bg-white text-[#7A6F62] border-[#DFD3C3] hover:border-[#D8AA67]'
+                        }`}
+                      >
+                        <CalendarIcon className="w-3.5 h-3.5 text-[#D8AA67]" />
+                        <span>Event Date</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setDialogView('hallCapacity')}
+                        className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer border ${
+                          dialogView === 'hallCapacity'
+                            ? 'bg-[#670E10] text-[#FFF8EB] border-[#D8AA67] shadow-xs'
+                            : 'bg-white text-[#7A6F62] border-[#DFD3C3] hover:border-[#D8AA67]'
+                        }`}
+                      >
+                        <Users className="w-3.5 h-3.5 text-[#D8AA67]" />
+                        <span>Hall Capacity</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setDialogView('hallOccasion')}
+                        className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer border ${
+                          dialogView === 'hallOccasion'
+                            ? 'bg-[#670E10] text-[#FFF8EB] border-[#D8AA67] shadow-xs'
+                            : 'bg-white text-[#7A6F62] border-[#DFD3C3] hover:border-[#D8AA67]'
+                        }`}
+                      >
+                        <PartyPopper className="w-3.5 h-3.5 text-[#D8AA67]" />
+                        <span>Occasion</span>
+                      </button>
+                    </>
+                  )}
+
+                  {/* Close (X) Button */}
+                  <button
+                    type="button"
+                    onClick={closeDialog}
+                    className="p-1.5 rounded-full hover:bg-black/5 text-[#7A6F62] hover:text-[#241F1A] transition cursor-pointer ml-2"
+                    aria-label="Close dialog"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
 
-              {/* Dialog Scrollable Content */}
-              <div className="p-4 sm:p-5 overflow-y-auto max-h-[68vh]">
-                {(expandedPanel === 'calendar' || expandedPanel === 'hallCalendar') && renderCalendarContent()}
-                {expandedPanel === 'guests' && renderGuestsStepperContent()}
-                {expandedPanel === 'hallCapacity' && renderHallCapacityContent()}
+              {/* Dialog Scrollable Interactive Body */}
+              <div className="p-4 sm:p-7 overflow-y-auto flex-1 max-h-[66vh]">
+                {(dialogView === 'dates' || dialogView === 'hallDate') && renderCalendarContent()}
+                {dialogView === 'guests' && renderGuestsStepperContent()}
+                {dialogView === 'hallCapacity' && renderHallCapacityContent()}
+                {dialogView === 'hallOccasion' && (
+                  <div className="flex flex-col space-y-4 animate-panel-fade-in">
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#8F7245]">
+                      Choose Occasion for Royal Celebration
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {[
+                        { title: 'Birthday Party', desc: 'Decorated banquet setup with royal Mewari dessert service' },
+                        { title: 'Anniversary & Milestone Party', desc: 'Candlelit courtyard setup with live instrumental sitar' },
+                        { title: 'Romantic Candlelight Dinner', desc: 'Private rooftop pavilion dinner overlooking lake Pichola' },
+                        { title: 'Corporate Event / Conference', desc: 'Audio-visual setup with palace high tea & catering' },
+                        { title: 'Pre-Wedding & Sangeet Gathering', desc: 'Starlit amphitheatre with folk dance & music setup' },
+                      ].map((item) => (
+                        <div
+                          key={item.title}
+                          onClick={() => {
+                            setHallEventType(item.title);
+                            setDialogView('hallDate');
+                          }}
+                          className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between ${
+                            hallEventType === item.title
+                              ? 'bg-[#FFF8EB] border-[#670E10] ring-2 ring-[#D8AA67] shadow-sm'
+                              : 'bg-white border-[#DFD3C3] hover:border-[#D8AA67]'
+                          }`}
+                        >
+                          <span
+                            className="text-base font-bold text-[#670E10] mb-1"
+                            style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)" }}
+                          >
+                            {item.title}
+                          </span>
+                          <span className="text-xs text-[#7A6F62]">{item.desc}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* Dialog Bottom Action */}
-              <div className="p-4 border-t border-[#DFD3C3] bg-[#F5F0E6] flex items-center justify-between gap-3">
-                <button
-                  type="button"
-                  onClick={handleClosePanel}
-                  className="w-full py-3 rounded-xl bg-gradient-to-r from-[#670E10] to-[#801417] text-[#FFF8EB] text-sm font-bold tracking-wide shadow-md hover:shadow-lg transition cursor-pointer text-center"
-                >
-                  Confirm &bull; Continue
-                </button>
+              {/* Dialog Bottom Action Summary Bar */}
+              <div className="p-4 sm:p-5 border-t border-[#DFD3C3] bg-[#F5EFE6] flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-xs text-[#241F1A] text-center sm:text-left">
+                  {activeTab === 'rooms' ? (
+                    <div>
+                      <span className="font-semibold text-[#8F7245]">Stay: </span>
+                      <span className="font-bold text-[#670E10]">
+                        {formattedCheckIn.day} {formattedCheckIn.monthYear} &rarr; {formattedCheckOut.day}{' '}
+                        {formattedCheckOut.monthYear} ({nightsCount} {nightsCount === 1 ? 'Night' : 'Nights'})
+                      </span>
+                      <span className="mx-2 text-gray-400 hidden sm:inline">&bull;</span>
+                      <span className="font-semibold text-[#8F7245]">Chambers: </span>
+                      <span className="font-bold text-[#670E10]">{guestsSummary}</span>
+                    </div>
+                  ) : (
+                    <div>
+                      <span className="font-semibold text-[#8F7245]">Event: </span>
+                      <span className="font-bold text-[#670E10]">
+                        {hallEventType} &bull; {formattedHallDate.day} {formattedHallDate.monthYear} &bull; {hallCapacity}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center space-x-3 w-full sm:w-auto">
+                  <button
+                    type="button"
+                    onClick={closeDialog}
+                    className="flex-1 sm:flex-initial px-5 py-2.5 rounded-xl border border-[#D8AA67] bg-white text-[#670E10] text-xs font-bold tracking-wide hover:bg-[#FFF8EB] transition cursor-pointer"
+                  >
+                    Done &bull; Save Selection
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={activeTab === 'rooms' ? handleRoomsSearchSubmit : handleHallSearchSubmit}
+                    className="flex-1 sm:flex-initial px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#670E10] via-[#7E1418] to-[#550B0D] text-[#FFF8EB] text-xs font-bold tracking-wide shadow-md hover:shadow-lg transition cursor-pointer flex items-center justify-center space-x-1.5"
+                  >
+                    <span>{activeTab === 'rooms' ? 'Search Chambers' : 'Check Hall Availability'}</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-[#D8AA67]" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>,
