@@ -43,70 +43,18 @@ export const Footer: React.FC = () => {
         <img src="/images/ornaments/floral-right.png" alt="" aria-hidden="true" className="w-full h-auto" />
       </div>
 
-      {/* ── 2. MONUMENTAL "RAJMAHAL" TYPOGRAPHY IN PEAK BOTTOM RIGHT BACKGROUND ── */}
-      <div className="absolute right-0 bottom-0 pointer-events-none select-none z-0 overflow-hidden max-w-full">
-        {/* Graffiti Paint Splatters & Stencil Background Effects */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute right-12 top-6 w-3 h-3 rounded-full bg-[#D8AA67]/40 blur-[1px]" />
-          <div className="absolute right-28 top-12 w-2 h-2 rounded-full bg-[#D8AA67]/50 blur-[0.5px]" />
-          <div className="absolute right-48 top-4 w-1.5 h-1.5 rounded-full bg-[#FFF8EB]/60" />
-          <div className="absolute right-72 top-14 w-2.5 h-2.5 rounded-full bg-[#D8AA67]/35 blur-[1px]" />
-          <div className="absolute right-24 bottom-10 w-2 h-2 rounded-full bg-[#FFF8EB]/50" />
-          <div className="absolute right-96 bottom-16 w-3 h-3 rounded-full bg-[#D8AA67]/25 blur-[1px]" />
-          <div
-            className="absolute -right-24 -bottom-16 w-[500px] sm:w-[750px] h-[300px] sm:h-[450px] rounded-full opacity-25 pointer-events-none"
-            style={{
-              background:
-                'radial-gradient(circle, rgba(216, 170, 103, 0.45) 0%, rgba(103, 14, 16, 0.25) 50%, transparent 75%)',
-            }}
-          />
-        </div>
+      {/* Subtle Royal Gold Radial Glow in Peak Bottom Right Background */}
+      <div
+        className="absolute right-0 bottom-0 w-[450px] sm:w-[650px] h-[250px] sm:h-[350px] rounded-full opacity-20 pointer-events-none select-none z-0"
+        style={{
+          background:
+            'radial-gradient(circle at 100% 100%, rgba(216, 170, 103, 0.4) 0%, rgba(103, 14, 16, 0.15) 50%, transparent 75%)',
+        }}
+      />
 
-        <div className="relative flex flex-col items-end pr-2 sm:pr-4 pb-0">
-          {/* Stencil Graffiti Tag */}
-          <div className="flex items-center space-x-2.5 mb-0.5 sm:mb-1 pr-2 sm:pr-4 opacity-80">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#D8AA67]/15 border border-[#D8AA67]/45 text-[9px] sm:text-[11px] font-mono tracking-[0.28em] uppercase text-[#D8AA67] shadow-inner backdrop-blur-xs">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#D8AA67] animate-ping" />
-              Mewar Royalty &bull; Estd 1842
-            </span>
-            <div className="hidden sm:flex items-center space-x-1 text-[#D8AA67]/70">
-              <span>&#10022;</span>
-              <span className="h-0.5 w-10 bg-gradient-to-r from-[#D8AA67]/80 to-transparent" />
-            </div>
-          </div>
-
-          {/* Giant Monumental Wordmark in Peak Bottom Right */}
-          <div className="relative">
-            <h1
-              className="text-[76px] min-[380px]:text-[95px] sm:text-[140px] md:text-[180px] lg:text-[220px] xl:text-[260px] font-black uppercase tracking-[-0.04em] leading-[0.76] text-right"
-              style={{
-                fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
-                WebkitTextStroke: '1.8px rgba(216, 170, 103, 0.38)',
-                color: 'transparent',
-                backgroundImage:
-                  'linear-gradient(180deg, rgba(255, 248, 235, 0.22) 0%, rgba(216, 170, 103, 0.14) 50%, rgba(79, 8, 9, 0.03) 100%)',
-                WebkitBackgroundClip: 'text',
-                filter: 'drop-shadow(0 6px 25px rgba(0, 0, 0, 0.8))',
-              }}
-            >
-              RAJMAHAL
-            </h1>
-
-            {/* Handcrafted Graffiti Brush Slash & Splash Accents */}
-            <div
-              className="absolute right-0 bottom-0 h-1 sm:h-1.5 w-3/4 sm:w-2/3 rounded-full opacity-70"
-              style={{
-                background:
-                  'linear-gradient(90deg, transparent 0%, rgba(216, 170, 103, 0.5) 40%, rgba(255, 248, 235, 0.75) 100%)',
-              }}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 pb-8 sm:pb-10">
-        {/* ── 3. FOUR-COLUMN CORE CONTENT ── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-8 pb-12 sm:pb-14 border-b border-[#D8AA67]/25">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 pb-24 sm:pb-12 md:pb-12">
+        {/* ── 3. FOUR-COLUMN CORE CONTENT (CLEAN & UNOBSTRUCTED) ── */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-8 pb-10 sm:pb-12 border-b border-[#D8AA67]/25">
           {/* Column 1: Royal Legacy Brand Card (4 cols) */}
           <div className="lg:col-span-4 space-y-4">
             <div className="flex items-center space-x-3.5">
@@ -292,19 +240,80 @@ export const Footer: React.FC = () => {
           </div>
         </div>
 
-        {/* ── 4. REFINED BOTTOM BAR & CLEARANCE ── */}
-        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-[11px] text-[#E7DEC8]/85 gap-3">
-          <p className="flex items-center gap-1.5 text-center sm:text-left">
-            <span>&copy; {new Date().getFullYear()} Rajmahal Heritage Hotel. All rights reserved.</span>
-            <span className="hidden md:inline text-[#D8AA67]">&bull;</span>
-            <span className="hidden md:inline text-[#D8AA67]">Preserved Living Heritage</span>
-          </p>
-          <div className="flex items-center space-x-5 text-[#D8AA67]">
-            <span className="hover:underline cursor-pointer">Privacy Charter</span>
-            <span>&bull;</span>
-            <span className="hover:underline cursor-pointer">Terms &amp; Tariffs</span>
-            <span>&bull;</span>
-            <span className="text-[#F7E5C3]">Udaipur, Rajasthan</span>
+        {/* ── 4. LOWER FOOTER BAND: METADATA & PEAK BOTTOM-RIGHT TYPOGRAPHY (ZERO OVERLAP) ── */}
+        <div className="pt-8 sm:pt-10 flex flex-col lg:flex-row items-start lg:items-end justify-between gap-6 relative">
+          {/* Left Side: Heritage Metadata & Legal Links (Clean, readable, unobstructed) */}
+          <div className="space-y-3 z-10 max-w-md">
+            <div className="flex items-center space-x-2 text-xs text-[#E7DEC8]">
+              <ShieldCheck className="w-4 h-4 text-[#D8AA67] shrink-0" />
+              <span>Preserved Living Heritage &bull; Udaipur, Rajasthan</span>
+            </div>
+            <p className="text-xs text-[#E7DEC8]/80 leading-relaxed font-light">
+              &copy; {new Date().getFullYear()} Rajmahal Heritage Hotel. All rights reserved.
+            </p>
+            <div className="flex items-center space-x-4 text-[11px] text-[#D8AA67] pt-1">
+              <Link href="/privacy" className="hover:text-[#FFF8EB] hover:underline transition-colors">
+                Privacy Charter
+              </Link>
+              <span>&bull;</span>
+              <Link href="/terms" className="hover:text-[#FFF8EB] hover:underline transition-colors">
+                Terms &amp; Tariffs
+              </Link>
+              <span>&bull;</span>
+              <span className="text-[#F7E5C3]">Mewar Sanctuary</span>
+            </div>
+          </div>
+
+          {/* Right Side: Peak Bottom-Right Monumental "RAJMAHAL" Typography */}
+          <div className="relative flex flex-col items-end self-end z-10 select-none overflow-hidden max-w-full">
+            {/* Graffiti Paint Splatters & Stencil Effects */}
+            <div className="absolute inset-0 pointer-events-none select-none">
+              <div className="absolute right-8 top-1 w-2 h-2 rounded-full bg-[#D8AA67]/40 blur-[0.5px]" />
+              <div className="absolute right-24 top-4 w-1.5 h-1.5 rounded-full bg-[#FFF8EB]/50" />
+              <div className="absolute right-44 top-2 w-2 h-2 rounded-full bg-[#D8AA67]/30 blur-[1px]" />
+              <div className="absolute right-14 bottom-3 w-1.5 h-1.5 rounded-full bg-[#FFF8EB]/60" />
+            </div>
+
+            {/* Stencil Graffiti Tag */}
+            <div className="flex items-center space-x-2 mb-1 opacity-85">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#D8AA67]/15 border border-[#D8AA67]/45 text-[9px] sm:text-[11px] font-mono tracking-[0.28em] uppercase text-[#D8AA67] shadow-inner backdrop-blur-xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#D8AA67] animate-ping" />
+                Mewar Royalty &bull; Estd 1842
+              </span>
+              <div className="hidden sm:flex items-center space-x-1 text-[#D8AA67]/70">
+                <span>&#10022;</span>
+                <span className="h-0.5 w-8 bg-gradient-to-r from-[#D8AA67]/80 to-transparent" />
+              </div>
+            </div>
+
+            {/* Monumental RAJMAHAL Wordmark */}
+            <div className="relative">
+              <span
+                role="presentation"
+                aria-hidden="true"
+                className="block text-[46px] min-[380px]:text-[56px] sm:text-[76px] md:text-[96px] lg:text-[112px] xl:text-[128px] font-black uppercase tracking-[-0.04em] leading-[0.8] text-right select-none"
+                style={{
+                  fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
+                  WebkitTextStroke: '1.6px rgba(216, 170, 103, 0.42)',
+                  color: 'transparent',
+                  backgroundImage:
+                    'linear-gradient(180deg, rgba(255, 248, 235, 0.28) 0%, rgba(216, 170, 103, 0.18) 50%, rgba(79, 8, 9, 0.04) 100%)',
+                  WebkitBackgroundClip: 'text',
+                  filter: 'drop-shadow(0 4px 18px rgba(0, 0, 0, 0.8))',
+                }}
+              >
+                RAJMAHAL
+              </span>
+
+              {/* Handcrafted Graffiti Brush Slash & Splash Accents */}
+              <div
+                className="absolute right-0 bottom-0 h-1 sm:h-1.5 w-3/4 sm:w-2/3 rounded-full opacity-70 pointer-events-none"
+                style={{
+                  background:
+                    'linear-gradient(90deg, transparent 0%, rgba(216, 170, 103, 0.55) 40%, rgba(255, 248, 235, 0.8) 100%)',
+                }}
+              />
+            </div>
           </div>
         </div>
       </div>
