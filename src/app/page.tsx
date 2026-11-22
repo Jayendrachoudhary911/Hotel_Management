@@ -188,7 +188,7 @@ async function HomeContent() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             {/* Left: Framed Bedroom with Frame Softener */}
             <div className="lg:col-span-5 flex justify-center">
-              <div className="relative w-full max-w-[480px] rounded-lg overflow-hidden shadow-2xl border border-[#d8aa67]/40">
+              <div className="relative w-full max-w-[480px] rounded-lg overflow-hidden">
                 <img
                   src="/images/heritage-reference/framed-bedroom.png"
                   alt="Warmly lit Rajputana bedroom overlooking lake"
@@ -290,29 +290,44 @@ async function HomeContent() {
           </div>
 
           {/* Dynamic Rooms Grid with Figma Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
+<div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 md:gap-7">
             {roomTypes.map((room) => {
               const roomImage = room.photos?.[0] || '/images/rooms/lakeview-palace-suite.png';
               return (
                 <Link
                   key={room.id}
                   href={`/rooms/${room.id}`}
-                  className="group flex flex-col justify-between rounded-[10px] overflow-hidden bg-[#fffaf1] border border-[#c99554]/60 shadow-[0_8px_20px_rgba(67,42,19,0.07)] hover:border-[#d8aa67] hover:-translate-y-2 hover:shadow-[0_24px_45px_rgba(67,42,19,0.18)] transition-all duration-300 ease-out cursor-pointer"
+                  className="group relative flex flex-col justify-between rounded-t-3xl rounded-b-xl overflow-hidden bg-[#FDF8EE] hover:border-[#4F0809] hover:-translate-y-1 transition-all duration-300 ease-out cursor-pointer"
                 >
-                  <div className="relative h-60 w-full overflow-hidden">
-                    <Image
-                      src={roomImage}
-                      alt={room.name}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  {/* Inner Royal Gold Hairline Frame */}
+                  <div className="pointer-events-none absolute inset-1.5 rounded-t-[20px] rounded-b-lg border border-[#D8AA67]/35 group-hover:border-[#D8AA67]/80 transition-colors z-10" />
+
+                  {/* Jharokha-Inspired Image Header */}
+                  <div className="p-[8.5px] sm:p-3 pb-0">
+                    <div className="relative h-36 sm:h-52 md:h-60 w-full overflow-hidden rounded-t-[17px] sm:rounded-t-[14px] rounded-b-md border border-[#C99A52]/50 bg-[#EFE6D5]">
+                      <Image
+                        src={roomImage}
+                        alt={room.name}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#2B0507]/55 via-transparent to-transparent" />
+
+                      {/* Floating Royal Crest Pill */}
+                      <div className="absolute top-2 left-2 sm:top-3 sm:left-3">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-[#4F0809]/95 text-[8px] sm:text-[10px] font-semibold uppercase tracking-[0.18em] text-[#F7E5C3] border border-[#D8AA67]/60">
+                          <span className="w-1 h-1 rounded-full bg-[#D8AA67]" />
+                          Rajputana Suite
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="p-5 flex-1 flex flex-col justify-between">
+                  {/* Card Body */}
+                  <div className="p-3 sm:p-5 flex-1 flex flex-col justify-between">
                     <div>
                       <h3
-                        className="text-2xl font-bold mb-2 text-[#781c1c] group-hover:text-[#d8aa67] transition-colors duration-200"
+                        className="text-base sm:text-xl md:text-2xl font-bold mb-1 sm:mb-1.5 text-[#4F0809] group-hover:text-[#9C7A45] transition-colors duration-200 line-clamp-1"
                         style={{
                           fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
                         }}
@@ -320,48 +335,55 @@ async function HomeContent() {
                         {room.name}
                       </h3>
 
+                      {/* Ornamental Gold Divider */}
+                      <div className="flex items-center gap-1.5 mb-2 sm:mb-2.5">
+                        <span className="h-[1px] w-6 sm:w-8 bg-[#C99A52]" />
+                        <span className="w-1.5 h-1.5 rotate-45 border border-[#C99A52] bg-[#D8AA67]/40" />
+                        <span className="h-[1px] flex-1 bg-[#C99A52]/30" />
+                      </div>
+
                       {/* Amenities Row */}
-                      <div className="flex items-center space-x-4 text-xs text-[#857866] mb-3">
-                        <span className="flex items-center">
-                          <BedDouble className="w-4 h-4 text-[#d8aa67] mr-1.5" />
+                      <div className="flex flex-wrap items-center gap-x-2 sm:gap-x-3 gap-y-1 text-[10px] sm:text-xs text-[#6B533B] mb-2 sm:mb-3 font-medium">
+                        <span className="inline-flex items-center">
+                          <BedDouble className="w-3 h-3 sm:w-4 sm:h-4 text-[#9C7A45] mr-1 sm:mr-1.5 shrink-0" />
                           <span>King Bed</span>
                         </span>
-                        <span>•</span>
-                        <span className="flex items-center">
-                          <Users className="w-4 h-4 text-[#d8aa67] mr-1.5" />
+                        <span className="text-[#C99A52]">&#9830;</span>
+                        <span className="inline-flex items-center">
+                          <Users className="w-3 h-3 sm:w-4 sm:h-4 text-[#9C7A45] mr-1 sm:mr-1.5 shrink-0" />
                           <span>{room.capacity} Guests</span>
                         </span>
                       </div>
 
-                      <p className="text-xs sm:text-sm text-[#4f0809] line-clamp-2 mb-4 leading-relaxed font-light">
-                        {room.description || 'Experience authentic royal heritage comforts with handcrafted furnishings and scenic views.'}
+                      <p className="text-[11px] sm:text-sm text-[#4F0809]/85 line-clamp-2 mb-3 sm:mb-4 leading-relaxed font-light">
+                        {room.description ||
+                          'Experience authentic royal heritage comforts with handcrafted furnishings and scenic views.'}
                       </p>
                     </div>
 
-                    <div className="pt-3 border-t border-[#dfcdb1]/60 flex items-center justify-between">
+                    {/* Footer: Tariff & Royal CTA */}
+                    <div className="pt-2.5 sm:pt-3.5 border-t border-double border-[#C99A52]/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <div className="flex flex-col text-left">
-                        <span className="text-xs text-[#857866]">Starting from</span>
+                        <span className="text-[8px] sm:text-[10px] uppercase tracking-[0.16em] text-[#856B4D] font-semibold">
+                          Royal Tariff
+                        </span>
                         <span
-                          className="text-xl font-bold text-[#781c1c]"
+                          className="text-base sm:text-xl font-bold text-[#4F0809] leading-tight"
                           style={{
                             fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
                           }}
                         >
                           {formatMoney(room.base_rate_minor)}{' '}
-                          <span className="text-xs font-normal text-[#5a4334]">/ night</span>
+                          <span className="text-[10px] sm:text-xs font-normal text-[#6B533B]">
+                            / night
+                          </span>
                         </span>
                       </div>
 
-                      <div className="flex items-center">
-                        <span
-                          className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-[6px] text-xs font-semibold transition-all duration-200 shadow group-hover:shadow-md group-hover:bg-[#680b0c] group-hover:-translate-y-0.5 active:translate-y-0"
-                          style={{
-                            backgroundColor: 'var(--forest-deep, #4f0809)',
-                            color: 'var(--ivory, #fff8eb)',
-                          }}
-                        >
-                          <span>Book Now</span>
-                          <ArrowRight className="w-3.5 h-3.5 ml-0.5 stroke-[2] group-hover:translate-x-1 transition-transform" />
+                      <div className="flex items-center w-full sm:w-auto">
+                        <span className="w-full sm:w-auto inline-flex items-center justify-center space-x-1 sm:space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-[#4F0809] border border-[#D8AA67]/70 text-[#FFF8EB] text-[10px] sm:text-xs font-bold uppercase tracking-[0.14em] transition-colors duration-200 group-hover:bg-[#680b0c] group-hover:border-[#D8AA67]">
+                          <span>Reserve</span>
+                          <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#D8AA67] stroke-[2.2] group-hover:translate-x-0.5 transition-transform" />
                         </span>
                       </div>
                     </div>
