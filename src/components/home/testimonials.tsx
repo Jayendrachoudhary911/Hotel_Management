@@ -292,6 +292,53 @@ export function Testimonials() {
         </div>
       </div>
 
+      {/* ── EMBEDDED MARQUEE ANIMATION KEYFRAMES (Guarantees HMR & Zero CSS caching issues) ── */}
+      <style>{`
+        @keyframes marqueeReviewsRTL {
+          0% {
+            transform: translate3d(0, 0, 0);
+          }
+          100% {
+            transform: translate3d(-50%, 0, 0);
+          }
+        }
+        @keyframes marqueeReviewsLTR {
+          0% {
+            transform: translate3d(-50%, 0, 0);
+          }
+          100% {
+            transform: translate3d(0, 0, 0);
+          }
+        }
+        .animate-marquee-infinite {
+          display: flex !important;
+          width: max-content !important;
+          animation: marqueeReviewsRTL 42s linear infinite !important;
+          will-change: transform;
+        }
+        .animate-marquee-infinite:hover {
+          animation-play-state: paused !important;
+        }
+        .animate-marquee-infinite-reverse {
+          display: flex !important;
+          width: max-content !important;
+          animation: marqueeReviewsLTR 46s linear infinite !important;
+          will-change: transform;
+        }
+        .animate-marquee-infinite-reverse:hover {
+          animation-play-state: paused !important;
+        }
+        .animate-marquee-infinite-fast {
+          display: flex !important;
+          width: max-content !important;
+          animation: marqueeReviewsRTL 36s linear infinite !important;
+          will-change: transform;
+        }
+        .animate-marquee-infinite-fast:hover {
+          animation-play-state: paused !important;
+        }
+      `}</style>
+
       {/* ── THREE-COLUMN INFINITE SCROLL TRACKS WITH DUAL MASK GRADIENTS ── */}
       {/* 1st Column / Row: Right to Left */}
       {/* 2nd Column / Row: Left to Right */}
@@ -315,7 +362,14 @@ export function Testimonials() {
 
         {/* ── Column 1: Right to Left (←) ── */}
         <div className="w-full overflow-hidden mask-gradient-x">
-          <div className="animate-marquee-infinite flex items-stretch gap-4 sm:gap-5 px-4">
+          <div
+            className="animate-marquee-infinite flex items-stretch gap-4 sm:gap-5 px-4"
+            style={{
+              animation: 'marqueeReviewsRTL 42s linear infinite',
+              width: 'max-content',
+              display: 'flex',
+            }}
+          >
             {row1Reviews.map((t, index) => (
               <ReviewCard key={`col1-${t.id}-${index}`} review={t} />
             ))}
@@ -324,7 +378,14 @@ export function Testimonials() {
 
         {/* ── Column 2: Left to Right (→) ── */}
         <div className="w-full overflow-hidden mask-gradient-x">
-          <div className="animate-marquee-infinite-reverse flex items-stretch gap-4 sm:gap-5 px-4">
+          <div
+            className="animate-marquee-infinite-reverse flex items-stretch gap-4 sm:gap-5 px-4"
+            style={{
+              animation: 'marqueeReviewsLTR 46s linear infinite',
+              width: 'max-content',
+              display: 'flex',
+            }}
+          >
             {row2Reviews.map((t, index) => (
               <ReviewCard key={`col2-${t.id}-${index}`} review={t} />
             ))}
@@ -333,7 +394,14 @@ export function Testimonials() {
 
         {/* ── Column 3: Right to Left (←) ── */}
         <div className="w-full overflow-hidden mask-gradient-x">
-          <div className="animate-marquee-infinite-fast flex items-stretch gap-4 sm:gap-5 px-4">
+          <div
+            className="animate-marquee-infinite-fast flex items-stretch gap-4 sm:gap-5 px-4"
+            style={{
+              animation: 'marqueeReviewsRTL 36s linear infinite',
+              width: 'max-content',
+              display: 'flex',
+            }}
+          >
             {row3Reviews.map((t, index) => (
               <ReviewCard key={`col3-${t.id}-${index}`} review={t} />
             ))}
