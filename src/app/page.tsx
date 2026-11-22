@@ -410,110 +410,144 @@ async function HomeContent() {
           aria-hidden="true"
         />
 
-        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:gap-7">
             {/* Feature 1: Rajasthani Restaurant */}
-            <article
-              className="group flex flex-col rounded-[12px] overflow-hidden bg-[#fffaf1] border border-[#c99554]/60 shadow-[0_8px_22px_rgba(67,42,19,0.08)] hover:border-[#d8aa67] hover:-translate-y-2 hover:shadow-[0_24px_50px_rgba(67,42,19,0.18)] transition-all duration-300 ease-out"
-            >
-              <div className="relative h-64 sm:h-72 w-full p-3.5 pb-0">
-                <div className="w-full h-full overflow-hidden rounded-[10px]">
+            <article className="group relative flex flex-col lg:flex-row rounded-t-3xl rounded-b-xl lg:rounded-2xl overflow-hidden bg-[#FDF8EE] border border-[#C99A52]/70 hover:border-[#4F0809] hover:-translate-y-1 transition-all duration-300 ease-out">
+              {/* Inner Royal Gold Hairline Frame */}
+              <div className="pointer-events-none absolute inset-1.5 rounded-t-[20px] rounded-b-lg lg:rounded-xl transition-colors z-10" />
+
+              {/* Image Section: Top on Mobile, Left Split on Desktop */}
+              <div className="relative p-0 sm:p-0 lg:p-0 lg:pr-0 w-full lg:w-[44%] shrink-0">
+                <div className="relative h-36 sm:h-52 lg:h-full lg:min-h-[270px] w-full overflow-hidden rounded-t-2xl rounded-b-md lg:rounded-xl bg-[#EFE6D5]">
                   <img
                     src="/images/dining/rajasthani-restaurant.png"
                     alt="Rajasthani restaurant dining room overlooking the lake"
-                    className="w-full h-full object-cover rounded-[10px] group-hover:scale-105 transition-transform duration-700 ease-out"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#2B0507]/50 via-transparent to-transparent" />
+
+                  {/* Floating Royal Crest Pill */}
+                  <div className="absolute top-2 left-2 sm:top-3 sm:left-3">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-[#4F0809]/95 text-[8px] sm:text-[9px] font-semibold uppercase tracking-[0.16em] text-[#F7E5C3] border border-[#D8AA67]/60">
+                      <span className="w-1 h-1 rounded-full bg-[#D8AA67]" />
+                      Royal Dining
+                    </span>
+                  </div>
                 </div>
               </div>
-              <div className="p-6 flex-1 flex flex-col justify-between">
+
+              {/* Content Section */}
+              <div className="p-3 sm:p-5 lg:p-6 flex-1 flex flex-col justify-between">
                 <div>
-                  <span className="text-xs font-semibold tracking-[0.14em] uppercase text-[#d8aa67] block mb-1">
+                  <span className="text-[9px] sm:text-[11px] font-bold tracking-[0.18em] uppercase text-[#9C7A45] block mb-1">
                     Authentic Flavors
                   </span>
                   <h3
-                    className="text-3xl font-bold mb-3 text-[#781c1c] group-hover:text-[#d8aa67] transition-colors duration-200"
+                    className="text-base sm:text-2xl lg:text-[26px] font-bold mb-1.5 text-[#4F0809] group-hover:text-[#9C7A45] transition-colors duration-200 leading-tight"
                     style={{
                       fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
                     }}
                   >
                     Rajasthani Restaurant
                   </h3>
-                  <p className="text-sm text-[#4f0809] leading-relaxed mb-6">
+
+                  {/* Ornamental Gold Divider */}
+                  <div className="flex items-center gap-1.5 mb-2 sm:mb-3">
+                    <span className="h-[1px] w-6 sm:w-8 bg-[#C99A52]" />
+                    <span className="w-1.5 h-1.5 rotate-45 border border-[#C99A52] bg-[#D8AA67]/40" />
+                    <span className="h-[1px] flex-1 bg-[#C99A52]/30" />
+                  </div>
+
+                  <p className="text-[11px] sm:text-xs lg:text-sm text-[#4F0809]/85 leading-relaxed mb-3 sm:mb-5 font-light line-clamp-3 lg:line-clamp-none">
                     Experience the true taste of Rajasthan with traditional recipes, fresh local ingredients and a heritage dining atmosphere.
                   </p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 mt-4">
+                {/* Action Buttons */}
+                <div className="pt-2.5 sm:pt-3.5 border-t border-double border-[#C99A52]/60 grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2.5">
                   <Link
                     href="/restaurant"
-                    className="flex items-center justify-center space-x-2 h-11 rounded-[6px] text-xs sm:text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:brightness-105 active:translate-y-0"
-                    style={{
-                      backgroundColor: 'var(--antique-gold, #d8aa67)',
-                      color: 'var(--forest-ink, #380506)',
-                    }}
+                    className="flex items-center justify-center space-x-1 sm:space-x-1.5 h-8 sm:h-10 px-2.5 rounded-full bg-[#D8AA67] border border-[#B78A48] text-[#2B0507] text-[10px] sm:text-xs font-bold uppercase tracking-[0.1em] transition-colors duration-200 hover:bg-[#E1B46F]"
                   >
                     <span>View Menu</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
                   </Link>
-                  <RestaurantReservationCTA
-                    venue="restaurant"
-                    variant="card"
-                    label="Reserve a Table"
-                  />
+                  <div className="[&>*]:w-full [&>*]:h-8 sm:[&>*]:h-10 [&>*]:rounded-full [&>*]:shadow-none [&>*]:text-[10px] sm:[&>*]:text-xs [&>*]:uppercase [&>*]:tracking-[0.1em]">
+                    <RestaurantReservationCTA
+                      venue="restaurant"
+                      variant="card"
+                      label="Reserve Table"
+                    />
+                  </div>
                 </div>
               </div>
             </article>
 
             {/* Feature 2: Café & Lounge */}
-            <article
-              className="group flex flex-col rounded-[12px] overflow-hidden bg-[#fffaf1] border border-[#c99554]/60 shadow-[0_8px_22px_rgba(67,42,19,0.08)] hover:border-[#d8aa67] hover:-translate-y-2 hover:shadow-[0_24px_50px_rgba(67,42,19,0.18)] transition-all duration-300 ease-out"
-            >
-              <div className="relative h-64 sm:h-72 w-full p-3.5 pb-0">
-                <div className="w-full h-full overflow-hidden rounded-[10px]">
+            <article className="group relative flex flex-col lg:flex-row rounded-t-3xl rounded-b-xl lg:rounded-2xl overflow-hidden bg-[#FDF8EE] border border-[#C99A52]/70 hover:border-[#4F0809] hover:-translate-y-1 transition-all duration-300 ease-out">
+              {/* Inner Royal Gold Hairline Frame */}
+              <div className="pointer-events-none absolute inset-1.5 rounded-t-[20px] rounded-b-lg lg:rounded-xl transition-colors z-10" />
+
+              {/* Image Section: Top on Mobile, Left Split on Desktop */}
+              <div className="relative p-0 sm:p-0 lg:p-0 lg:pr-0 w-full lg:w-[44%] shrink-0">
+                <div className="relative h-36 sm:h-52 lg:h-full lg:min-h-[270px] w-full overflow-hidden rounded-t-2xl rounded-b-md lg:rounded-xl bg-[#EFE6D5]">
                   <img
                     src="/images/dining/cafe-lounge.png"
                     alt="Heritage café and lounge with lake views"
-                    className="w-full h-full object-cover rounded-[10px] group-hover:scale-105 transition-transform duration-700 ease-out"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#2B0507]/50 via-transparent to-transparent" />
+
+                  {/* Floating Royal Crest Pill */}
+                  <div className="absolute top-2 left-2 sm:top-3 sm:left-3">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-[#4F0809]/95 text-[8px] sm:text-[9px] font-semibold uppercase tracking-[0.16em] text-[#F7E5C3] border border-[#D8AA67]/60">
+                      <span className="w-1 h-1 rounded-full bg-[#D8AA67]" />
+                      Palace Lounge
+                    </span>
+                  </div>
                 </div>
               </div>
-              <div className="p-6 flex-1 flex flex-col justify-between">
+
+              {/* Content Section */}
+              <div className="p-3 sm:p-5 lg:p-6 flex-1 flex flex-col justify-between">
                 <div>
-                  <span className="text-xs font-semibold tracking-[0.14em] uppercase text-[#d8aa67] block mb-1">
-                    Relax, Sip & Unwind
+                  <span className="text-[9px] sm:text-[11px] font-bold tracking-[0.18em] uppercase text-[#9C7A45] block mb-1">
+                    Relax, Sip &amp; Unwind
                   </span>
                   <h3
-                    className="text-3xl font-bold mb-3 text-[#781c1c] group-hover:text-[#d8aa67] transition-colors duration-200"
+                    className="text-base sm:text-2xl lg:text-[26px] font-bold mb-1.5 text-[#4F0809] group-hover:text-[#9C7A45] transition-colors duration-200 leading-tight"
                     style={{
                       fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
                     }}
                   >
-                    Café & Lounge
+                    Café &amp; Lounge
                   </h3>
-                  <p className="text-sm text-[#4f0809] leading-relaxed mb-6">
+
+                  {/* Ornamental Gold Divider */}
+                  <div className="flex items-center gap-1.5 mb-2 sm:mb-3">
+                    <span className="h-[1px] w-6 sm:w-8 bg-[#C99A52]" />
+                    <span className="w-1.5 h-1.5 rotate-45 border border-[#C99A52] bg-[#D8AA67]/40" />
+                    <span className="h-[1px] flex-1 bg-[#C99A52]/30" />
+                  </div>
+
+                  <p className="text-[11px] sm:text-xs lg:text-sm text-[#4F0809]/85 leading-relaxed mb-3 sm:mb-5 font-light line-clamp-3 lg:line-clamp-none">
                     A cozy space to enjoy freshly brewed coffee, Rajasthani snacks and a relaxed ambience with beautiful views.
                   </p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 mt-4">
+                {/* Action Buttons */}
+                <div className="pt-2.5 sm:pt-3.5 border-t border-double border-[#C99A52]/60 grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2.5">
                   <Link
                     href="/restaurant#cafe"
-                    className="flex items-center justify-center space-x-2 h-11 rounded-[6px] text-xs sm:text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:brightness-105 active:translate-y-0"
-                    style={{
-                      backgroundColor: 'var(--antique-gold, #d8aa67)',
-                      color: 'var(--forest-ink, #380506)',
-                    }}
+                    className="flex items-center justify-center space-x-1 sm:space-x-1.5 h-8 sm:h-10 px-2.5 rounded-full bg-[#D8AA67] border border-[#B78A48] text-[#2B0507] text-[10px] sm:text-xs font-bold uppercase tracking-[0.1em] transition-colors duration-200 hover:bg-[#E1B46F]"
                   >
-                    <span>View Café Menu</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <span>Café Menu</span>
+                    <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
                   </Link>
                   <Link
                     href="/restaurant"
-                    className="flex items-center justify-center h-11 rounded-[6px] text-xs sm:text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md hover:bg-[#680b0c] hover:-translate-y-0.5 active:translate-y-0"
-                    style={{
-                      backgroundColor: 'var(--forest-deep, #4f0809)',
-                      color: 'var(--ivory, #fff8eb)',
-                    }}
+                    className="flex items-center justify-center h-8 sm:h-10 px-2.5 rounded-full bg-[#4F0809] border border-[#D8AA67]/70 text-[#FFF8EB] text-[10px] sm:text-xs font-bold uppercase tracking-[0.1em] transition-colors duration-200 hover:bg-[#680b0c]"
                   >
                     <span>Order Now</span>
                   </Link>
