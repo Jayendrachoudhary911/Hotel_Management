@@ -17,7 +17,8 @@ export const WhatsAppConcierge: React.FC = () => {
 
     const updatePosition = () => {
       const footer = document.querySelector('footer');
-      const baseBottom = window.innerWidth >= 640 ? 32 : 24;
+      // On mobile (<640px), keep above the 56px mobile nav bar (56 + 16 = 72px)
+      const baseBottom = window.innerWidth >= 640 ? 32 : 72;
 
       if (!footer) {
         setBottomOffset(baseBottom);

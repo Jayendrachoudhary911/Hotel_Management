@@ -1,12 +1,58 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, BedDouble, Utensils, Coffee, Calendar } from 'lucide-react';
 
 export const MobileNav: React.FC = () => {
   const pathname = usePathname();
+  const [bottomOffset, setBottomOffset] = useState<number>(0);
+
+  // Dynamic boundary tracking: stops sticking/floating at the viewport bottom when reaching the footer
+  useEffect(() => {
+    let rafId: number | null = null;
+
+    const updatePosition = () => {
+      const footer = document.querySelector('footer');
+
+      if (!footer) {
+        setBottomOffset(0);
+        return;
+      }
+
+      const footerRect = footer.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+
+      // Distance from top of viewport to top of footer
+      const overlap = viewportHeight - footerRect.top;
+
+      if (overlap > 0) {
+        // Ends sticky property before footer: parks right above the footer top border
+        setBottomOffset(overlap);
+      } else {
+        setBottomOffset(0);
+      }
+    };
+
+    const handleScroll = () => {
+      if (rafId !== null) return;
+      rafId = requestAnimationFrame(() => {
+        updatePosition();
+        rafId = null;
+      });
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleScroll, { passive: true });
+    updatePosition();
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+      if (rafId !== null) cancelAnimationFrame(rafId);
+    };
+  }, []);
 
   // Hide on staff dashboard and dedicated auth pages
   if (pathname.startsWith('/dashboard') || pathname === '/login' || pathname === '/signup' || pathname.startsWith('/auth')) {
@@ -22,7 +68,11 @@ export const MobileNav: React.FC = () => {
   ];
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#FAF8F3] border-t border-[#D4CBBB] shadow-lg px-2 py-1.5 flex items-center justify-around">
+    <nav
+      className="md:hidden fixed left-0 right-0 z-40 bg-[#FAF8F3] border-t border-[#D4CBBB] shadow-lg px-2 py-1.5 flex items-center justify-around"
+      style={{ bottom: `${bottomOffset}px` }}
+      aria-label="Mobile Navigation"
+    >
       {items.map((item) => {
         const isActive = pathname === item.href;
         const Icon = item.icon;
