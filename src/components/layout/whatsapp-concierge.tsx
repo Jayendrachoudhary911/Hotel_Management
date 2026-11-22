@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { MessageCircle, X, Sparkles } from 'lucide-react';
 
@@ -9,6 +9,54 @@ const CONCIERGE_PHONE = '919829012345'; // Rajmahal Palace Front Desk & Concierg
 export const WhatsAppConcierge: React.FC = () => {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const [bottomOffset, setBottomOffset] = useState<number>(24);
+
+  // Dynamic positioning: stops floating when reaching the footer so it never overlaps footer content
+  useEffect(() => {
+    let rafId: number | null = null;
+
+    const updatePosition = () => {
+      const footer = document.querySelector('footer');
+      const baseBottom = window.innerWidth >= 640 ? 32 : 24;
+
+      if (!footer) {
+        setBottomOffset(baseBottom);
+        return;
+      }
+
+      const footerRect = footer.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+
+      // Distance from top of viewport to top of footer
+      // When footerRect.top < viewportHeight, the top of the footer has entered the viewport
+      const overlap = viewportHeight - footerRect.top;
+
+      if (overlap > 0) {
+        // Stop floating over the footer: lift button by overlap amount so it stays parked above the footer top
+        setBottomOffset(overlap + baseBottom);
+      } else {
+        setBottomOffset(baseBottom);
+      }
+    };
+
+    const handleScroll = () => {
+      if (rafId !== null) return;
+      rafId = requestAnimationFrame(() => {
+        updatePosition();
+        rafId = null;
+      });
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleScroll, { passive: true });
+    updatePosition();
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+      if (rafId !== null) cancelAnimationFrame(rafId);
+    };
+  }, []);
 
   // Hide on staff dashboard and dedicated auth screens
   if (
@@ -47,7 +95,10 @@ export const WhatsAppConcierge: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-6 right-5 sm:bottom-8 sm:right-7 z-40 flex flex-col items-end">
+    <div
+      className="fixed right-5 sm:right-7 z-40 flex flex-col items-end transition-[bottom] duration-150 ease-out"
+      style={{ bottom: `${bottomOffset}px` }}
+    >
       {/* Expanded Quick Card */}
       {isOpen && (
         <div className="mb-3 w-72 sm:w-80 rounded-2xl bg-[#FFFDF9] border border-[#D8AA67]/60 shadow-[0_12px_40px_rgba(40,5,6,0.35)] p-4 text-[#241F1A] animate-fade-in-up">
@@ -72,7 +123,7 @@ export const WhatsAppConcierge: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="p-1 rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition"
+              className="p-1 rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition cursor-pointer"
               aria-label="Close concierge preview"
             >
               <X className="w-4 h-4" />
