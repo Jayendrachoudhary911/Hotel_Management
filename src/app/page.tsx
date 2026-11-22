@@ -22,7 +22,7 @@ type HeritageIconName = 'arch' | 'dining' | 'cafe' | 'pavilion' | 'wedding' | 'm
 function HeritageQuickIcon({ name }: { name: HeritageIconName }) {
   const common = {
     className:
-      'w-14 h-14 sm:w-16 sm:h-16 shrink-0 transition-transform duration-300 group-hover:scale-110 text-[#d8aa67]',
+      'w-9 h-9 min-[400px]:w-10 min-[400px]:h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 shrink-0 transition-transform duration-300 group-hover:scale-110 text-[#d8aa67]',
     viewBox: '0 0 72 72',
     fill: 'none',
     stroke: 'currentColor',
@@ -128,34 +128,34 @@ async function HomeContent() {
       <HeroSection />
 
       {/* ── 2. QUICK LINKS WITH HERITAGE ORNAMENTS ── */}
-      <section className="relative z-10 pt-20 sm:pt-24 pb-16 overflow-hidden border-b border-[#dfcdb1]/60" style={{ backgroundColor: 'var(--cream, #fbf5e9)' }}>
+      <section className="relative z-10 pt-20 sm:pt-24 pb-16 overflow-hidden" style={{ backgroundColor: 'var(--cream, #fbf5e9)' }}>
         {/* Left and Right Floral Artworks */}
         <img
-          className="floral-artwork left opacity-25"
+          className="floral-artwork left opacity-15 sm:opacity-25"
           src="/images/ornaments/floral-left.png"
           alt=""
           aria-hidden="true"
         />
         <img
-          className="floral-artwork right opacity-25"
+          className="floral-artwork right opacity-15 sm:opacity-25"
           src="/images/ornaments/floral-right.png"
           alt=""
           aria-hidden="true"
         />
 
-        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6 sm:gap-4 text-center">
+        <div className="relative z-10 max-w-6xl mx-auto px-2 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-5 gap-1 min-[400px]:gap-2 sm:gap-4 text-center">
             {quickLinks.map((item, idx) => (
               <Link
                 key={idx}
                 href={item.href}
-                className="group flex flex-col items-center justify-start p-3 rounded-xl hover:bg-[#fffaf1] transition-all cursor-pointer relative"
+                className="group flex flex-col items-center justify-start py-2 px-0.5 min-[400px]:px-1 sm:p-3 rounded-xl hover:bg-[#fffaf1] transition-all cursor-pointer relative"
               >
-                <div className="mb-3">
+                <div className="mb-1.5 sm:mb-3">
                   <HeritageQuickIcon name={item.icon} />
-                </div>
+                </div> 
                 <span
-                  className="text-base sm:text-lg font-semibold text-[#4f0809] tracking-normal group-hover:text-[#d8aa67] transition-colors"
+                  className="text-[10px] min-[360px]:text-[11px] min-[400px]:text-xs sm:text-base md:text-lg font-semibold text-[#4f0809] tracking-normal leading-[1.15] sm:leading-snug group-hover:text-[#d8aa67] transition-colors"
                   style={{
                     fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
                   }}
