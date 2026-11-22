@@ -10,30 +10,32 @@ export function HeroSection() {
   const [isMobile, setIsMobile] = useState(false);
   const trackRef = useRef<HTMLDivElement>(null);
   const rafIdRef = useRef<number | null>(null);
+  const maxDistanceRef = useRef<number>(380);
 
   useEffect(() => {
-    const checkMobile = () => {
+    const calculateMetrics = () => {
       setIsMobile(window.innerWidth < 768);
+      if (trackRef.current) {
+        const scrollDistance = trackRef.current.offsetHeight - window.innerHeight;
+        maxDistanceRef.current = scrollDistance > 50 ? scrollDistance : 380;
+      }
     };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
+
+    calculateMetrics();
+    window.addEventListener('resize', calculateMetrics, { passive: true });
 
     const updateScrollProgress = () => {
       if (!trackRef.current) {
         const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
-        const progress = Math.min(1, Math.max(0, scrollY / 360));
+        const progress = Math.min(1, Math.max(0, scrollY / 380));
         setScrollProgress(progress);
         return;
       }
 
-      // Track distance: track height minus viewport height gives the exact scroll runway
+      // Read only rect.top on frame tick (metrics are cached on resize, eliminating layout reflow)
       const rect = trackRef.current.getBoundingClientRect();
-      const scrollDistance = trackRef.current.offsetHeight - window.innerHeight;
-      const maxDistance = scrollDistance > 50 ? scrollDistance : 360;
-
-      // rect.top is 0 when at top of track. As user scrolls down, rect.top is negative.
       const scrolled = -rect.top;
-      const progress = Math.min(1, Math.max(0, scrolled / maxDistance));
+      const progress = Math.min(1, Math.max(0, scrolled / maxDistanceRef.current));
       setScrollProgress(progress);
     };
 
@@ -50,7 +52,7 @@ export function HeroSection() {
     window.addEventListener('scroll', handleScroll, { passive: true });
 
     return () => {
-      window.removeEventListener('resize', checkMobile);
+      window.removeEventListener('resize', calculateMetrics);
       window.removeEventListener('scroll', handleScroll);
       if (rafIdRef.current !== null) {
         cancelAnimationFrame(rafIdRef.current);
@@ -62,10 +64,10 @@ export function HeroSection() {
   // Compute dynamic insets & radius based on scrollProgress
   // At scrollProgress = 0: Full Screen Edge-to-Edge (0 insets, 0 radius, 0 border, 0 shadow)
   // At scrollProgress = 1: Framed Card (padded insets, rounded corners, gold border, luxury shadow)
-  const insetX = scrollProgress * (isMobile ? 12 : 28); // px
-  const insetTop = scrollProgress * (isMobile ? 10 : 20); // px
-  const insetBottom = scrollProgress * (isMobile ? 10 : 20); // px
-  const borderRadius = scrollProgress * (isMobile ? 24 : 40); // px
+  const insetX = scrollProgress * (isMobile ? 6 : 6); // px
+  const insetTop = scrollProgress * (isMobile ? 20 : 10); // px
+  const insetBottom = scrollProgress * (isMobile ? 10 : 10); // px
+  const borderRadius = scrollProgress * (isMobile ? 28 : 40); // px
   const borderOpacity = scrollProgress * 0.45;
   const shadowOpacity = scrollProgress * 0.28;
 
@@ -78,13 +80,13 @@ export function HeroSection() {
     // Height provides the scroll runway (100dvh + 380px) over which the sticky hero shrinks in-place
     <section
       ref={trackRef}
-      className="relative z-20 w-full h-[calc(100vh+360px)] sm:h-[calc(100dvh+400px)] -mt-[72px] sm:-mt-[84px]"
+      className="relative z-20 w-full h-[calc(100vh+380px)] sm:h-[calc(100dvh+400px)] -mt-[72px] sm:-mt-[84px]"
     >
       {/* ── Sticky Full-Screen Viewport Container (Locks to top: 0 while scrolling) ── */}
-      <div className="sticky top-0 left-0 right-0 w-full h-screen sm:h-[100dvh] min-h-[640px] flex flex-col justify-between overflow-visible">
+      <div className="sticky top-0 left-0 right-[0] w-full h-screen sm:h-[100dvh] min-h-[640px] flex flex-col justify-between overflow-visible">
         {/* ── Scroll-Aware Background Image Frame (Sticks & Shrinks in Viewport) ── */}
         <div
-          className="absolute z-0 overflow-hidden will-change-[transform,inset,border-radius]"
+          className="absolute z-0 overflow-hidden will-change-[top,left,right,bottom,border-radius]"
           style={{
             top: `${insetTop}px`,
             left: `${insetX}px`,
@@ -92,14 +94,12 @@ export function HeroSection() {
             bottom: `${insetBottom}px`,
             borderRadius: `${borderRadius}px`,
             borderColor: `rgba(216, 170, 103, ${borderOpacity})`,
-            borderWidth: scrollProgress > 0.05 ? '1px' : '0px',
-            borderStyle: 'solid',
+            transform: 'translateZ(0)',
+            WebkitBackfaceVisibility: 'hidden',
+            backfaceVisibility: 'hidden',
+            WebkitMaskImage: '-webkit-radial-gradient(white, black)',
             transition:
-              'top 0.12s ease-out, left 0.12s ease-out, right 0.12s ease-out, bottom 0.12s ease-out, border-radius 0.15s ease-out, box-shadow 0.2s ease-out, border-color 0.2s ease-out',
-            boxShadow:
-              scrollProgress > 0.05
-                ? `0 ${24 * scrollProgress}px ${60 * scrollProgress}px -10px rgba(20, 8, 10, ${shadowOpacity}), 0 ${6 * scrollProgress}px ${20 * scrollProgress}px rgba(0,0,0,0.06)`
-                : 'none',
+              'top 0.1s cubic-bezier(0.25, 1, 0.5, 1), left 0.1s cubic-bezier(0.25, 1, 0.5, 1), right 0.1s cubic-bezier(0.25, 1, 0.5, 1), bottom 0.1s cubic-bezier(0.25, 1, 0.5, 1), border-radius 0.1s cubic-bezier(0.25, 1, 0.5, 1), border-color 0.1s cubic-bezier(0.25, 1, 0.5, 1)',
           }}
         >
           <Image
@@ -107,19 +107,22 @@ export function HeroSection() {
             alt="Rajmahal Heritage Hotel Grand Palace Courtyard and Lakeview"
             fill
             priority
-            className="object-cover object-center transition-transform duration-500 ease-out"
+            sizes="100vw"
+            className="object-cover object-center will-change-transform"
             style={{
-              transform: `scale(${1.08 - scrollProgress * 0.05})`,
-              filter: 'saturate(1.08) sepia(0.08)',
+              transform: isMobile
+                ? `scale(${1.21 - scrollProgress * 0.25}) translateZ(0)`
+                : `scale(${1.08 - scrollProgress * 0.25}) translateZ(0)`,
+              borderRadius: `${borderRadius}px`,
+              filter: 'saturate(0.8) sepia(0.08)',
+              WebkitBackfaceVisibility: 'hidden',
+              backfaceVisibility: 'hidden',
+              transition:
+                'transform 0.1s cubic-bezier(0.25, 1, 0.5, 1), border-radius 0.1s cubic-bezier(0.25, 1, 0.5, 1)',
             }}
           />
 
           {/* Hero Warmth overlay */}
-          <div className="hero-warmth pointer-events-none" />
-          {/* Hero Shade overlay */}
-          <div className="hero-shade pointer-events-none" />
-          {/* Gradient vignette for text legibility */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0A0203]/80 via-[#0A0203]/20 to-[#0A0203]/40 pointer-events-none" />
         </div>
 
         {/* ── Hero Content (Typography & Luxury Badges) ── */}
@@ -130,18 +133,11 @@ export function HeroSection() {
             opacity: textOpacity,
           }}
         >
-          <div className="max-w-2xl text-left">
-            {/* 1. Royal Crest Eyebrow Pill */}
-            <div className="inline-flex items-center space-x-2.5 px-3.5 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-[#D8AA67]/60 text-[#F5E0B8] shadow-lg mb-3 sm:mb-4 group cursor-default">
-              <Sparkles className="w-3.5 h-3.5 text-[#E1B46F] animate-pulse" />
-              <span className="text-[10px] sm:text-[11px] font-bold tracking-[0.25em] uppercase text-[#E1B46F]">
-                Mewar Palace Heritage &bull; Udaipur
-              </span>
-            </div>
+<div className="max-w-2xl mx-auto sm:mx-0 text-center sm:text-left flex flex-col items-center sm:items-start">
 
-            {/* 2. Majestic Title */}
+            {/* 1. Majestic Title */}
             <h1
-              className="text-4xl sm:text-6xl md:text-7xl lg:text-[76px] font-semibold tracking-tight text-[#FFF8EB] mb-3 sm:mb-4 leading-[0.92] drop-shadow-[0_4px_24px_rgba(0,0,0,0.85)]"
+              className="text-7xl sm:text-6xl md:text-7xl lg:text-[76px] font-semibold tracking-tight text-[#FFF8EB] mb-3 mt-8 sm:mb-4 leading-[0.92] drop-shadow-[0_4px_24px_rgba(0,0,0,0.85)]"
               style={{
                 fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
               }}
@@ -153,20 +149,20 @@ export function HeroSection() {
             </h1>
 
             {/* 3. Refined Palace Description */}
-            <p className="text-xs sm:text-sm lg:text-base text-[#FFF8EB]/95 mb-4 sm:mb-5 font-light leading-relaxed max-w-xl drop-shadow-[0_2px_12px_rgba(0,0,0,0.7)]">
+            <p className="text-8xs sm:text-sm lg:text-base text-[#FFF8EB]/95 mb-4 sm:mb-5 font-light leading-relaxed max-w-xl mx-auto sm:mx-0 drop-shadow-[0_2px_12px_rgba(0,0,0,0.7)]">
               Where four centuries of regal Rajputana grandeur embrace Lake Pichola&apos;s serene waters. Six restored imperial suites, candlelit dining courtyards, and timeless palace hospitality.
             </p>
 
             {/* 4. Luxury Micro-Badges / Trust Affordances */}
-            <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/35 backdrop-blur-md border border-[#D8AA67]/40 text-[11px] sm:text-xs font-medium text-[#FFF8EB] shadow-xs">
-                <span className="text-[#D8AA67]">🏰</span> 6 Imperial Suites
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-2.5">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#4F0809] backdrop-blur-lg text-[14px] sm:text-xs font-medium text-[#FFF8EB] shadow-xs">
+                6 Imperial Suites
               </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/35 backdrop-blur-md border border-[#D8AA67]/40 text-[11px] sm:text-xs font-medium text-[#FFF8EB] shadow-xs">
-                <span className="text-[#D8AA67]">🌊</span> Lake Pichola Vistas
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#4F0809] backdrop-blur-lg text-[14px] sm:text-xs font-medium text-[#FFF8EB] shadow-xs">
+                Lake Pichola Vistas
               </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/35 backdrop-blur-md border border-[#D8AA67]/40 text-[11px] sm:text-xs font-medium text-[#FFF8EB] shadow-xs">
-                <span className="text-[#D8AA67]">👑</span> Aristocratic Dining
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#4F0809] backdrop-blur-lg text-[14px] sm:text-xs font-medium text-[#FFF8EB] shadow-xs">
+                Aristocratic Dining
               </span>
             </div>
           </div>
