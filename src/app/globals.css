@@ -240,13 +240,22 @@ body {
   animation: shimmer 3s ease-in-out infinite;
 }
 
-/* ── Infinite Reviews Marquee ── */
+/* ── Infinite Reviews Marquee (Right-to-Left and Left-to-Right) ── */
 @keyframes marqueeReviews {
   0% {
     transform: translate3d(0, 0, 0);
   }
   100% {
     transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes marqueeReviewsReverse {
+  0% {
+    transform: translate3d(-50%, 0, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
   }
 }
 
@@ -258,6 +267,28 @@ body {
 }
 
 .animate-marquee-infinite:hover {
+  animation-play-state: paused;
+}
+
+.animate-marquee-infinite-reverse {
+  display: flex;
+  width: max-content;
+  animation: marqueeReviewsReverse 46s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee-infinite-reverse:hover {
+  animation-play-state: paused;
+}
+
+.animate-marquee-infinite-fast {
+  display: flex;
+  width: max-content;
+  animation: marqueeReviews 38s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee-infinite-fast:hover {
   animation-play-state: paused;
 }
 
