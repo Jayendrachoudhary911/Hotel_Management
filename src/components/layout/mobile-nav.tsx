@@ -7,9 +7,9 @@ import { Home, BedDouble, Utensils, Coffee, Calendar } from 'lucide-react';
 
 export const MobileNav: React.FC = () => {
   const pathname = usePathname();
-  const [bottomOffset, setBottomOffset] = useState<number>(0);
+  const [isStuckToFooter, setIsStuckToFooter] = useState<boolean>(false);
 
-  // Dynamic boundary tracking: stops sticking/floating at the viewport bottom when reaching the footer
+  // Dynamic boundary tracking: ends sticky behavior at footer boundary and docks at the start of the footer
   useEffect(() => {
     let rafId: number | null = null;
 
@@ -17,22 +17,16 @@ export const MobileNav: React.FC = () => {
       const footer = document.querySelector('footer');
 
       if (!footer) {
-        setBottomOffset(0);
+        setIsStuckToFooter(false);
         return;
       }
 
       const footerRect = footer.getBoundingClientRect();
       const viewportHeight = window.innerHeight;
 
-      // Distance from top of viewport to top of footer
-      const overlap = viewportHeight - footerRect.top;
-
-      if (overlap > 0) {
-        // Ends sticky property before footer: parks right above the footer top border
-        setBottomOffset(overlap);
-      } else {
-        setBottomOffset(0);
-      }
+      // When the top edge of the footer reaches or enters the viewport,
+      // sticky positioning ends, and the bar stays docked at the start of the footer.
+      setIsStuckToFooter(footerRect.top <= viewportHeight);
     };
 
     const handleScroll = () => {
@@ -68,9 +62,10 @@ export const MobileNav: React.FC = () => {
   ];
 
   return (
-    <nav
-      className="md:hidden fixed left-0 right-0 z-40 bg-[#FAF8F3] border-t border-[#D4CBBB] shadow-lg px-2 py-1.5 flex items-center justify-around"
-      style={{ bottom: `${bottomOffset}px` }}
+<nav
+      className={`md:hidden ${
+        isStuckToFooter ? 'absolute bottom-full mb-3' : 'fixed bottom-3'
+      } left-4 right-4 max-w-md mx-auto z-40 rounded-full bg-[#FDF8EE]/95 backdrop-blur-md border border-[#C99A52]/70 px-1 py-1.5 flex items-center justify-around`}
       aria-label="Mobile Navigation"
     >
       {items.map((item) => {
@@ -80,12 +75,18 @@ export const MobileNav: React.FC = () => {
           <Link
             key={item.href}
             href={item.href}
-            className={`flex flex-col items-center justify-center py-1 px-2 text-[10px] font-medium transition-colors ${
-              isActive ? 'text-[#13251E] font-bold' : 'text-[#7A6F62] hover:text-[#13251E]'
+            className={`flex flex-col items-center justify-center py-2 px-5 rounded-full text-[10px] tracking-wide transition-all duration-200 active:scale-95 ${
+              isActive
+                ? 'bg-[#4F0809] text-[#FFF8EB] font-bold'
+                : 'text-[#6B533B] font-medium hover:text-[#4F0809]'
             }`}
           >
-            <Icon className={`w-5 h-5 mb-0.5 ${isActive ? 'text-[#C59B63]' : 'text-[#7A6F62]'}`} />
-            <span>{item.label}</span>
+            <Icon
+              className={`w-4 h-4 mb-0.5 transition-colors ${
+                isActive ? 'text-[#D8AA67]' : 'text-[#6B533B]'
+              }`}
+            />
+            <span className="leading-none">{item.label}</span>
           </Link>
         );
       })}

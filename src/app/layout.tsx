@@ -91,15 +91,17 @@ export default function RootLayout({
           <Navbar />
         </Suspense>
         <main className="flex-1 flex flex-col">{children}</main>
-        <Suspense fallback={null}>
-          <Footer />
-        </Suspense>
-        <Suspense fallback={null}>
-          <MobileNav />
-        </Suspense>
-        <Suspense fallback={null}>
-          <WhatsAppConcierge />
-        </Suspense>
+        <div className="relative mt-auto">
+          <Suspense fallback={null}>
+            <Footer />
+          </Suspense>
+          <Suspense fallback={null}>
+            <MobileNav />
+          </Suspense>
+          <Suspense fallback={null}>
+            <WhatsAppConcierge />
+          </Suspense>
+        </div>
       </body>
     </html>
   );

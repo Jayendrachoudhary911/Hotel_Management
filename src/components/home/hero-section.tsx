@@ -64,10 +64,10 @@ export function HeroSection() {
   // Compute dynamic insets & radius based on scrollProgress
   // At scrollProgress = 0: Full Screen Edge-to-Edge (0 insets, 0 radius, 0 border, 0 shadow)
   // At scrollProgress = 1: Framed Card (padded insets, rounded corners, gold border, luxury shadow)
-  const insetX = scrollProgress * (isMobile ? 6 : 6); // px
-  const insetTop = scrollProgress * (isMobile ? 20 : 10); // px
-  const insetBottom = scrollProgress * (isMobile ? 10 : 10); // px
-  const borderRadius = scrollProgress * (isMobile ? 28 : 40); // px
+  const insetX = scrollProgress * (isMobile ? 16 : 6); // px
+  const insetTop = scrollProgress * (isMobile ? 16 : 10); // px
+  const insetBottom = scrollProgress * (isMobile ? 115 : 10); // px
+  const borderRadius = scrollProgress * (isMobile ? 35 : 40); // px
   const borderOpacity = scrollProgress * 0.45;
   const shadowOpacity = scrollProgress * 0.28;
 
@@ -83,7 +83,7 @@ export function HeroSection() {
       className="relative z-20 w-full h-[calc(100vh+380px)] sm:h-[calc(100dvh+400px)] -mt-[72px] sm:-mt-[84px]"
     >
       {/* ── Sticky Full-Screen Viewport Container (Locks to top: 0 while scrolling) ── */}
-      <div className="sticky top-0 left-0 right-[0] w-full h-screen sm:h-[100dvh] min-h-[640px] flex flex-col justify-between overflow-visible">
+      <div className="sticky top-0 left-0 right-[0] w-full h-screen sm:h-[100dvh] min-h-[520px] sm:min-h-[640px] flex flex-col justify-between overflow-visible">
         {/* ── Scroll-Aware Background Image Frame (Sticks & Shrinks in Viewport) ── */}
         <div
           className="absolute z-0 overflow-hidden will-change-[top,left,right,bottom,border-radius]"
@@ -111,7 +111,7 @@ export function HeroSection() {
             className="object-cover object-center will-change-transform"
             style={{
               transform: isMobile
-                ? `scale(${1.21 - scrollProgress * 0.25}) translateZ(0)`
+                ? `scale(${1.28 - scrollProgress * 0.25}) translateZ(0)`
                 : `scale(${1.08 - scrollProgress * 0.25}) translateZ(0)`,
               borderRadius: `${borderRadius}px`,
               filter: 'saturate(0.8) sepia(0.08)',
@@ -127,17 +127,16 @@ export function HeroSection() {
 
         {/* ── Hero Content (Typography & Luxury Badges) ── */}
         <div
-          className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 pt-28 sm:pt-36 md:pt-40 pb-4 w-full will-change-transform"
+          className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 pt-36 sm:pt-32 md:pt-40 pb-2 sm:pb-4 w-full will-change-transform"
           style={{
             transform: `translateY(${textTranslateY}px)`,
             opacity: textOpacity,
           }}
         >
-<div className="max-w-2xl mx-auto sm:mx-0 text-center sm:text-left flex flex-col items-center sm:items-start">
-
+          <div className="max-w-2xl mx-auto sm:mx-0 text-center sm:text-left flex flex-col items-center sm:items-start">
             {/* 1. Majestic Title */}
             <h1
-              className="text-7xl sm:text-6xl md:text-7xl lg:text-[76px] font-semibold tracking-tight text-[#FFF8EB] mb-3 mt-8 sm:mb-4 leading-[0.92] drop-shadow-[0_4px_24px_rgba(0,0,0,0.85)]"
+              className="text-5xl min-[400px]:text-7xl sm:text-8xl md:text-7xl lg:text-[96px] font-semibold tracking-tight text-[#FFF8EB] mb-2 sm:mb-4 mt-2 sm:mt-6 leading-[0.94] drop-shadow-[0_4px_24px_rgba(0,0,0,0.85)]"
               style={{
                 fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
               }}
@@ -149,19 +148,19 @@ export function HeroSection() {
             </h1>
 
             {/* 3. Refined Palace Description */}
-            <p className="text-8xs sm:text-sm lg:text-base text-[#FFF8EB]/95 mb-4 sm:mb-5 font-light leading-relaxed max-w-xl mx-auto sm:mx-0 drop-shadow-[0_2px_12px_rgba(0,0,0,0.7)]">
+            <p className="text-2sm sm:text-sm lg:text-base text-[#FFF8EB]/95 mb-2.5 sm:mb-5 font-light leading-relaxed max-w-xl mx-auto sm:mx-0 drop-shadow-[0_2px_12px_rgba(0,0,0,0.7)]">
               Where four centuries of regal Rajputana grandeur embrace Lake Pichola&apos;s serene waters. Six restored imperial suites, candlelit dining courtyards, and timeless palace hospitality.
             </p>
 
             {/* 4. Luxury Micro-Badges / Trust Affordances */}
-            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-2.5">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#4F0809] backdrop-blur-lg text-[14px] sm:text-xs font-medium text-[#FFF8EB] shadow-xs">
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 sm:gap-2.5">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#4F0809] backdrop-blur-lg text-[13px] min-[400px]:text-xs font-medium text-[#FFF8EB] shadow-xs">
                 6 Imperial Suites
               </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#4F0809] backdrop-blur-lg text-[14px] sm:text-xs font-medium text-[#FFF8EB] shadow-xs">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#4F0809] backdrop-blur-lg text-[13px] min-[400px]:text-xs font-medium text-[#FFF8EB] shadow-xs">
                 Lake Pichola Vistas
               </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#4F0809] backdrop-blur-lg text-[14px] sm:text-xs font-medium text-[#FFF8EB] shadow-xs">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#4F0809] backdrop-blur-lg text-[13px] min-[400px]:text-xs font-medium text-[#FFF8EB] shadow-xs">
                 Aristocratic Dining
               </span>
             </div>
@@ -169,7 +168,7 @@ export function HeroSection() {
         </div>
 
         {/* ── 5. Overlapping Floating Booking Widget (Maintains complete operability) ── */}
-        <div className="relative z-30 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 w-full pb-4 sm:pb-6">
+        <div className="relative z-30 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 w-full pb-28 sm:pb-6">
           <BookingBar />
         </div>
       </div>

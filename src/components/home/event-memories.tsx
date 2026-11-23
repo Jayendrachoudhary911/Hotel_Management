@@ -305,16 +305,16 @@ export function EventMemories() {
   };
 
   return (
-    <section
+<section
       ref={sectionRef}
-      className="relative h-[420vh] lg:h-[460vh]"
+      className="relative h-[360vh] sm:h-[420vh] lg:h-[460vh]"
       style={{ backgroundColor: 'var(--cream, #fbf5e9)' }}
       aria-label="Event Memories — Sticky Scroll Perspective Gallery"
     >
-      {/* ── STICKY PINNED VIEWPORT CONTAINER (LOCKS ON SCREEN WHILE SCROLLING) ── */}
-      <div className="sticky top-0 h-screen h-[100dvh] max-h-screen w-full overflow-hidden flex flex-col justify-between pt-[68px] sm:pt-[72px] lg:pt-[76px] pb-3 sm:pb-4 lg:pb-5 z-10">
+      {/* ── STICKY PINNED VIEWPORT CONTAINER ── */}
+      <div className="sticky top-0 h-[90dvh] sm:h-[100dvh] max-h-[100dvh] w-full overflow-hidden flex flex-col justify-between pt-[64px] sm:pt-[72px] lg:pt-[76px] pb-4 sm:pb-5 z-10">
         {/* Architectural Line Art Flanking in Background */}
-        <div className="absolute left-[-40px] sm:left-[-20px] lg:left-0 top-1/2 -translate-y-1/2 pointer-events-none z-0 w-64 sm:w-80 lg:w-[420px] opacity-25">
+        <div className="absolute -left-12 sm:-left-5 lg:left-0 top-1/2 -translate-y-1/2 pointer-events-none z-0 w-44 sm:w-80 lg:w-[420px] opacity-20 sm:opacity-25">
           <img
             src="/images/heritage-elements/palace-line-art.png"
             alt=""
@@ -322,7 +322,7 @@ export function EventMemories() {
             className="w-full h-auto object-contain"
           />
         </div>
-        <div className="absolute right-[-40px] sm:right-[-20px] lg:right-0 top-1/2 -translate-y-1/2 pointer-events-none z-0 w-64 sm:w-80 lg:w-[420px] opacity-25 scale-x-[-1]">
+        <div className="absolute -right-12 sm:-right-5 lg:right-0 top-1/2 -translate-y-1/2 pointer-events-none z-0 w-44 sm:w-80 lg:w-[420px] opacity-20 sm:opacity-25 scale-x-[-1]">
           <img
             src="/images/heritage-elements/palace-line-art.png"
             alt=""
@@ -334,77 +334,73 @@ export function EventMemories() {
         {/* ── SECTION HEADER AT TOP OF PINNED VIEWPORT ── */}
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full shrink-0">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-1 sm:gap-2">
-            <div className="text-center md:text-left max-w-2xl">
+            <div className="text-center md:text-left max-w-2xl mx-auto md:mx-0">
               {/* Eyebrow */}
-              <div className="inline-flex items-center space-x-3 mb-1">
-                <span className="w-8 sm:w-10 h-[1px] bg-[#d8aa67]/80" />
-                <span
-                  className="text-[10px] sm:text-xs font-semibold tracking-[0.22em] uppercase"
-                  style={{ color: 'var(--antique-gold, #d8aa67)' }}
-                >
+              <div className="inline-flex items-center justify-center md:justify-start space-x-2.5 sm:space-x-3 mb-0.5 sm:mb-1">
+                <span className="w-6 sm:w-10 h-[1px] bg-[#C99A52]" />
+                <span className="text-[9px] sm:text-xs font-bold tracking-[0.2em] uppercase text-[#9C7A45]">
                   Celebrations That Matter
                 </span>
-                <span className="w-8 sm:w-10 h-[1px] bg-[#d8aa67]/80 md:hidden" />
+                <span className="w-6 sm:w-10 h-[1px] bg-[#C99A52] md:hidden" />
               </div>
 
               {/* Main Heading */}
               <h2
-                className="text-2xl sm:text-3xl lg:text-[34px] font-bold leading-tight"
+                className="text-2xl sm:text-3xl lg:text-[34px] font-bold leading-tight text-[#4F0809]"
                 style={{
                   fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
-                  color: 'var(--burgundy, #781c1c)',
                 }}
               >
                 Event Memories
               </h2>
 
               {/* Subtitle */}
-              <p
-                className="text-xs sm:text-[13px] font-normal max-w-xl leading-relaxed hidden sm:block mt-0.5"
-                style={{ color: 'var(--forest, #4f0809)' }}
-              >
+              <p className="text-xs sm:text-[13px] font-normal max-w-xl leading-relaxed hidden sm:block mt-0.5 text-[#4F0809]/85">
                 Scroll page to journey through royal weddings, lakeside galas, and magnificent celebrations.
               </p>
             </div>
 
-            {/* Active Celebration Indicator (Shows current memory and scroll hint) */}
-            <div className="hidden md:flex flex-col items-end text-right">
-              <span className="text-[11px] font-bold text-[#670E10] tracking-wider uppercase flex items-center space-x-1.5 mb-0.5">
-                <Sparkles className="w-3 h-3 text-[#D8AA67]" />
-                <span>
-                  0{activeIndex + 1} / 0{EVENT_MEMORIES.length}
+            {/* Active Celebration Indicator (Compact Pill on Mobile, Full Readout on Desktop) */}
+            <div className="flex md:flex-col items-center justify-center md:items-end text-center md:text-right mt-1 md:mt-0">
+              <div className="inline-flex md:flex md:flex-col items-center md:items-end gap-2 md:gap-0.5 px-3 py-1 md:p-0 rounded-full bg-[#FDF8EE] md:bg-transparent border border-[#C99A52]/50 md:border-none">
+                <span className="text-[10px] sm:text-[11px] font-bold text-[#4F0809] tracking-wider uppercase flex items-center space-x-1">
+                  <Sparkles className="w-3 h-3 text-[#D8AA67]" />
+                  <span>
+                    0{activeIndex + 1} / 0{EVENT_MEMORIES.length}
+                  </span>
                 </span>
-              </span>
-              <span
-                className="text-base font-bold text-[#241F1A]"
-                style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)" }}
-              >
-                {EVENT_MEMORIES[activeIndex].title}
-              </span>
+                <span className="text-[#C99A52] md:hidden text-[10px]">&#9830;</span>
+                <span
+                  className="text-xs sm:text-base font-bold text-[#4F0809] truncate max-w-[180px] sm:max-w-none"
+                  style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)" }}
+                >
+                  {EVENT_MEMORIES[activeIndex].title}
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* ── HORIZONTAL PERSPECTIVE STAGE WITH DUAL EDGE VIGNETTES (OVERFLOW VISIBLE TO PREVENT CLIPPING) ── */}
-        <div className="relative w-full overflow-visible my-auto py-4 sm:py-6 lg:py-8">
-          {/* Ambient Left & Right Edge Vignette Fades */}
+        {/* ── HORIZONTAL PERSPECTIVE STAGE ── */}
+        <div className="relative w-full overflow-visible my-auto py-2 sm:py-6 lg:py-8">
+          {/* Subtle Left & Right Edge Vignette Fades (Narrow on Mobile so Cards Stay Crisp) */}
           <div
-            className="absolute left-0 top-0 bottom-0 w-16 sm:w-28 md:w-44 z-20 pointer-events-none"
+            className="absolute left-0 top-0 bottom-0 w-6 sm:w-28 md:w-44 z-20 pointer-events-none"
             style={{
-              background: 'linear-gradient(to right, #FBF5E9 25%, rgba(251, 245, 233, 0) 100%)',
+              background: 'linear-gradient(to right, #FBF5E9 15%, rgba(251, 245, 233, 0) 100%)',
             }}
           />
           <div
-            className="absolute right-0 top-0 bottom-0 w-16 sm:w-28 md:w-44 z-20 pointer-events-none"
+            className="absolute right-0 top-0 bottom-0 w-6 sm:w-28 md:w-44 z-20 pointer-events-none"
             style={{
-              background: 'linear-gradient(to left, #FBF5E9 25%, rgba(251, 245, 233, 0) 100%)',
+              background: 'linear-gradient(to left, #FBF5E9 15%, rgba(251, 245, 233, 0) 100%)',
             }}
           />
 
-          {/* Perspective Track (Translated Horizontally with Smooth LERP as Page Scrolls Vertically) */}
+          {/* Perspective Track (Centered Initial Offset for 220px Mobile Cards) */}
           <div
             ref={trackRef}
-            className="flex items-center space-x-5 sm:space-x-7 md:space-x-9 pl-[10vw] sm:pl-[20vw] md:pl-[25vw] pr-[25vw]"
+            className="flex items-center space-x-4 sm:space-x-7 md:space-x-9 pl-[calc(50vw-110px)] sm:pl-[20vw] md:pl-[25vw] pr-[calc(50vw-110px)] sm:pr-[25vw]"
             style={{
               perspective: '1200px',
               perspectiveOrigin: 'center center',
@@ -422,31 +418,31 @@ export function EventMemories() {
                     cardRefs.current[index] = el;
                   }}
                   onClick={() => setSelectedMemory(memory)}
-                  className="group relative shrink-0 w-[240px] sm:w-[275px] md:w-[310px] lg:w-[335px] xl:w-[360px] h-[300px] sm:h-[340px] md:h-[370px] lg:h-[395px] xl:h-[420px] rounded-[20px] sm:rounded-[26px] overflow-hidden border-2 transition-colors duration-200 cursor-pointer"
+                  className="group relative shrink-0 w-[220px] sm:w-[275px] md:w-[310px] lg:w-[335px] xl:w-[360px] h-[270px] min-[400px]:h-[295px] sm:h-[340px] md:h-[370px] lg:h-[395px] xl:h-[420px] rounded-t-3xl rounded-b-2xl sm:rounded-[26px] overflow-hidden border transition-colors duration-200 cursor-pointer"
                   style={{
                     backgroundColor: '#1b0608',
-                    borderColor: isCenter ? '#D8AA67' : 'rgba(216, 170, 103, 0.45)',
-                    willChange: 'transform, opacity, box-shadow',
+                    borderColor: isCenter ? '#D8AA67' : 'rgba(201, 154, 82, 0.45)',
+                    willChange: 'transform, opacity',
                     transformStyle: 'preserve-3d',
                   }}
                   aria-label={memory.title}
                 >
-                  {/* Clean Full-Bleed Image with Smooth Parallax Zoom on Hover */}
+                  {/* Full-Bleed Image */}
                   <Image
                     src={memory.image}
                     alt={memory.alt}
                     fill
-                    sizes="(max-width: 640px) 240px, (max-width: 1024px) 335px, 360px"
-                    className="object-cover group-hover:scale-108 transition-transform duration-700 ease-out pointer-events-none"
+                    sizes="(max-width: 640px) 220px, (max-width: 1024px) 335px, 360px"
+                    className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out pointer-events-none"
                     priority={index < 3}
                   />
 
                   {/* Top-Right Expand Button */}
                   <div
-                    className="absolute top-3 sm:top-3.5 right-3 sm:right-3.5 z-10 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/55 backdrop-blur-md border border-[#D8AA67]/60 flex items-center justify-center text-white/90 shadow-md group-hover:scale-110 group-hover:bg-black/75 group-hover:border-[#D8AA67] transition-all duration-300 pointer-events-none"
+                    className="absolute top-2.5 sm:top-3.5 right-2.5 sm:right-3.5 z-10 w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-[#4F0809]/80 backdrop-blur-md border border-[#D8AA67]/70 flex items-center justify-center text-[#FFF8EB] group-hover:scale-110 group-hover:bg-[#4F0809] transition-all duration-300 pointer-events-none"
                     aria-hidden="true"
                   >
-                    <Maximize2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#FFF8EB]" />
+                    <Maximize2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#D8AA67]" />
                   </div>
                 </div>
               );
@@ -456,12 +452,12 @@ export function EventMemories() {
 
         {/* ── FOOTER CONTROLS & PROGRESS BAR AT BOTTOM OF PINNED VIEWPORT ── */}
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full shrink-0">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-4">
             {/* Scroll Progress Bar & Dots */}
-            <div className="flex items-center space-x-4">
-              <div className="w-36 sm:w-56 h-1.5 bg-[#D8AA67]/25 rounded-full overflow-hidden">
+            <div className="flex items-center justify-center sm:justify-start space-x-3 sm:space-x-4 w-full sm:w-auto">
+              <div className="w-28 sm:w-56 h-1.5 bg-[#D8AA67]/25 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-[#D8AA67] to-[#670E10] rounded-full transition-all duration-75"
+                  className="h-full bg-gradient-to-r from-[#D8AA67] to-[#4F0809] rounded-full transition-all duration-75"
                   style={{ width: `${Math.round(scrollProgress * 100)}%` }}
                 />
               </div>
@@ -475,8 +471,8 @@ export function EventMemories() {
                     onClick={() => jumpToMemory(idx)}
                     className={`transition-all duration-300 rounded-full cursor-pointer ${
                       idx === activeIndex
-                        ? 'w-6 h-2 bg-[#670E10] border border-[#D8AA67]'
-                        : 'w-2 h-2 bg-[#D8AA67]/40 hover:bg-[#D8AA67]'
+                        ? 'w-5 sm:w-6 h-2 bg-[#4F0809] border border-[#D8AA67]'
+                        : 'w-2 h-2 bg-[#C99A52]/40 hover:bg-[#D8AA67]'
                     }`}
                     aria-label={`Jump to ${m.title}`}
                   />
@@ -485,33 +481,27 @@ export function EventMemories() {
             </div>
 
             {/* Scroll Hint & View Full Gallery */}
-            <div className="flex items-center space-x-4">
-              <span className="hidden sm:inline-flex items-center space-x-1.5 text-xs text-[#8A7B68] font-medium">
+            <div className="flex items-center justify-center sm:justify-end space-x-4 w-full sm:w-auto">
+              <span className="hidden sm:inline-flex items-center space-x-1.5 text-xs text-[#6B533B] font-medium">
                 {scrollProgress >= 0.88 ? (
-                  <span className="text-[#670E10] font-bold flex items-center space-x-1">
+                  <span className="text-[#4F0809] font-bold flex items-center space-x-1">
                     <span>Celebrations Complete &bull; Continue Scrolling</span>
-                    <ChevronDown className="w-3.5 h-3.5 text-[#670E10]" />
+                    <ChevronDown className="w-3.5 h-3.5 text-[#4F0809]" />
                   </span>
                 ) : (
                   <>
                     <span>Scroll down to explore celebrations</span>
-                    <ChevronDown className="w-3.5 h-3.5 text-[#D8AA67] animate-bounce" />
+                    <ChevronDown className="w-3.5 h-3.5 text-[#C99A52] animate-bounce" />
                   </>
                 )}
               </span>
 
               <Link
                 href="/hotel"
-                className="inline-flex items-center space-x-2 px-6 py-2.5 rounded-[6px] text-xs sm:text-sm font-semibold tracking-wide transition-all duration-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 cursor-pointer group"
-                style={{
-                  backgroundColor: 'var(--antique-gold, #d8aa67)',
-                  color: 'var(--forest-ink, #380506)',
-                  fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
-                  fontSize: '15px',
-                }}
+                className="inline-flex items-center justify-center space-x-2 px-5 sm:px-6 py-2 sm:py-2.5 rounded-full bg-[#4F0809] hover:bg-[#680b0c] border border-[#D8AA67]/70 text-[#FFF8EB] text-[11px] sm:text-xs font-bold uppercase tracking-[0.12em] transition-colors duration-200 cursor-pointer group"
               >
                 <span>View Full Gallery</span>
-                <ArrowRight className="w-4 h-4 ml-1 stroke-[1.8] group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-3.5 h-3.5 text-[#D8AA67] group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
           </div>
@@ -529,14 +519,14 @@ export function EventMemories() {
             className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 md:p-10 bg-black/90 backdrop-blur-md animate-fade-in select-none"
           >
             {/* Top Bar with Counter and Close Button */}
-            <div className="absolute top-4 sm:top-6 inset-x-4 sm:inset-x-8 z-30 flex items-center justify-between pointer-events-none">
-              <span className="px-3 py-1 rounded-full bg-black/00 text-[#FFF8EB] text-xs sm:text-sm font-semibold tracking-wider uppercase">
+            <div className="absolute top-4 sm:top-6 inset-x-4 sm:inset-x-8 z-30 flex items-center justify-between gap-2 pointer-events-none">
+              <span className="px-3 py-1 rounded-full bg-black/60 border border-[#D8AA67]/30 text-[#FFF8EB] text-[11px] sm:text-sm font-semibold tracking-wider uppercase truncate max-w-[75%]">
                 {selectedIndex + 1} / {EVENT_MEMORIES.length} &bull; {selectedMemory.title}
               </span>
               <button
                 type="button"
                 onClick={() => setSelectedMemory(null)}
-                className="pointer-events-auto p-2.5 sm:p-2 rounded-full bg-black/60 text-white/90 hover:text-white hover:bg-black/90 transition-all cursor-pointer hover:scale-125 active:scale-95"
+                className="pointer-events-auto shrink-0 p-2 rounded-full bg-black/60 border border-[#D8AA67]/40 text-white/90 hover:text-white hover:bg-black/90 transition-all cursor-pointer active:scale-95"
                 aria-label="Close image gallery"
               >
                 <X className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -550,7 +540,7 @@ export function EventMemories() {
                 e.stopPropagation();
                 showPrev();
               }}
-              className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-30 p-2.5 sm:p-3.5 rounded-full bg-black/60 text-[#FFF8EB] hover:text-white hover:bg-black/90 hover:scale-120 active:scale-95 transition-all cursor-pointer shadow-xl"
+              className="absolute left-2.5 sm:left-6 top-1/2 -translate-y-1/2 z-30 p-2 sm:p-3.5 rounded-full bg-black/65 border border-[#D8AA67]/40 text-[#FFF8EB] hover:text-white hover:bg-black/90 active:scale-95 transition-all cursor-pointer"
               aria-label="Previous image"
             >
               <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -563,7 +553,7 @@ export function EventMemories() {
                 e.stopPropagation();
                 showNext();
               }}
-              className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-30 p-2.5 sm:p-3.5 rounded-full bg-black/60 text-[#FFF8EB] hover:text-white hover:bg-black/90 hover:scale-120 active:scale-95 transition-all cursor-pointer shadow-xl"
+              className="absolute right-2.5 sm:right-6 top-1/2 -translate-y-1/2 z-30 p-2 sm:p-3.5 rounded-full bg-black/65 border border-[#D8AA67]/40 text-[#FFF8EB] hover:text-white hover:bg-black/90 active:scale-95 transition-all cursor-pointer"
               aria-label="Next image"
             >
               <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -572,7 +562,7 @@ export function EventMemories() {
             {/* Main Pure Image Frame */}
             <div
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-5xl h-[70vh] sm:h-[80vh] md:h-[86vh] rounded-2xl sm:rounded-3xl overflow-hidden flex items-center justify-center"
+              className="relative w-full max-w-5xl h-[65vh] sm:h-[80vh] md:h-[86vh] rounded-2xl sm:rounded-3xl overflow-hidden flex items-center justify-center"
             >
               <Image
                 src={selectedMemory.image}

@@ -9,35 +9,26 @@ const CONCIERGE_PHONE = '919829012345'; // Rajmahal Palace Front Desk & Concierg
 export const WhatsAppConcierge: React.FC = () => {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
-  const [bottomOffset, setBottomOffset] = useState<number>(24);
+  const [isStuckToFooter, setIsStuckToFooter] = useState<boolean>(false);
 
-  // Dynamic positioning: stops floating when reaching the footer so it never overlaps footer content
+  // Dynamic boundary tracking: stops floating when reaching the footer and docks at the start of the footer
   useEffect(() => {
     let rafId: number | null = null;
 
     const updatePosition = () => {
       const footer = document.querySelector('footer');
-      // On mobile (<640px), keep above the 56px mobile nav bar (56 + 16 = 72px)
-      const baseBottom = window.innerWidth >= 640 ? 32 : 72;
 
       if (!footer) {
-        setBottomOffset(baseBottom);
+        setIsStuckToFooter(false);
         return;
       }
 
       const footerRect = footer.getBoundingClientRect();
       const viewportHeight = window.innerHeight;
 
-      // Distance from top of viewport to top of footer
-      // When footerRect.top < viewportHeight, the top of the footer has entered the viewport
-      const overlap = viewportHeight - footerRect.top;
-
-      if (overlap > 0) {
-        // Stop floating over the footer: lift button by overlap amount so it stays parked above the footer top
-        setBottomOffset(overlap + baseBottom);
-      } else {
-        setBottomOffset(baseBottom);
-      }
+      // When the top of the footer reaches or enters the viewport:
+      // Sticky positioning ends, and the button docks right at the start of the footer
+      setIsStuckToFooter(footerRect.top <= viewportHeight);
     };
 
     const handleScroll = () => {
@@ -96,72 +87,99 @@ export const WhatsAppConcierge: React.FC = () => {
   };
 
   return (
-    <div
-      className="fixed right-5 sm:right-7 z-40 flex flex-col items-end transition-[bottom] duration-150 ease-out"
-      style={{ bottom: `${bottomOffset}px` }}
+<div
+      className={`${
+        isStuckToFooter
+          ? 'absolute bottom-[calc(100%+84px)] md:bottom-[calc(100%+28px)]'
+          : 'fixed bottom-[84px] md:bottom-7'
+      } right-4 sm:right-7 z-40 flex flex-col items-end`}
     >
-      {/* Expanded Quick Card */}
+      {/* Expanded Royal Concierge Card */}
       {isOpen && (
-        <div className="mb-3 w-72 sm:w-80 rounded-2xl bg-[#FFFDF9] border border-[#D8AA67]/60 shadow-[0_12px_40px_rgba(40,5,6,0.35)] p-4 text-[#241F1A] animate-fade-in-up">
-          <div className="flex items-start justify-between pb-3 border-b border-[#E8DFCE]">
+<div className="mb-3 w-[calc(100vw-2rem)] max-w-[310px] sm:w-80 rounded-t-3xl rounded-b-2xl bg-[#FDF8EE] border border-[#C99A52]/80 overflow-hidden text-[#4F0809] animate-fade-in-up">
+          {/* Header Banner (Unified Background) */}
+          <div className="px-4 py-3.5 flex items-center justify-between border-b border-[#C99A52]/30">
             <div className="flex items-center space-x-2.5">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#4F0809] to-[#781C1C] flex items-center justify-center text-[#D8AA67] shadow-sm">
+              <div className="w-9 h-9 rounded-full bg-[#25D366]/15 border border-[#25D366]/40 flex items-center justify-center text-[#15803D] shrink-0">
                 <Sparkles className="w-4 h-4" />
               </div>
               <div>
                 <h4
-                  className="font-bold text-sm text-[#4F0809] leading-tight"
+                  className="font-bold text-base text-[#4F0809] leading-tight tracking-wide"
                   style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)" }}
                 >
                   Royal Concierge Desk
                 </h4>
-                <p className="text-[10px] text-[#2E7D32] font-semibold flex items-center gap-1 mt-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#2E7D32] animate-pulse" />
-                  Live Palace Steward (Online)
+                <p className="text-[10px] text-[#15803D] font-semibold tracking-wider uppercase flex items-center gap-1.5 mt-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#25D366]" />
+                  Palace Steward &bull; Online
                 </p>
               </div>
             </div>
+
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="p-1 rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition cursor-pointer"
+              className="p-1.5 rounded-full bg-[#4F0809]/10 hover:bg-[#4F0809]/15 text-[#4F0809] transition-colors cursor-pointer"
               aria-label="Close concierge preview"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
 
-          <div className="py-3 text-xs text-[#5A4B3C] leading-relaxed">
-            <p className="font-medium text-[#4F0809] mb-1">Padharo Mhare Desh! 🪷</p>
-            <p>
-              Direct assistance with room reservations, palace dining, banquet inquiries, or local Udaipur heritage excursions.
-            </p>
-          </div>
+          {/* Card Body */}
+          <div className="p-4">
+            <div className="mb-3.5">
+              <p
+                className="text-base font-bold text-[#4F0809] mb-1"
+                style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)" }}
+              >
+                Padharo Mhare Desh
+              </p>
 
-          <button
-            type="button"
-            onClick={handleOpenWhatsApp}
-            className="w-full py-2.5 px-4 rounded-xl bg-[#25D366] hover:bg-[#20BD5A] text-white font-bold text-xs tracking-wide shadow-md hover:shadow-lg flex items-center justify-center space-x-2 transition cursor-pointer"
-          >
-            <MessageCircle className="w-4 h-4 fill-white" />
-            <span>Chat on WhatsApp</span>
-          </button>
+              {/* Ornamental Gold Divider */}
+              <div className="flex items-center gap-1.5 mb-2">
+                <span className="h-[1px] w-6 bg-[#C99A52]" />
+                <span className="w-1.5 h-1.5 rotate-45 border border-[#C99A52] bg-[#D8AA67]/40" />
+                <span className="h-[1px] flex-1 bg-[#C99A52]/30" />
+              </div>
+
+              <p className="text-xs text-[#6B533B] leading-relaxed font-normal">
+                Direct assistance with imperial suite reservations, lakeside dining, royal banquets, or Udaipur heritage excursions.
+              </p>
+            </div>
+
+            {/* WhatsApp Action Pill */}
+            <button
+              type="button"
+              onClick={handleOpenWhatsApp}
+              className="w-full py-2.5 px-4 rounded-full bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold text-xs uppercase tracking-[0.12em] flex items-center justify-center space-x-2 transition-colors cursor-pointer"
+            >
+              <MessageCircle className="w-4 h-4 fill-white text-white" />
+              <span>Chat on WhatsApp</span>
+            </button>
+          </div>
         </div>
       )}
 
-      {/* Floating Action Button */}
+{/* Floating Light WhatsApp Concierge Capsule Button with Hover Text Reveal */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="group relative flex items-center space-x-2 px-3.5 py-3 sm:px-4 sm:py-3.5 rounded-full bg-gradient-to-r from-[#25D366] to-[#1EBE5D] text-white shadow-[0_8px_25px_rgba(37,211,102,0.45)] hover:shadow-[0_12px_32px_rgba(37,211,102,0.6)] hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer border border-white/30"
-        aria-label="Chat with Royal Concierge on WhatsApp"
+        className="group relative flex items-center justify-center p-2.5 sm:p-2 rounded-full bg-[#25D366] hover:bg-[#E2F6E9] text-[#14532D] active:scale-95 transition-all duration-300 cursor-pointer"
+        aria-label="Chat on WhatsApp"
       >
-        <MessageCircle className="w-5 h-5 sm:w-5.5 sm:h-5.5 fill-white shrink-0" />
-        <span className="hidden sm:inline font-bold text-xs tracking-wide pr-1">
-          Royal Concierge
+        <div className="w-9 h-9 rounded-full bg-[#25D366] flex items-center justify-center shrink-0">
+          <MessageCircle className="w-5.5 h-5.5 text-white fill-white" />
+        </div>
+
+        {/* Smooth Hover Reveal Text */}
+        <span className="max-w-0 overflow-hidden opacity-0 group-hover:max-w-[160px] group-hover:opacity-100 group-hover:ml-2.5 group-hover:pr-1 whitespace-nowrap font-bold text-xs uppercase tracking-[0.12em] text-[#14532D] transition-all duration-300 ease-out">
+          Chat on WhatsApp
         </span>
-        <span className="absolute -top-1 -right-1 w-3 h-3 bg-[#E1B46F] border-2 border-white rounded-full animate-ping" />
-        <span className="absolute -top-1 -right-1 w-3 h-3 bg-[#E1B46F] border-2 border-white rounded-full" />
+
+        {/* Static Online Status Dot */}
+        <span className="!ml-0 absolute -top-0.5 -right-0.5 w-3 h-3 bg-[#25D366] border-2 border-white rounded-full" />
       </button>
     </div>
   );

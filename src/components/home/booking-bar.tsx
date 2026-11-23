@@ -1049,7 +1049,7 @@ export function BookingBar() {
   const panelHeader = getPanelHeader();
 
   return (
-    <div ref={barRootRef} className="w-full max-w-[1080px] mx-auto relative pt-4">
+    <div ref={barRootRef} className="w-full max-w-[1080px] mx-auto relative pt-2 sm:pt-4">
       {/* ── 1. Popping-Out Tabs with Inset Fillet Curves ── */}
       <div className="relative z-20 flex flex-col sm:flex-row sm:items-end justify-between px-0">
         <div
@@ -1143,7 +1143,7 @@ export function BookingBar() {
 
       {/* ── 2. Master Booking Details Card ── */}
       <div
-        className="relative z-10 w-full rounded-[28px] sm:rounded-full pt-2 sm:pt-2 pb-2 sm:pb-2 px-2 sm:px-2 transition-all duration-300 border-2"
+        className="relative z-10 w-full rounded-[44px] sm:rounded-full pt-2 sm:pt-2 pb-2 sm:pb-2 px-2 sm:px-2 transition-all duration-300 border-2"
         style={{
           backgroundColor: '#FAF7F2',
           borderColor: '#D8AA67',
@@ -1153,7 +1153,7 @@ export function BookingBar() {
           <form
             action="/rooms"
             method="GET"
-            className="grid grid-cols-2 lg:grid-cols-[1fr_auto_1fr_1.25fr_auto] gap-2.5 sm:gap-3 items-center"
+            className="grid grid-cols-2 lg:grid-cols-[1fr_auto_1fr_1.25fr_auto] gap-[5.2px] sm:gap-3 items-center"
           >
             <input type="hidden" name="checkIn" value={checkIn} />
             <input type="hidden" name="checkOut" value={checkOut} />
@@ -1173,7 +1173,7 @@ export function BookingBar() {
                   openTooltip('calendar', checkInTileRef, 'in');
                 }
               }}
-              className={`col-span-1 relative flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 rounded-[16px] sm:rounded-full border bg-white transition-all cursor-pointer group h-[60px] sm:h-[64px] ${
+              className={`col-span-1 relative flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 rounded-tl-[36px] rounded-tr-[18px] rounded-bl-[18px] rounded-br-[18px] sm:rounded-full border bg-white transition-all cursor-pointer group h-[54px] min-[400px]:h-[60px] sm:h-[64px] ${
                 tooltipOpen && activeTooltipTab === 'calendar' && selectingField === 'in'
                   ? 'border-[#670E10] ring-1 ring-[#D8AA67] bg-[#FFF8EB]'
                   : 'border-[#DFD3C3] hover:border-[#B08D57]'
@@ -1195,7 +1195,7 @@ export function BookingBar() {
                   </span>
                 </div>
               </div>
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-[10px] sm:rounded-full bg-[#FAF7F2] flex items-center justify-center shrink-0 group-hover:border-[#B08D57] group-hover:bg-[#FFF8EB] transition-colors">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-[40px] sm:rounded-full bg-[#FAF7F2] flex items-center justify-center shrink-0 group-hover:border-[#B08D57] group-hover:bg-[#FFF8EB] transition-colors">
                 <CalendarIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#670E10] group-hover:text-[#B08D57] transition-colors" />
               </div>
             </div>
@@ -1211,7 +1211,7 @@ export function BookingBar() {
               }}
               className="hidden lg:flex flex-col items-center justify-center px-0.5 cursor-pointer group"
             >
-              <span className="text-[10px] font-bold px-2.5 py-1 rounded-[12px] bg-[#ffffff] text-[#670E10] whitespace-nowrap flex items-center gap-1 group-hover:border-[#B08D57] group-hover:bg-[#FFF8EB] transition">
+              <span className="text-[10px] font-bold px-2.5 py-1 rounded-[32px] bg-[#ffffff] text-[#670E10] whitespace-nowrap flex items-center gap-1 group-hover:border-[#B08D57] group-hover:bg-[#FFF8EB] transition">
                 <span>🌙</span>
                 <span>
                   {nightsCount} {nightsCount === 1 ? 'Night' : 'Nights'}
@@ -1229,7 +1229,7 @@ export function BookingBar() {
                   openTooltip('calendar', checkOutTileRef, 'out');
                 }
               }}
-              className={`col-span-1 relative flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 rounded-[16px] sm:rounded-full border bg-white transition-all cursor-pointer group h-[60px] sm:h-[64px] ${
+              className={`col-span-1 relative flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 rounded-tl-[18px] rounded-tr-[36px] rounded-bl-[18px] rounded-br-[18px] sm:rounded-full border bg-white transition-all cursor-pointer group h-[54px] min-[400px]:h-[60px] sm:h-[64px] ${
                 tooltipOpen && activeTooltipTab === 'calendar' && selectingField === 'out'
                   ? 'border-[#670E10] ring-1 ring-[#D8AA67] bg-[#FFF8EB]'
                   : 'border-[#DFD3C3] hover:border-[#B08D57]'
@@ -1251,7 +1251,7 @@ export function BookingBar() {
                   </span>
                 </div>
               </div>
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-[10px] sm:rounded-full bg-[#FAF7F2] flex items-center justify-center shrink-0 group-hover:border-[#B08D57] group-hover:bg-[#FFF8EB] transition-colors">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-[40px] sm:rounded-full bg-[#FAF7F2] flex items-center justify-center shrink-0 group-hover:border-[#B08D57] group-hover:bg-[#FFF8EB] transition-colors">
                 <CalendarIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#670E10] group-hover:text-[#B08D57] transition-colors" />
               </div>
             </div>
@@ -1266,7 +1266,7 @@ export function BookingBar() {
                   openTooltip('guests', guestsTileRef);
                 }
               }}
-              className={`col-span-2 lg:col-span-1 relative flex items-center justify-between px-4 py-2.5 sm:py-3 rounded-[16px] sm:rounded-full border bg-white transition-all cursor-pointer group h-[60px] sm:h-[64px] ${
+              className={`col-span-2 lg:col-span-1 relative flex items-center justify-between px-4 py-2.5 sm:py-3 rounded-[18px] sm:rounded-full border bg-white transition-all cursor-pointer group h-[54px] min-[400px]:h-[60px] sm:h-[64px] ${
                 tooltipOpen && activeTooltipTab === 'guests'
                   ? 'border-[#670E10] ring-2 ring-[#D8AA67] bg-[#FFF8EB]'
                   : 'border-[#DFD3C3] hover:border-[#B08D57]'
@@ -1293,7 +1293,7 @@ export function BookingBar() {
             <div className="col-span-2 lg:col-span-1">
               <button
                 type="submit"
-                className="w-full h-[58px] sm:h-[64px] px-8 rounded-[16px] sm:rounded-full font-bold tracking-wide transition-all duration-300 active:scale-[0.98] flex items-center justify-center space-x-2.5 cursor-pointer text-[#FFF8EB] border border-[#D8AA67]/80 group"
+                className="w-full h-[52px] min-[400px]:h-[58px] sm:h-[64px] px-8 rounded-tl-[18px] rounded-tr-[18px] rounded-bl-[36px] rounded-br-[36px] sm:rounded-full font-bold tracking-wide transition-all duration-300 active:scale-[0.98] flex items-center justify-center space-x-2.5 cursor-pointer text-[#FFF8EB] border border-[#D8AA67]/80 group"
                 style={{
                   background: 'linear-gradient(135deg, #670E10 0%, #7E1418 50%, #52090B 100%)',
                   fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
@@ -1309,7 +1309,7 @@ export function BookingBar() {
           /* ── Content Area: Party Hall Form ── */
           <form
             onSubmit={handleHallSearch}
-            className="grid grid-cols-2 lg:grid-cols-[1.1fr_1fr_1.2fr_auto] gap-2.5 sm:gap-3 items-center"
+            className="grid grid-cols-2 lg:grid-cols-[1.1fr_1fr_1.2fr_auto] gap-[5.2px] sm:gap-3 items-center"
           >
             {/* 1. Event Occasion (Col-span 1 on mobile: Occasion & Date in a row) */}
             <div
@@ -1321,7 +1321,7 @@ export function BookingBar() {
                   openTooltip('hallOccasion', hallOccasionTileRef);
                 }
               }}
-              className={`col-span-1 relative flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 rounded-[16px] sm:rounded-full border bg-white transition-all cursor-pointer group h-[60px] sm:h-[64px] ${
+              className={`col-span-1 relative flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 rounded-tl-[36px] rounded-tr-[18px] rounded-bl-[18px] rounded-br-[18px] sm:rounded-full border bg-white transition-all cursor-pointer group h-[54px] min-[400px]:h-[60px] sm:h-[64px] ${
                 tooltipOpen && activeTooltipTab === 'hallOccasion'
                   ? 'border-[#670E10] ring-2 ring-[#D8AA67] bg-[#FFF8EB]'
                   : 'border-[#DFD3C3] hover:border-[#B08D57]'
@@ -1338,7 +1338,7 @@ export function BookingBar() {
                   {hallEventType}
                 </span>
               </div>
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-[10px] sm:rounded-full bg-[#FAF7F2] flex items-center justify-center shrink-0 group-hover:border-[#B08D57] group-hover:bg-[#FFF8EB] transition-colors">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-[40px] sm:rounded-full bg-[#FAF7F2] flex items-center justify-center shrink-0 group-hover:border-[#B08D57] group-hover:bg-[#FFF8EB] transition-colors">
                 <PartyPopper className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#670E10] group-hover:text-[#B08D57] transition-colors" />
               </div>
             </div>
@@ -1353,7 +1353,7 @@ export function BookingBar() {
                   openTooltip('hallCalendar', hallDateTileRef);
                 }
               }}
-              className={`col-span-1 relative flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 rounded-[16px] sm:rounded-full border bg-white transition-all cursor-pointer group h-[60px] sm:h-[64px] ${
+              className={`col-span-1 relative flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 rounded-tl-[18px] rounded-tr-[36px] rounded-bl-[18px] rounded-br-[18px] sm:rounded-full border bg-white transition-all cursor-pointer group h-[54px] min-[400px]:h-[60px] sm:h-[64px] ${
                 tooltipOpen && activeTooltipTab === 'hallCalendar'
                   ? 'border-[#670E10] ring-2 ring-[#D8AA67] bg-[#FFF8EB]'
                   : 'border-[#DFD3C3] hover:border-[#B08D57]'
@@ -1390,7 +1390,7 @@ export function BookingBar() {
                   openTooltip('hallCapacity', hallCapacityTileRef);
                 }
               }}
-              className={`col-span-2 lg:col-span-1 relative flex items-center justify-between px-4 py-2.5 sm:py-3 rounded-[16px] sm:rounded-full border bg-white transition-all cursor-pointer group h-[60px] sm:h-[64px] ${
+              className={`col-span-2 lg:col-span-1 relative flex items-center justify-between px-4 py-2.5 sm:py-3 rounded-[18px] sm:rounded-full border bg-white transition-all cursor-pointer group h-[54px] min-[400px]:h-[60px] sm:h-[64px] ${
                 tooltipOpen && activeTooltipTab === 'hallCapacity'
                   ? 'border-[#670E10] ring-2 ring-[#D8AA67] bg-[#FFF8EB]'
                   : 'border-[#DFD3C3] hover:border-[#B08D57]'
@@ -1416,7 +1416,7 @@ export function BookingBar() {
             <div className="col-span-2 lg:col-span-1">
               <button
                 type="submit"
-                className="w-full h-[58px] sm:h-[64px] px-8 rounded-[16px] sm:rounded-full font-bold tracking-wide transition-all duration-300 active:scale-[0.98] flex items-center justify-center space-x-2.5 cursor-pointer text-[#FFF8EB] border border-[#D8AA67]/80 group"
+                className="w-full h-[52px] min-[400px]:h-[58px] sm:h-[64px] px-8 rounded-tl-[18px] rounded-tr-[18px] rounded-bl-[36px] rounded-br-[36px] sm:rounded-full font-bold tracking-wide transition-all duration-300 active:scale-[0.98] flex items-center justify-center space-x-2.5 cursor-pointer text-[#FFF8EB] border border-[#D8AA67]/80 group"
                 style={{
                   background: 'linear-gradient(135deg, #670E10 0%, #7E1418 50%, #52090B 100%)',
                   fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",

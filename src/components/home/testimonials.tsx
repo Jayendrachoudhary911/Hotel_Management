@@ -229,7 +229,7 @@ export function Testimonials() {
 
   return (
     <section
-      className="relative py-14 sm:py-18 lg:py-24 overflow-hidden"
+      className="relative py-14 pb-22 sm:py-18 lg:py-24 overflow-hidden"
       style={{ backgroundColor: 'var(--cream, #fbf5e9)' }}
       aria-label="Guest Experiences — What Our Guests Say"
     >
@@ -394,17 +394,20 @@ export function Testimonials() {
       </div>
 
       {/* ── TRUST & REPUTATION BADGE BELOW MARQUEE ── */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 sm:mt-6">
-        <div className="flex flex-wrap items-center justify-center gap-3 text-xs sm:text-sm font-medium text-[#4f0809]">
-          <div className="inline-flex items-center space-x-2 bg-white/70 px-4 py-2 rounded-full border border-[#d8aa67]/50 shadow-2xs">
-            <div className="flex items-center space-x-0.5">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Star key={i} className="w-3.5 h-3.5 fill-[#e5a93b] text-[#e5a93b]" />
-              ))}
+<div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-5 sm:mt-6">
+        <div className="flex items-center justify-center text-[11px] sm:text-sm font-medium text-[#4f0809]">
+          <div className="inline-flex flex-wrap items-center justify-center gap-x-2 gap-y-1 bg-[#FFFFFF] px-4 py-2 sm:px-5 sm:py-2.5 rounded-2xl sm:rounded-full text-center max-w-full">
+            <div className="inline-flex items-center space-x-1.5 shrink-0">
+              <div className="flex items-center space-x-0.5">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star key={i} className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-[#D8AA67] text-[#C99A52]" />
+                ))}
+              </div>
+              <span className="font-bold text-[#4F0809]">4.9 / 5.0 Rating</span>
             </div>
-            <span className="font-bold text-[#670E10]">4.9 / 5.0 Rating</span>
-            <span className="text-[#8a7b68]">&bull;</span>
-            <span className="text-[#6B5E4F]">Over 450+ Verified Traveler Reviews</span>
+
+            <span className="hidden sm:inline text-[#C99A52]">&bull;</span>
+            <span className="text-[#6B533B] w-full sm:w-auto">Over 450+ Verified Reviews</span>
           </div>
         </div>
       </div>

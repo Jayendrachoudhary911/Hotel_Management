@@ -92,14 +92,13 @@ export function InstaLookbook() {
   };
 
   return (
-    <section
-      className="relative py-14 sm:py-16 lg:py-20 overflow-hidden"
+<section
+      className="relative py-12 sm:py-16 lg:py-20 overflow-hidden"
       style={{ backgroundColor: 'var(--cream, #fbf5e9)' }}
       aria-label="Instagram Lookbook and Reels"
     >
-      {/* ── AUTHENTIC RAJASTHANI CHHATRI, PEACOCK & FLORAL ORNAMENT PANELS ── */}
-      {/* Left Decoration: Rajasthani Sandstone Chhatri with Climbing Floral Vine */}
-      <div className="absolute left-0 top-0 bottom-0 w-[120px] sm:w-[160px] md:w-[190px] lg:w-[230px] xl:w-[260px] pointer-events-none z-0 flex items-center justify-start select-none opacity-75">
+      {/* ── BACKGROUND CHHATRI ORNAMENTS (HIDDEN ON MOBILE TO PREVENT CLUTTER) ── */}
+      <div className="hidden md:flex absolute left-0 top-0 bottom-0 w-[180px] lg:w-[230px] xl:w-[260px] pointer-events-none z-0 items-center justify-start select-none opacity-60">
         <img
           src="/images/ornaments/lookbook-left-transparent-2x.png"
           alt=""
@@ -108,8 +107,7 @@ export function InstaLookbook() {
         />
       </div>
 
-      {/* Right Decoration: Rajasthani Sandstone Chhatri with Royal Peacock on Pedestal and Floral Vine */}
-      <div className="absolute right-0 top-0 bottom-0 w-[120px] sm:w-[160px] md:w-[190px] lg:w-[230px] xl:w-[260px] pointer-events-none z-0 flex items-center justify-end select-none opacity-75">
+      <div className="hidden md:flex absolute right-0 top-0 bottom-0 w-[180px] lg:w-[230px] xl:w-[260px] pointer-events-none z-0 items-center justify-end select-none opacity-60">
         <img
           src="/images/ornaments/lookbook-right-transparent-2x.png"
           alt=""
@@ -120,15 +118,15 @@ export function InstaLookbook() {
 
       <div className="relative z-10 max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8">
         {/* ── SECTION HEADER ── */}
-        <div className="text-center max-w-2xl mx-auto mb-8 sm:mb-10">
+        <div className="text-center max-w-xl mx-auto mb-6 sm:mb-10">
           <span
-            className="text-[11px] sm:text-xs font-semibold tracking-[0.22em] uppercase block mb-1.5"
+            className="text-[10px] sm:text-xs font-semibold tracking-[0.22em] uppercase block mb-1"
             style={{ color: '#ba905e' }}
           >
             Curated for Moments
           </span>
           <h2
-            className="text-3xl sm:text-4xl lg:text-[44px] font-bold mb-2 leading-tight tracking-tight"
+            className="text-3xl sm:text-4xl lg:text-[44px] font-bold mb-1.5 leading-tight tracking-tight"
             style={{
               fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
               color: '#751c26',
@@ -144,8 +142,8 @@ export function InstaLookbook() {
           </p>
         </div>
 
-        {/* ── 5 REELS / LOOKBOOK VERTICAL CARDS GRID WITH POPOUT & AUTO-PLAY ── */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-3.5 lg:gap-4">
+        {/* ── REELS GRID: HORIZONTAL SNAP CAROUSEL ON MOBILE, 5-COL GRID ON DESKTOP ── */}
+        <div className="flex sm:grid sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-3.5 lg:gap-4 overflow-x-auto sm:overflow-visible snap-x snap-mandatory pb-2 sm:pb-0 -mx-4 px-4 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {REELS_DATA.map((reel) => {
             const isHovered = hoveredReelId === reel.id;
             const isOtherHovered = hoveredReelId !== null && !isHovered;
@@ -156,30 +154,22 @@ export function InstaLookbook() {
                 onMouseEnter={() => handleMouseEnter(reel.id)}
                 onMouseLeave={() => handleMouseLeave(reel.id)}
                 onClick={() => setActiveReel(reel)}
-                className={`relative h-[300px] sm:h-[340px] lg:h-[370px] rounded-[24px] overflow-hidden cursor-pointer bg-[#1a1a1a] transition-all duration-400 ease-[cubic-bezier(0.25,1,0.5,1)] ${
+                className={`relative shrink-0 w-[68vw] max-w-[240px] sm:w-auto sm:max-w-none snap-center h-[320px] sm:h-[340px] lg:h-[370px] rounded-[22px] overflow-hidden cursor-pointer bg-[#1a1a1a] transition-all duration-300 ease-out ${
                   isHovered
-                    ? 'z-30 scale-[1.08] lg:scale-[1.38] -translate-y-2.5'
+                    ? 'z-30 sm:scale-[1.06] lg:scale-[1.08] sm:-translate-y-2'
                     : isOtherHovered
-                    ? 'z-10 opacity-80 scale-[0.88] shadow-md'
-                    : 'z-10 shadow-md hover:shadow-xl'
+                    ? 'z-10 opacity-80 sm:scale-[0.98]'
+                    : 'z-10'
                 }`}
-                style={{
-                  willChange: 'transform, box-shadow',
-                  transform: isHovered
-                    ? 'translateY(-10px) scale(1.08)'
-                    : isOtherHovered
-                    ? 'scale(0.98)'
-                    : 'none',
-                }}
               >
                 {/* 1. Base Photo Poster */}
                 <Image
                   src={reel.image}
                   alt={reel.alt}
                   fill
-                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                  sizes="(max-width: 640px) 70vw, (max-width: 1024px) 33vw, 20vw"
                   className={`object-cover transition-transform duration-700 ${
-                    isHovered ? 'scale-110 brightness-105' : 'scale-100'
+                    isHovered ? 'scale-105' : 'scale-100'
                   }`}
                 />
 
@@ -199,45 +189,32 @@ export function InstaLookbook() {
                   }`}
                 />
 
-                {/* 4. Top Live Badge with Pulsing Equalizer (Visible on Hover) */}
-                <div
-                  className={`absolute top-2.5 right-2.5 z-20 flex items-center space-x-1.5 px-1.5 py-0.8 rounded-full bg-black/65 backdrop-blur-md transition-all duration-300 shadow-md ${
-                    isHovered
-                      ? 'opacity-100 translate-y-0 scale-100'
-                      : 'opacity-0 -translate-y-1 scale-95 pointer-events-none'
-                  }`}
-                >
-                  <span className="text-[8px] font-bold tracking-wider uppercase text-[#FFF8EB]">
-                    Playing
-                  </span>
-                </div>
+                {/* 3. Shading Vignette Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
 
-                {/* 5. Shading Vignette Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/15 to-transparent pointer-events-none" />
-
-                {/* 6. Center Play Button Overlay (Fades out smoothly when hovered and playing) */}
+                {/* 4. Minimal Center Play Button (Fades out on hover) */}
                 <div
                   className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-all duration-300 ${
                     isHovered ? 'opacity-0 scale-75' : 'opacity-100 scale-100'
                   }`}
                 >
-                  <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white shadow-lg transition-all duration-300">
-                    <Play className="w-4 h-4 sm:w-5 sm:h-5 fill-current ml-0.5" />
+                  <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/35 backdrop-blur-sm flex items-center justify-center text-white">
+                    <Play className="w-4 h-4 fill-current ml-0.5" />
                   </div>
                 </div>
 
-                {/* 7. Bottom Details (Title + Views) */}
+                {/* 5. Clean Bottom Title & Views */}
                 <div className="absolute bottom-0 inset-x-0 p-3.5 sm:p-4 text-left z-20">
                   <h3
-                    className="text-sm sm:text-[15px] font-bold text-white mb-1 leading-snug line-clamp-2 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]"
+                    className="text-sm sm:text-[15px] font-bold text-white mb-1 leading-snug line-clamp-2"
                     style={{
                       fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
                     }}
                   >
                     {reel.title}
                   </h3>
-                  <div className="flex items-center space-x-1.5 text-[11px] sm:text-xs text-white/90 font-medium drop-shadow">
-                    <Eye className="w-3.5 h-3.5 text-[#D8AA67] stroke-[2]" />
+                  <div className="flex items-center space-x-1.5 text-[11px] text-white/85 font-medium">
+                    <Eye className="w-3.5 h-3.5 text-[#D8AA67]" />
                     <span>{reel.views}</span>
                   </div>
                 </div>
@@ -247,23 +224,22 @@ export function InstaLookbook() {
         </div>
       </div>
 
-      {/* ── INTERACTIVE MODAL FOR FULL REEL PLAYBACK ── */}
+      {/* ── CLEAN, BORDERLESS MODAL FOR FULL REEL PLAYBACK ── */}
       {activeReel && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in-up"
           onClick={() => setActiveReel(null)}
         >
           <div
-            className="relative w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl border border-[#d8aa67]/60"
-            style={{ backgroundColor: 'var(--forest-deep, #4f0809)' }}
+            className="relative w-full max-w-sm rounded-3xl overflow-hidden bg-black"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Controls: Sound toggle & Close */}
-            <div className="absolute top-3 inset-x-3 z-30 flex items-center justify-between">
+            <div className="absolute top-3.5 inset-x-3.5 z-30 flex items-center justify-between">
               <button
                 type="button"
                 onClick={() => setModalMuted(!modalMuted)}
-                className="w-9 h-9 rounded-full bg-black/60 backdrop-blur-md text-white border border-white/30 flex items-center justify-center hover:bg-[#d8aa67] hover:text-[#4f0809] transition-colors cursor-pointer"
+                className="w-9 h-9 rounded-full bg-black/50 backdrop-blur-md text-white flex items-center justify-center hover:bg-[#d8aa67] hover:text-[#4f0809] transition-colors cursor-pointer"
                 aria-label={modalMuted ? 'Unmute video' : 'Mute video'}
               >
                 {modalMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
@@ -271,7 +247,7 @@ export function InstaLookbook() {
               <button
                 type="button"
                 onClick={() => setActiveReel(null)}
-                className="w-9 h-9 rounded-full bg-black/60 backdrop-blur-md text-white border border-white/30 flex items-center justify-center hover:bg-[#d8aa67] hover:text-[#4f0809] transition-colors cursor-pointer"
+                className="w-9 h-9 rounded-full bg-black/50 backdrop-blur-md text-white flex items-center justify-center hover:bg-[#d8aa67] hover:text-[#4f0809] transition-colors cursor-pointer"
                 aria-label="Close"
               >
                 <X className="w-5 h-5" />
@@ -279,7 +255,7 @@ export function InstaLookbook() {
             </div>
 
             {/* Reel Video Player */}
-            <div className="relative h-[520px] w-full bg-black">
+            <div className="relative h-[75vh] max-h-[540px] w-full bg-black">
               <video
                 src={activeReel.video}
                 poster={activeReel.image}
@@ -289,13 +265,10 @@ export function InstaLookbook() {
                 playsInline
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/30 pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent pointer-events-none" />
 
               {/* Bottom Caption Overlay */}
               <div className="absolute bottom-0 inset-x-0 p-5 text-left text-white z-20">
-                <span className="text-[10px] uppercase font-bold tracking-widest text-[#d8aa67] block mb-1">
-                  Rajmahal Moments
-                </span>
                 <h4
                   className="text-xl font-bold mb-1"
                   style={{
@@ -307,8 +280,6 @@ export function InstaLookbook() {
                 <div className="flex items-center space-x-2 text-xs text-white/80">
                   <Eye className="w-3.5 h-3.5 text-[#d8aa67]" />
                   <span>{activeReel.views} views</span>
-                  <span>•</span>
-                  <span>Udaipur, Rajasthan</span>
                 </div>
               </div>
             </div>
