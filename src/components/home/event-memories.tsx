@@ -9,8 +9,8 @@ import {
   Sparkles,
   Maximize2,
   X,
-  Calendar,
-  Users,
+  ChevronLeft,
+  ChevronRight,
   ChevronDown,
 } from 'lucide-react';
 
@@ -113,6 +113,41 @@ export function EventMemories() {
   const currentTranslateX = useRef(0);
   const isRunningRef = useRef(false);
   const animFrameId = useRef<number | null>(null);
+
+  const selectedIndex = selectedMemory
+    ? EVENT_MEMORIES.findIndex((m) => m.id === selectedMemory.id)
+    : -1;
+
+  const showPrev = useCallback(() => {
+    setSelectedMemory((curr) => {
+      if (!curr) return null;
+      const idx = EVENT_MEMORIES.findIndex((m) => m.id === curr.id);
+      const prevIdx = (idx - 1 + EVENT_MEMORIES.length) % EVENT_MEMORIES.length;
+      return EVENT_MEMORIES[prevIdx];
+    });
+  }, []);
+
+  const showNext = useCallback(() => {
+    setSelectedMemory((curr) => {
+      if (!curr) return null;
+      const idx = EVENT_MEMORIES.findIndex((m) => m.id === curr.id);
+      const nextIdx = (idx + 1) % EVENT_MEMORIES.length;
+      return EVENT_MEMORIES[nextIdx];
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!selectedMemory) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSelectedMemory(null);
+      if (e.key === 'ArrowLeft') showPrev();
+      if (e.key === 'ArrowRight') showNext();
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedMemory, showPrev, showNext]);
 
   useEffect(() => {
     setMounted(true);
@@ -389,13 +424,14 @@ export function EventMemories() {
                   onClick={() => setSelectedMemory(memory)}
                   className="group relative shrink-0 w-[240px] sm:w-[275px] md:w-[310px] lg:w-[335px] xl:w-[360px] h-[300px] sm:h-[340px] md:h-[370px] lg:h-[395px] xl:h-[420px] rounded-[20px] sm:rounded-[26px] overflow-hidden border-2 transition-colors duration-200 cursor-pointer"
                   style={{
-                    backgroundColor: '#FFFDF9',
-                    borderColor: isCenter ? '#D8AA67' : 'rgba(216, 170, 103, 0.6)',
+                    backgroundColor: '#1b0608',
+                    borderColor: isCenter ? '#D8AA67' : 'rgba(216, 170, 103, 0.45)',
                     willChange: 'transform, opacity, box-shadow',
                     transformStyle: 'preserve-3d',
                   }}
+                  aria-label={memory.title}
                 >
-                  {/* Background Image with Smooth Parallax Zoom on Hover */}
+                  {/* Clean Full-Bleed Image with Smooth Parallax Zoom on Hover */}
                   <Image
                     src={memory.image}
                     alt={memory.alt}
@@ -405,54 +441,12 @@ export function EventMemories() {
                     priority={index < 3}
                   />
 
-                  {/* Shimmer / Glass reflection layer */}
-                  <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-transparent pointer-events-none opacity-40 group-hover:opacity-75 transition-opacity" />
-
-                  {/* Top Category Badge */}
-                  <div className="absolute top-3.5 left-3.5 z-10 flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-black/45 backdrop-blur-md border border-[#D8AA67]/60 text-[#FFF8EB] text-[10px] font-semibold tracking-wide shadow-md">
-                    <Sparkles className="w-2.5 h-2.5 text-[#D8AA67]" />
-                    <span>{memory.category}</span>
-                  </div>
-
-                  {/* Top-Right Expand Icon on Hover */}
-                  <div className="absolute top-3.5 right-3.5 z-10 w-7 h-7 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white/80 group-hover:text-[#FFF8EB] group-hover:scale-110 transition-all opacity-0 group-hover:opacity-100 shadow-sm">
-                    <Maximize2 className="w-3 h-3" />
-                  </div>
-
-                  {/* Bottom Dark Gradient Card Deck */}
-                  <div className="absolute inset-x-0 bottom-0 z-10 p-4 sm:p-5 bg-gradient-to-t from-black/95 via-black/65 to-transparent flex flex-col justify-end text-left pointer-events-none">
-                    {/* Subtitle / Location */}
-                    <span
-                      className="text-[10px] sm:text-[11px] font-semibold tracking-[0.16em] uppercase text-[#E1B46F] mb-0.5 drop-shadow"
-                      style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)" }}
-                    >
-                      {memory.subtitle}
-                    </span>
-
-                    {/* Title */}
-                    <h3
-                      className="text-lg sm:text-xl lg:text-2xl font-bold text-[#FFF8EB] leading-tight mb-1 group-hover:text-[#E1B46F] transition-colors drop-shadow-md"
-                      style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)" }}
-                    >
-                      {memory.title}
-                    </h3>
-
-                    {/* 1-Line Description */}
-                    <p className="text-[11px] sm:text-xs text-[#EAE4D9]/90 font-light leading-relaxed line-clamp-2 mb-2 drop-shadow">
-                      {memory.description}
-                    </p>
-
-                    {/* Action Link Row */}
-                    <div className="flex items-center justify-between pt-1.5 border-t border-white/15 text-[10px] sm:text-[11px] font-medium text-[#FAF7F2]">
-                      <span className="flex items-center space-x-1.5 text-[#E1B46F]">
-                        <Users className="w-3 h-3" />
-                        <span>{memory.capacity}</span>
-                      </span>
-                      <span className="inline-flex items-center space-x-1 text-[#FFF8EB] font-semibold group-hover:translate-x-1 transition-transform">
-                        <span>Explore</span>
-                        <ArrowRight className="w-3 h-3 text-[#D8AA67]" />
-                      </span>
-                    </div>
+                  {/* Top-Right Expand Button */}
+                  <div
+                    className="absolute top-3 sm:top-3.5 right-3 sm:right-3.5 z-10 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/55 backdrop-blur-md border border-[#D8AA67]/60 flex items-center justify-center text-white/90 shadow-md group-hover:scale-110 group-hover:bg-black/75 group-hover:border-[#D8AA67] transition-all duration-300 pointer-events-none"
+                    aria-hidden="true"
+                  >
+                    <Maximize2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#FFF8EB]" />
                   </div>
                 </div>
               );
@@ -524,7 +518,7 @@ export function EventMemories() {
         </div>
       </div>
 
-      {/* ── FULLSCREEN IMMERSIVE LIGHTBOX MODAL (PORTAL TO DOCUMENT.BODY) ── */}
+      {/* ── FULLSCREEN IMAGE-ONLY LIGHTBOX GALLERY (PORTAL TO DOCUMENT.BODY) ── */}
       {selectedMemory &&
         mounted &&
         createPortal(
@@ -532,83 +526,62 @@ export function EventMemories() {
             onClick={(e) => {
               if (e.target === e.currentTarget) setSelectedMemory(null);
             }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md animate-fade-in"
+            className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 md:p-10 bg-black/90 backdrop-blur-md animate-fade-in select-none"
           >
-            <div className="relative w-full max-w-4xl max-h-[92vh] overflow-hidden rounded-[24px] bg-[#FFFDF9] border border-[#D8AA67]/60 shadow-[0_25px_60px_rgba(40,5,8,0.6)] flex flex-col md:flex-row">
-              {/* Close Button */}
+            {/* Top Bar with Counter and Close Button */}
+            <div className="absolute top-4 sm:top-6 inset-x-4 sm:inset-x-8 z-30 flex items-center justify-between pointer-events-none">
+              <span className="px-3 py-1 rounded-full bg-black/00 text-[#FFF8EB] text-xs sm:text-sm font-semibold tracking-wider uppercase">
+                {selectedIndex + 1} / {EVENT_MEMORIES.length} &bull; {selectedMemory.title}
+              </span>
               <button
                 type="button"
                 onClick={() => setSelectedMemory(null)}
-                className="absolute top-4 right-4 z-20 p-2 rounded-full bg-black/60 text-white hover:bg-black/90 transition cursor-pointer"
-                aria-label="Close photo preview"
+                className="pointer-events-auto p-2.5 sm:p-2 rounded-full bg-black/60 text-white/90 hover:text-white hover:bg-black/90 transition-all cursor-pointer hover:scale-125 active:scale-95"
+                aria-label="Close image gallery"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
+            </div>
 
-              {/* Left/Top Image in Lightbox */}
-              <div className="relative w-full md:w-3/5 h-64 sm:h-80 md:h-[520px] bg-black">
-                <Image
-                  src={selectedMemory.image}
-                  alt={selectedMemory.alt}
-                  fill
-                  className="object-cover"
-                  priority
-                />
-                <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-black/50 text-[#FFF8EB] border border-[#D8AA67]/50 text-xs font-semibold backdrop-blur-xs">
-                  {selectedMemory.category}
-                </div>
-              </div>
+            {/* Left Prev Navigation Arrow */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                showPrev();
+              }}
+              className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-30 p-2.5 sm:p-3.5 rounded-full bg-black/60 text-[#FFF8EB] hover:text-white hover:bg-black/90 hover:scale-120 active:scale-95 transition-all cursor-pointer shadow-xl"
+              aria-label="Previous image"
+            >
+              <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+            </button>
 
-              {/* Right/Bottom Story & Details in Lightbox */}
-              <div className="p-6 sm:p-8 flex-1 flex flex-col justify-between text-left bg-[#FFFDF9]">
-                <div>
-                  <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[#D8AA67] block mb-1">
-                    {selectedMemory.subtitle}
-                  </span>
-                  <h3
-                    className="text-2xl sm:text-3xl font-bold text-[#670E10] mb-3 leading-tight"
-                    style={{ fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)" }}
-                  >
-                    {selectedMemory.title}
-                  </h3>
-                  <p className="text-sm text-[#4F0809] leading-relaxed mb-6 font-normal">
-                    {selectedMemory.description}
-                  </p>
+            {/* Right Next Navigation Arrow */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                showNext();
+              }}
+              className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-30 p-2.5 sm:p-3.5 rounded-full bg-black/60 text-[#FFF8EB] hover:text-white hover:bg-black/90 hover:scale-120 active:scale-95 transition-all cursor-pointer shadow-xl"
+              aria-label="Next image"
+            >
+              <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+            </button>
 
-                  <div className="p-4 rounded-xl bg-[#FAF7F2] border border-[#E8DFC9] space-y-2 mb-6 text-xs text-[#6B5E4F]">
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-[#241F1A]">Celebration Capacity:</span>
-                      <span className="text-[#670E10] font-bold">{selectedMemory.capacity}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-[#241F1A]">Location:</span>
-                      <span>Palace Courtyard &amp; Terrace</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-[#241F1A]">Cuisine Available:</span>
-                      <span>Royal Mewari &bull; Pure Veg &bull; Multi-Cuisine</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-[#DFD3C3]">
-                  <Link
-                    href="/hotel#party-hall-enquiry"
-                    onClick={() => setSelectedMemory(null)}
-                    className="flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-[8px] bg-gradient-to-r from-[#670E10] to-[#801417] text-[#FFF8EB] text-xs sm:text-sm font-bold tracking-wide shadow hover:shadow-md transition-all text-center"
-                  >
-                    <Calendar className="w-4 h-4 text-[#D8AA67]" />
-                    <span>Enquire for Celebration</span>
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedMemory(null)}
-                    className="py-3 px-4 rounded-[8px] border border-[#D8AA67] text-[#670E10] text-xs sm:text-sm font-semibold hover:bg-[#FAF7F2] transition text-center cursor-pointer"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
+            {/* Main Pure Image Frame */}
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-5xl h-[70vh] sm:h-[80vh] md:h-[86vh] rounded-2xl sm:rounded-3xl overflow-hidden flex items-center justify-center"
+            >
+              <Image
+                src={selectedMemory.image}
+                alt={selectedMemory.alt}
+                fill
+                className="object-contain rounded-2xl sm:rounded-3xl"
+                sizes="(max-width: 1280px) 95vw, 1200px"
+                priority
+              />
             </div>
           </div>,
           document.body

@@ -359,14 +359,6 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* ── 3. Right: Desktop Action Pills ── */}
           <div className="hidden sm:flex items-center space-x-2.5 md:space-x-3 shrink-0">
-            {/* Primary Accent CTA Pill: Book A Stay */}
-            <Link
-              href="/rooms"
-              className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-full bg-gradient-to-r from-[#D8AA67] via-[#E1B46F] to-[#C89B55] hover:brightness-110 text-[#2B0507] font-bold text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all active:scale-95 cursor-pointer shrink-0"
-            >
-              <BedDouble className="w-3.5 h-3.5 text-[#2B0507]" />
-              <span>Book A Stay</span>
-            </Link>
 
             {/* Language Selector Pill */}
             <button

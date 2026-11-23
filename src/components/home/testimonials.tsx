@@ -146,7 +146,7 @@ const REVIEWS_ROW_3: Testimonial[] = [
 
 function ReviewCard({ review }: { review: Testimonial }) {
   return (
-    <article className="group relative flex flex-col justify-between p-5 sm:p-6 rounded-[16px] sm:rounded-[18px] transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-[#ffffff] border border-[#eadfcb]/90 hover:border-[#D8AA67] shadow-[0_4px_18px_rgba(216,170,103,0.06)] w-[280px] sm:w-[330px] lg:w-[370px] shrink-0 text-left select-none">
+    <article className="group relative flex flex-col justify-between p-5 sm:p-4 rounded-[26px] sm:rounded-[28px] transition-all duration-300 bg-[#ffffff] border border-[#eadfcb]/0 hover:border-[#D8AA67] w-[280px] sm:w-[330px] lg:w-[370px] shrink-0 text-left select-none">
       {/* Top Row: Avatar, Name/City, and 5 Gold Stars */}
       <div>
         <div className="flex items-start justify-between gap-3 mb-3">
@@ -175,49 +175,47 @@ function ReviewCard({ review }: { review: Testimonial }) {
           </div>
 
           {/* 5 Gold Star Icons */}
-          <div
-            className="flex items-center space-x-0.5 shrink-0 pt-0.5"
-            aria-label={`${review.rating} out of 5 stars`}
-          >
-            {Array.from({ length: review.rating }).map((_, i) => (
-              <Star
-                key={i}
-                className="w-3.5 h-3.5 fill-[#e5a93b] text-[#e5a93b]"
-                aria-hidden="true"
-              />
-            ))}
-          </div>
+<div className="flex flex-col items-start sm:items-end gap-1 shrink-0 pt-0.5">
+  {/* 5-Star Rating Pill */}
+  <div
+    className="inline-flex items-center space-x-1 rounded-full"
+    aria-label={`${review.rating} out of 5 stars`}
+  >
+    {Array.from({ length: review.rating }).map((_, i) => (
+      <Star
+        key={i}
+        className="w-3.5 h-3.5 fill-[#D8AA67] text-[#C99A52]"
+        aria-hidden="true"
+      />
+    ))}
+  </div>
+
+  {/* Verified Guest Badge */}
+  <span className="inline-flex items-center gap-1 px-1 py-0.3 rounded-full bg-emerald-50/90 border border-emerald-700/20 text-[8px] sm:text-[9px] font-semibold tracking-wide text-emerald-900">
+    <CheckCircle2 className="w-2 h-2 text-emerald-700 shrink-0" aria-hidden="true" />
+    <span>Verified Guest</span>
+  </span>
+</div>
         </div>
 
         {/* Testimonial Quote */}
-        <div className="relative mt-1 text-left">
-          <span
-            className="font-serif text-2xl font-bold leading-none select-none mr-1 inline-block align-top"
-            style={{ color: '#e8be88' }}
-            aria-hidden="true"
-          >
-            “
-          </span>
-          <p className="inline text-[13px] leading-relaxed text-[#424d45] font-normal">
-            {review.quote}
-          </p>
-          <span
-            className="font-serif text-2xl font-bold leading-none select-none ml-1 inline-block align-bottom"
-            style={{ color: '#e8be88' }}
-            aria-hidden="true"
-          >
-            ”
-          </span>
-        </div>
-      </div>
-
-      {/* Bottom Verified Guest Badge */}
-      <div className="pt-3 mt-3 border-t border-[#f0e7d8] flex items-center justify-between text-[11px] text-[#8a7b68]">
-        <span className="flex items-center space-x-1.5 text-emerald-800 font-medium">
-          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-          <span>Verified Guest Stay</span>
-        </span>
-        <span className="font-serif italic text-[#ba905e] truncate ml-2">{review.tag}</span>
+<div className="relative mt-1 text-left">
+  <p className="text-xs sm:text-xs leading-relaxed text-[#424d45] font-normal">
+    <span
+      className="font-serif text-xl font-bold leading-none select-none mr-1 text-[#D8AA67]"
+      aria-hidden="true"
+    >
+      &ldquo;
+    </span>
+    {review.quote}
+    <span
+      className="font-serif text-xl font-bold leading-none select-none ml-1 text-[#D8AA67]"
+      aria-hidden="true"
+    >
+      &rdquo;
+    </span>
+  </p>
+</div>
       </div>
     </article>
   );
@@ -258,7 +256,7 @@ export function Testimonials() {
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* ── SECTION HEADER ── */}
-        <div className="text-center max-w-2xl mx-auto mb-8 sm:mb-10">
+        <div className="text-center max-w-2xl mx-auto mb-6 sm:mb-6">
           {/* Eyebrow with subtle horizontal lines */}
           <div className="flex items-center justify-center gap-3 mb-2">
             <span className="w-8 sm:w-12 h-[1px] bg-[#d8aa67]/70" />
@@ -343,27 +341,13 @@ export function Testimonials() {
       {/* 1st Column / Row: Right to Left */}
       {/* 2nd Column / Row: Left to Right */}
       {/* 3rd Column / Row: Right to Left */}
-      <div className="relative w-full overflow-hidden py-2 space-y-4 sm:space-y-5">
-        {/* Left Mask Gradient Overlay (ambient background fade) */}
-        <div
-          className="absolute left-0 top-0 bottom-0 w-16 sm:w-28 md:w-44 z-20 pointer-events-none"
-          style={{
-            background: 'linear-gradient(to right, #FBF5E9 25%, rgba(251, 245, 233, 0) 100%)',
-          }}
-        />
+      <div className="relative w-full overflow-hidden py-2 space-y-1 sm:space-y-2">
 
-        {/* Right Mask Gradient Overlay (ambient background fade) */}
-        <div
-          className="absolute right-0 top-0 bottom-0 w-16 sm:w-28 md:w-44 z-20 pointer-events-none"
-          style={{
-            background: 'linear-gradient(to left, #FBF5E9 25%, rgba(251, 245, 233, 0) 100%)',
-          }}
-        />
 
         {/* ── Column 1: Right to Left (←) ── */}
         <div className="w-full overflow-hidden mask-gradient-x">
           <div
-            className="animate-marquee-infinite flex items-stretch gap-4 sm:gap-5 px-4"
+            className="animate-marquee-infinite flex items-stretch gap-1 sm:gap-2 px-4"
             style={{
               animation: 'marqueeReviewsRTL 42s linear infinite',
               width: 'max-content',
@@ -379,7 +363,7 @@ export function Testimonials() {
         {/* ── Column 2: Left to Right (→) ── */}
         <div className="w-full overflow-hidden mask-gradient-x">
           <div
-            className="animate-marquee-infinite-reverse flex items-stretch gap-4 sm:gap-5 px-4"
+            className="animate-marquee-infinite-reverse flex items-stretch gap-1 sm:gap-2 px-4"
             style={{
               animation: 'marqueeReviewsLTR 46s linear infinite',
               width: 'max-content',
@@ -395,7 +379,7 @@ export function Testimonials() {
         {/* ── Column 3: Right to Left (←) ── */}
         <div className="w-full overflow-hidden mask-gradient-x">
           <div
-            className="animate-marquee-infinite-fast flex items-stretch gap-4 sm:gap-5 px-4"
+            className="animate-marquee-infinite-fast flex items-stretch gap-1 sm:gap-2 px-4"
             style={{
               animation: 'marqueeReviewsRTL 36s linear infinite',
               width: 'max-content',
@@ -410,7 +394,7 @@ export function Testimonials() {
       </div>
 
       {/* ── TRUST & REPUTATION BADGE BELOW MARQUEE ── */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 sm:mt-10">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 sm:mt-6">
         <div className="flex flex-wrap items-center justify-center gap-3 text-xs sm:text-sm font-medium text-[#4f0809]">
           <div className="inline-flex items-center space-x-2 bg-white/70 px-4 py-2 rounded-full border border-[#d8aa67]/50 shadow-2xs">
             <div className="flex items-center space-x-0.5">

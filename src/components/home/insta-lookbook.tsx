@@ -156,12 +156,12 @@ export function InstaLookbook() {
                 onMouseEnter={() => handleMouseEnter(reel.id)}
                 onMouseLeave={() => handleMouseLeave(reel.id)}
                 onClick={() => setActiveReel(reel)}
-                className={`relative h-[300px] sm:h-[340px] lg:h-[370px] rounded-[14px] overflow-hidden cursor-pointer bg-[#1a1a1a] transition-all duration-400 ease-[cubic-bezier(0.25,1,0.5,1)] ${
+                className={`relative h-[300px] sm:h-[340px] lg:h-[370px] rounded-[24px] overflow-hidden cursor-pointer bg-[#1a1a1a] transition-all duration-400 ease-[cubic-bezier(0.25,1,0.5,1)] ${
                   isHovered
-                    ? 'z-30 scale-[1.08] lg:scale-[1.12] -translate-y-2.5 shadow-[0_24px_55px_-8px_rgba(79,8,9,0.55),0_12px_28px_rgba(216,170,103,0.35)] ring-2 ring-[#D8AA67] border-2 border-[#D8AA67]'
+                    ? 'z-30 scale-[1.08] lg:scale-[1.38] -translate-y-2.5'
                     : isOtherHovered
-                    ? 'z-10 opacity-80 scale-[0.98] shadow-md border-2 border-transparent'
-                    : 'z-10 shadow-md hover:shadow-xl border-2 border-transparent'
+                    ? 'z-10 opacity-80 scale-[0.88] shadow-md'
+                    : 'z-10 shadow-md hover:shadow-xl'
                 }`}
                 style={{
                   willChange: 'transform, box-shadow',
@@ -199,35 +199,15 @@ export function InstaLookbook() {
                   }`}
                 />
 
-                {/* 3. Top Instagram-Style Story Progress Bar */}
-                <div className="absolute top-0 inset-x-0 h-1 bg-white/20 z-20 overflow-hidden">
-                  <div
-                    className={`h-full bg-gradient-to-r from-[#D8AA67] to-[#FFF8EB] transition-all ease-linear ${
-                      isHovered ? 'w-full duration-[8000ms]' : 'w-0 duration-150'
-                    }`}
-                  />
-                </div>
-
                 {/* 4. Top Live Badge with Pulsing Equalizer (Visible on Hover) */}
                 <div
-                  className={`absolute top-2.5 right-2.5 z-20 flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-black/65 backdrop-blur-md border border-[#D8AA67]/70 transition-all duration-300 shadow-md ${
+                  className={`absolute top-2.5 right-2.5 z-20 flex items-center space-x-1.5 px-1.5 py-0.8 rounded-full bg-black/65 backdrop-blur-md transition-all duration-300 shadow-md ${
                     isHovered
                       ? 'opacity-100 translate-y-0 scale-100'
                       : 'opacity-0 -translate-y-1 scale-95 pointer-events-none'
                   }`}
                 >
-                  <div className="flex items-end space-x-0.5 h-3">
-                    <span className="w-0.5 h-3 bg-[#D8AA67] rounded-full animate-pulse" />
-                    <span
-                      className="w-0.5 h-2 bg-[#D8AA67] rounded-full animate-pulse"
-                      style={{ animationDelay: '150ms' }}
-                    />
-                    <span
-                      className="w-0.5 h-3 bg-[#D8AA67] rounded-full animate-pulse"
-                      style={{ animationDelay: '300ms' }}
-                    />
-                  </div>
-                  <span className="text-[10px] font-bold tracking-wider uppercase text-[#FFF8EB]">
+                  <span className="text-[8px] font-bold tracking-wider uppercase text-[#FFF8EB]">
                     Playing
                   </span>
                 </div>
@@ -241,7 +221,7 @@ export function InstaLookbook() {
                     isHovered ? 'opacity-0 scale-75' : 'opacity-100 scale-100'
                   }`}
                 >
-                  <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm border-2 border-white/90 flex items-center justify-center text-white shadow-lg transition-all duration-300">
+                  <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white shadow-lg transition-all duration-300">
                     <Play className="w-4 h-4 sm:w-5 sm:h-5 fill-current ml-0.5" />
                   </div>
                 </div>

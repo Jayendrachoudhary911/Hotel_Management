@@ -410,7 +410,7 @@ async function HomeContent() {
           aria-hidden="true"
         />
 
-<div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+<div className="relative z-10 max-w-[80%] mx-auto px-3 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:gap-7">
             {/* Feature 1: Rajasthani Restaurant */}
             <article className="group relative flex flex-col lg:flex-row rounded-t-3xl rounded-b-xl lg:rounded-2xl overflow-hidden bg-[#FDF8EE] border border-[#C99A52]/70 hover:border-[#4F0809] hover:-translate-y-1 transition-all duration-300 ease-out">
