@@ -22,7 +22,7 @@ export default function HotelPage() {
     <Suspense fallback={<div className="min-h-screen bg-[#fbf5e9]" />}>
       <div className="flex flex-col w-full text-[#151c1a]" style={{ backgroundColor: 'var(--cream, #fbf5e9)' }}>
         {/* ── 1. HOTEL HERO SECTION (EXACT MOCKUP MATCH) ── */}
-        <section className="relative z-20 min-h-[440px] lg:min-h-[720px] flex flex-col justify-between -mt-[22px] sm:-mt-[78px]">
+        <section className="relative z-20 min-h-[440px] lg:min-h-[720px] flex flex-col justify-between mt-0">
           {/* Background Palace Image with Corner Radius & Framing Inset */}
           <div className="absolute inset-x-2.5 sm:inset-x-4 lg:inset-x-6 top-2 sm:top-3.5 bottom-0 z-0 overflow-hidden rounded-t-[28px] rounded-b-[48px] sm:rounded-[36px] lg:rounded-[42px]">
             <Image

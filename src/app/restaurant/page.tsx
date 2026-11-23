@@ -72,7 +72,7 @@ async function RestaurantAndCafeContent() {
   ];
 
   return (
-    <div className="relative bg-[#F5F1E8] min-h-screen py-8 sm:py-14 text-[#241F1A] overflow-hidden">
+    <div className="relative bg-[#F5F1E8] min-h-screen pt-24 sm:pt-28 pb-14 text-[#241F1A] overflow-hidden">
       {/* ── BESPOKE VERTICAL LATA JAALI BORDERS ── */}
       <LataJaaliRunner side="left" opacity={0.15} color="#B08D57" className="hidden lg:block" />
       <LataJaaliRunner side="right" opacity={0.15} color="#B08D57" className="hidden lg:block" />

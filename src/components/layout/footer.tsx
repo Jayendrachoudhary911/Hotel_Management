@@ -9,13 +9,8 @@ import { MapPin, Phone, Mail, Clock, ShieldCheck, Sparkles, Compass } from 'luci
 export const Footer: React.FC = () => {
   const pathname = usePathname();
 
-  // Hide footer on dashboard and dedicated auth pages
-  if (
-    pathname.startsWith('/dashboard') ||
-    pathname === '/login' ||
-    pathname === '/signup' ||
-    pathname.startsWith('/auth')
-  ) {
+  // Only display footer on the homepage
+  if (pathname !== '/') {
     return null;
   }
 
