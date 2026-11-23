@@ -6,6 +6,7 @@ import { formatMoney } from '@/lib/utils/money';
 import { IconKingBed, IconGuests } from '@/components/ui/heritage-art';
 import { LataJaaliRunner, HeritageDivider } from '@/components/ui/heritage-ornaments';
 import { ArrowRight, Calendar, Users, Search } from 'lucide-react';
+import { RoomsFilterBar } from '@/components/rooms/rooms-filter-bar';
 
 interface RoomsPageProps {
   searchParams: Promise<{
@@ -49,63 +50,12 @@ async function RoomsContent({ searchParams }: RoomsPageProps) {
           </p>
         </div>
 
-        {/* Date Filter Bar */}
-        <div className="bg-white rounded-xl border border-[#D4CBBB]/70 shadow-sm p-4 mb-12 max-w-4xl mx-auto">
-          <form method="GET" action="/rooms" className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-center">
-            <div className="flex items-center space-x-2.5 px-3 py-2 rounded-lg border border-[#E5DFD5] bg-[#FAF8F3]/60">
-              <Calendar className="w-4 h-4 text-[#8F7245]" />
-              <div className="w-full text-left">
-                <span className="block text-[10px] uppercase font-bold text-[#7A6F62]">Check In</span>
-                <input
-                  type="date"
-                  name="checkIn"
-                  defaultValue={checkIn}
-                  className="w-full bg-transparent text-xs text-[#670E10] font-semibold focus:outline-none"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-2.5 px-3 py-2 rounded-lg border border-[#E5DFD5] bg-[#FAF8F3]/60">
-              <Calendar className="w-4 h-4 text-[#8F7245]" />
-              <div className="w-full text-left">
-                <span className="block text-[10px] uppercase font-bold text-[#7A6F62]">Check Out</span>
-                <input
-                  type="date"
-                  name="checkOut"
-                  defaultValue={checkOut}
-                  className="w-full bg-transparent text-xs text-[#670E10] font-semibold focus:outline-none"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-2.5 px-3 py-2 rounded-lg border border-[#E5DFD5] bg-[#FAF8F3]/60">
-              <Users className="w-4 h-4 text-[#8F7245]" />
-              <div className="w-full text-left">
-                <span className="block text-[10px] uppercase font-bold text-[#7A6F62]">Guests</span>
-                <select
-                  name="guests"
-                  defaultValue={guests}
-                  className="w-full bg-transparent text-xs text-[#670E10] font-semibold focus:outline-none"
-                >
-                  <option value="1">1 Adult</option>
-                  <option value="2">2 Adults</option>
-                  <option value="3">3 Adults</option>
-                  <option value="4">4 Adults</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <button
-                type="submit"
-                className="w-full py-3 px-4 rounded-lg bg-[#670E10] hover:bg-[#821215] text-[#FAF8F3] font-medium text-xs tracking-wide transition-all shadow flex items-center justify-center space-x-1.5"
-              >
-                <Search className="w-3.5 h-3.5 text-[#C9A96E]" />
-                <span>Search Rooms</span>
-              </button>
-            </div>
-          </form>
-        </div>
+        {/* Date Filter Bar with Floating Tooltip Dialog & Mobile Drawer */}
+        <RoomsFilterBar
+          initialCheckIn={checkIn}
+          initialCheckOut={checkOut}
+          initialGuests={guests}
+        />
 
         {/* 6 Room Cards (3x2 Grid) matching image */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">

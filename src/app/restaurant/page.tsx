@@ -18,6 +18,7 @@ import {
   IconCafeLounge,
 } from '@/components/ui/heritage-art';
 import { ArrowRight, QrCode, Clock, Coffee, UtensilsCrossed, Sparkles } from 'lucide-react';
+import { RestaurantReservationCTA } from '@/components/restaurant/restaurant-reservation-cta';
 
 export const metadata = {
   title: 'Restaurant & Café | Authentic Rajasthani Dining & Artisan Brews | Rajmahal Heritage Hotel',
@@ -106,12 +107,7 @@ async function RestaurantAndCafeContent() {
               <Coffee className="w-4 h-4 text-[#B08D57]" />
               <span>Jharokha Café &amp; Lounge</span>
             </a>
-            <Link
-              href="/#contact"
-              className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-full bg-[#C59B63] hover:bg-[#B88E55] text-[#4A0A0C] text-xs sm:text-sm font-semibold tracking-wide transition-all shadow-md"
-            >
-              <span>Reserve a Table</span>
-            </Link>
+            <RestaurantReservationCTA />
           </div>
         </div>
 
@@ -151,12 +147,9 @@ async function RestaurantAndCafeContent() {
                   >
                     View Restaurant Menu
                   </a>
-                  <Link
-                    href="/#contact"
-                    className="px-6 py-2.5 rounded-md bg-[#670E10] border border-[#B08D57]/60 hover:bg-[#821215] text-[#FAF8F3] font-medium text-sm tracking-wide transition-all shadow"
-                  >
-                    Reserve a Table
-                  </Link>
+                  <RestaurantReservationCTA
+                    className="!rounded-md !px-6 !py-2.5 !bg-[#670E10] !border !border-[#B08D57]/60 hover:!bg-[#821215] !text-[#FAF8F3]"
+                  />
                   <Link
                     href="/qr/table-t01"
                     className="px-4 py-2.5 rounded-md bg-white/10 hover:bg-white/20 text-[#FAF8F3] text-sm font-medium backdrop-blur-xs flex items-center space-x-1.5 transition-all"
@@ -366,13 +359,18 @@ async function RestaurantAndCafeContent() {
                   <span>Open Daily: 8:00 AM – 11:00 PM</span>
                 </div>
 
-                <div>
+                <div className="flex flex-wrap items-center justify-center gap-3">
                   <a
                     href="#cafe-menu"
                     className="px-6 py-2.5 rounded-md bg-[#C59B63] hover:bg-[#B88E55] text-[#4A0A0C] font-semibold text-sm tracking-wide transition-all shadow"
                   >
                     View Café Menu
                   </a>
+                  <RestaurantReservationCTA
+                    venue="cafe"
+                    label="Reserve Café Table"
+                    className="!rounded-md !px-6 !py-2.5 !bg-[#670E10] !border !border-[#B08D57]/60 hover:!bg-[#821215] !text-[#FAF8F3]"
+                  />
                 </div>
               </div>
             </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import {
   ChefHat,
   Clock,
@@ -16,6 +16,11 @@ import {
   Check,
   X,
   Play,
+  Volume2,
+  VolumeX,
+  Flame,
+  Coffee,
+  Sparkles,
 } from 'lucide-react';
 import { dataRepository } from '@/lib/data/repository';
 import type { Order, Outlet } from '@/lib/types';
@@ -25,22 +30,97 @@ export default function KitchenOrderBoardPage() {
   const [outlets, setOutlets] = useState<Outlet[]>([]);
   const [selectedOutlet, setSelectedOutlet] = useState<string>('all');
   const [sourceFilter, setSourceFilter] = useState<string>('all');
+  const [stationFilter, setStationFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [soundEnabled, setSoundEnabled] = useState(true);
 
-  const loadData = () => {
+  const prevPendingCountRef = useRef<number>(0);
+
+  // Web Audio royal chime (D5 -> A5 two-tone chime)
+  const playKitchenChime = useCallback(() => {
+    try {
+      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+
+      // Tone 1: 587.33 Hz (D5)
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(587.33, ctx.currentTime);
+      gain1.gain.setValueAtTime(0.25, ctx.currentTime);
+      gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
+      osc1.start();
+      osc1.stop(ctx.currentTime + 0.5);
+
+      // Tone 2: 880 Hz (A5)
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(880, ctx.currentTime + 0.18);
+      gain2.gain.setValueAtTime(0.3, ctx.currentTime + 0.18);
+      gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.start(ctx.currentTime + 0.18);
+      osc2.stop(ctx.currentTime + 0.8);
+    } catch {
+      // Audio permissions or unsupported
+    }
+  }, []);
+
+  const loadData = useCallback(async () => {
+    try {
+      const res = await fetch('/api/orders');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.orders) && data.orders.length > 0) {
+          setOrders(data.orders);
+          setOutlets(dataRepository.getOutlets());
+          return;
+        }
+      }
+    } catch {
+      // Fallback to dataRepository if offline or server route fails
+    }
     setOrders(dataRepository.getOrders());
     setOutlets(dataRepository.getOutlets());
-  };
+  }, []);
 
   useEffect(() => {
     loadData();
     const interval = setInterval(loadData, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [loadData]);
 
-  const handleUpdateStatus = (orderId: string, nextStatus: Order['status'], reason?: string) => {
+  // Audio trigger on newly arrived pending orders
+  useEffect(() => {
+    const currentPending = orders.filter((o) => o.status === 'new' || o.status === 'accepted').length;
+    if (currentPending > prevPendingCountRef.current && soundEnabled && prevPendingCountRef.current > 0) {
+      playKitchenChime();
+    }
+    prevPendingCountRef.current = currentPending;
+  }, [orders, soundEnabled, playKitchenChime]);
+
+  const handleUpdateStatus = async (orderId: string, nextStatus: Order['status'], reason?: string) => {
     dataRepository.updateOrderStatus(orderId, nextStatus, reason);
+    try {
+      await fetch(`/api/orders/${orderId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: nextStatus }),
+      });
+    } catch {
+      // Ignored
+    }
     loadData();
+  };
+
+  const getTicketAgeMinutes = (createdAt: string) => {
+    const diff = Date.now() - new Date(createdAt).getTime();
+    return Math.max(0, Math.floor(diff / 60000));
   };
 
   // Only active kitchen orders
@@ -55,9 +135,26 @@ export default function KitchenOrderBoardPage() {
         o.order_number.toLowerCase().includes(q) ||
         (o.table?.table_number && o.table.table_number.toLowerCase().includes(q)) ||
         (o.room_number && o.room_number.toLowerCase().includes(q));
-      return isKitchenActive && matchesOutlet && matchesSource && matchesSearch;
+
+      // Station filter matching item names
+      let matchesStation = true;
+      if (stationFilter !== 'all') {
+        const lines = (o.items || o.order_lines || []) as Array<{ menu_item?: { name?: string }; item_name_snapshot?: string }>;
+        const allItemNames = lines.map((l) => (l.menu_item?.name || l.item_name_snapshot || '').toLowerCase()).join(' ');
+        if (stationFilter === 'tandoor') {
+          matchesStation = /naan|roti|kebab|tikka|tandoori|kulcha|paneer tikka/.test(allItemNames);
+        } else if (stationFilter === 'curry') {
+          matchesStation = /curry|dal|baati|laal maas|gatta|paneer|biryani|pulao/.test(allItemNames);
+        } else if (stationFilter === 'cafe') {
+          matchesStation = /chai|coffee|lassi|shake|beverage|tea|juice/.test(allItemNames);
+        } else if (stationFilter === 'desserts') {
+          matchesStation = /halwa|kheer|rabdi|dessert|malpua|ghewar/.test(allItemNames);
+        }
+      }
+
+      return isKitchenActive && matchesOutlet && matchesSource && matchesStation && matchesSearch;
     });
-  }, [orders, selectedOutlet, sourceFilter, searchQuery]);
+  }, [orders, selectedOutlet, sourceFilter, stationFilter, searchQuery]);
 
   const newOrders = activeOrders.filter((o) => o.status === 'new' || o.status === 'accepted');
   const preparingOrders = activeOrders.filter((o) => o.status === 'preparing');
@@ -73,6 +170,8 @@ export default function KitchenOrderBoardPage() {
         return <Bike className="w-3.5 h-3.5 text-[#4F0809]" />;
       case 'pickup':
         return <Package className="w-3.5 h-3.5 text-[#2E7D32]" />;
+      default:
+        return <UtensilsCrossed className="w-3.5 h-3.5 text-[#8F6628]" />;
     }
   };
 
@@ -86,11 +185,21 @@ export default function KitchenOrderBoardPage() {
       ? 'Online Delivery'
       : 'Counter Pickup';
 
+    const ageMins = getTicketAgeMinutes(order.created_at);
+    const isUrgent = ageMins >= 20;
+    const isWarning = ageMins >= 10 && ageMins < 20;
+
+    let cardClasses = 'bg-white rounded-xl p-3.5 shadow-xs transition flex flex-col justify-between border';
+    if (isUrgent && order.status !== 'ready') {
+      cardClasses += ' border-rose-500 bg-rose-50/50 ring-2 ring-rose-400 animate-pulse';
+    } else if (isWarning && order.status !== 'ready') {
+      cardClasses += ' border-amber-400 bg-amber-50/30 ring-1 ring-amber-300';
+    } else {
+      cardClasses += ' border-[#E8DCD2] hover:shadow-md';
+    }
+
     return (
-      <div
-        key={order.id}
-        className="bg-white border border-[#E8DCD2] rounded-xl p-3 shadow-xs hover:shadow-md transition flex flex-col justify-between"
-      >
+      <div key={order.id} className={cardClasses}>
         <div>
           {/* Ticket Header */}
           <div className="flex items-start justify-between gap-1 pb-2 mb-2 border-b border-[#E8DCD2]">
@@ -98,9 +207,18 @@ export default function KitchenOrderBoardPage() {
               <span className="font-mono font-bold text-xs text-[#4F0809]">
                 KOT #{order.order_number}
               </span>
-              <div className="flex items-center gap-1 text-[10px] text-[#81736D] mt-0.5">
-                <Clock className="w-3 h-3 text-[#B78A48]" />
-                <span>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 ${
+                  isUrgent && order.status !== 'ready'
+                    ? 'bg-rose-600 text-white'
+                    : isWarning && order.status !== 'ready'
+                    ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                    : 'bg-[#FBF6EF] text-[#81736D]'
+                }`}>
+                  <Clock className="w-3 h-3" />
+                  <span>{ageMins}m ago</span>
+                </span>
+                <span className="text-[10px] text-[#81736D]">
                   {new Date(order.created_at).toLocaleTimeString([], {
                     hour: '2-digit',
                     minute: '2-digit',
@@ -110,29 +228,34 @@ export default function KitchenOrderBoardPage() {
             </div>
 
             <div className="flex items-center gap-1 capitalize text-[10px] font-semibold px-2 py-0.5 bg-[#F6EAE0] rounded text-[#302421]">
-              {getSourceIcon((order.order_type || order.fulfilment_mode || 'dine_in') as any)}
+              {getSourceIcon((order.order_type || order.fulfilment_mode || 'dine_in') as Order['order_type'])}
               <span>{(order.order_type || order.fulfilment_mode || 'dine_in').replace('_', ' ')}</span>
             </div>
           </div>
 
           {/* Table / Room Banner */}
-          <div className="px-2 py-1.5 rounded-lg bg-[#FBF6EF] border border-[#E8DCD2] mb-2.5 flex items-center justify-between">
+          <div className="px-2.5 py-1.5 rounded-lg bg-[#FBF6EF] border border-[#E8DCD2] mb-2.5 flex items-center justify-between">
             <span className="font-bold text-xs text-[#4F0809]">{destination}</span>
-            <span className="text-[10px] text-[#81736D]">{order.outlet?.name || 'Restaurant'}</span>
+            <span className="text-[10px] text-[#81736D]">{order.outlet?.name || 'Palace Dining'}</span>
           </div>
 
           {/* Items List */}
           <div className="space-y-1.5 mb-3">
-            {((order.items || order.order_lines || []) as any[]).map((it, idx) => (
+            {((order.items || order.order_lines || []) as Array<{
+              quantity: number;
+              menu_item?: { name?: string };
+              item_name_snapshot?: string;
+              notes?: string | null;
+            }>).map((it, idx) => (
               <div key={idx} className="text-xs text-[#302421] border-b border-dashed border-[#E8DCD2]/60 pb-1">
-                <div className="flex justify-between">
-                  <span className="font-bold text-[#4F0809]">{it.quantity}x</span>
-                  <span className="font-medium flex-1 ml-2">
+                <div className="flex justify-between items-start">
+                  <span className="font-bold text-[#4F0809] shrink-0 mr-1.5">{it.quantity}x</span>
+                  <span className="font-medium flex-1">
                     {it.menu_item?.name || it.item_name_snapshot || 'Palace Specialty'}
                   </span>
                 </div>
                 {it.notes && (
-                  <div className="text-[10px] text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded mt-0.5">
+                  <div className="text-[10px] text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded mt-0.5 font-medium">
                     Note: {it.notes}
                   </div>
                 )}
@@ -146,7 +269,7 @@ export default function KitchenOrderBoardPage() {
           {(order.status === 'new' || order.status === 'accepted') && (
             <button
               onClick={() => handleUpdateStatus(order.id, 'preparing')}
-              className="w-full py-1.5 rounded-lg bg-[#4F0809] hover:bg-[#6B1518] text-white text-xs font-semibold flex items-center justify-center gap-1 shadow-xs transition"
+              className="w-full py-2 rounded-lg bg-[#4F0809] hover:bg-[#6B1518] text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer"
             >
               <Play className="w-3.5 h-3.5 text-[#D8AA67]" />
               Start Cooking
@@ -156,7 +279,7 @@ export default function KitchenOrderBoardPage() {
           {order.status === 'preparing' && (
             <button
               onClick={() => handleUpdateStatus(order.id, 'ready')}
-              className="w-full py-1.5 rounded-lg bg-[#2E7D32] hover:bg-[#256629] text-white text-xs font-semibold flex items-center justify-center gap-1 shadow-xs transition"
+              className="w-full py-2 rounded-lg bg-[#2E7D32] hover:bg-[#256629] text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer"
             >
               <Check className="w-3.5 h-3.5" />
               Mark Ready at Pass
@@ -164,8 +287,9 @@ export default function KitchenOrderBoardPage() {
           )}
 
           {order.status === 'ready' && (
-            <div className="w-full py-1 rounded bg-[#2E7D32]/10 text-[#2E7D32] text-xs font-bold text-center">
-              ✓ Ready for Steward Pickup
+            <div className="w-full py-1.5 rounded-lg bg-[#2E7D32]/10 text-[#2E7D32] text-xs font-bold text-center border border-[#2E7D32]/30 flex items-center justify-center gap-1">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>Ready for Steward Service</span>
             </div>
           )}
         </div>
@@ -176,39 +300,61 @@ export default function KitchenOrderBoardPage() {
   return (
     <div className="space-y-4">
       {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[#E8DCD2]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#E8DCD2]">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 rounded bg-[#2E7D32] text-white text-[10px] font-bold uppercase tracking-wider">
+            <span className="px-2.5 py-0.5 rounded bg-[#2E7D32] text-white text-[10px] font-bold uppercase tracking-wider">
               Live Kitchen Display System (KDS)
             </span>
             <span className="w-2 h-2 rounded-full bg-[#2E7D32] animate-pulse" />
           </div>
           <h1
-            className="text-2xl font-bold text-[#4F0809] mt-0.5"
+            className="text-2xl sm:text-3xl font-bold text-[#4F0809] mt-0.5"
             style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
           >
-            Royal Kitchen (KOT) Display
+            Royal Kitchen (KOT) Display &amp; Pass
           </h1>
           <p className="text-xs text-[#81736D] mt-0.5">
-            Real-time live queue for Head Chef, Sous Chefs, and Tandoor stations across all palace dining venues
+            Real-time live ticket queue with auditory alerts, ticket aging timers, and station routing
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Action and Sound Controls */}
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => setSoundEnabled((prev) => !prev)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition shadow-2xs cursor-pointer ${
+              soundEnabled
+                ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
+                : 'bg-stone-100 text-stone-600 border-stone-300 hover:bg-stone-200'
+            }`}
+          >
+            {soundEnabled ? <Volume2 className="w-3.5 h-3.5 text-emerald-700" /> : <VolumeX className="w-3.5 h-3.5 text-stone-500" />}
+            <span>Chime: {soundEnabled ? 'ON' : 'OFF'}</span>
+          </button>
+
+          <button
+            onClick={playKitchenChime}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-[#E8DCD2] bg-white text-[#4F0809] hover:bg-[#F6EAE0] text-xs font-medium shadow-2xs transition cursor-pointer"
+            title="Test Royal Chime Sound"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-[#B78A48]" />
+            <span>Test Sound</span>
+          </button>
+
           <button
             onClick={loadData}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#E8DCD2] bg-white text-[#4F0809] hover:bg-[#F6EAE0] text-xs font-medium shadow-xs transition"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#E8DCD2] bg-[#4F0809] text-white hover:bg-[#680b0c] text-xs font-medium shadow-2xs transition cursor-pointer"
           >
             <RotateCw className="w-3.5 h-3.5" />
-            Refresh Queue
+            <span>Refresh</span>
           </button>
         </div>
       </div>
 
       {/* ── Filter Controls Bar ── */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white border border-[#E8DCD2] rounded-xl p-3 shadow-xs">
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 bg-white border border-[#E8DCD2] rounded-xl p-3 shadow-xs">
+        <div className="flex flex-wrap items-center gap-2">
           <select
             value={selectedOutlet}
             onChange={(e) => setSelectedOutlet(e.target.value)}
@@ -220,6 +366,18 @@ export default function KitchenOrderBoardPage() {
                 {o.name}
               </option>
             ))}
+          </select>
+
+          <select
+            value={stationFilter}
+            onChange={(e) => setStationFilter(e.target.value)}
+            className="px-2.5 py-1.5 rounded-lg border border-[#E8DCD2] text-xs bg-white font-medium focus:ring-1 focus:ring-[#4F0809] focus:outline-none text-[#4F0809] font-bold"
+          >
+            <option value="all">All Culinary Stations</option>
+            <option value="tandoor">🔥 Tandoor &amp; Clay Oven</option>
+            <option value="curry">🍲 Curries &amp; Royal Range</option>
+            <option value="cafe">☕ Jharokha Café &amp; Barista</option>
+            <option value="desserts">🍮 Mithai &amp; Confectionery</option>
           </select>
 
           <select
@@ -235,7 +393,7 @@ export default function KitchenOrderBoardPage() {
           </select>
         </div>
 
-        <div className="relative w-full sm:w-64">
+        <div className="relative w-full lg:w-64">
           <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#81736D]" />
           <input
             type="text"

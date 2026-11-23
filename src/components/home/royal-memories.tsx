@@ -300,134 +300,57 @@ export function RoyalMemories() {
             <div
               key={mem.id}
               onClick={() => setZoomMemory(mem)}
-              className="bg-white rounded-2xl overflow-hidden border border-[#D4CBBB]/70 shadow-sm hover:shadow-xl hover:border-[#B08D57] transition-all duration-300 flex flex-col group cursor-pointer"
+              className="relative h-80 sm:h-96 rounded-2xl overflow-hidden border border-[#D4CBBB]/70 shadow-sm hover:shadow-xl hover:border-[#B08D57] transition-all duration-300 group cursor-pointer"
+              aria-label={mem.eventName}
             >
               {/* Photo View with Hover Zoom */}
-              <div className="relative h-64 w-full overflow-hidden">
-                <Image
-                  src={mem.photoUrl}
-                  alt={mem.eventName}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-700"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
+              <Image
+                src={mem.photoUrl}
+                alt={mem.eventName}
+                fill
+                className="object-cover group-hover:scale-106 transition-transform duration-700 ease-out"
+              />
 
-                {/* Event Name Tag */}
-                <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
-                  <span className="px-3 py-1 rounded-full bg-[#670E10]/90 backdrop-blur-md text-[11px] font-bold text-[#FAF8F3] border border-[#B08D57]/40 shadow">
-                    {mem.eventName}
-                  </span>
-                  <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Maximize2 className="w-4 h-4" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Memory Story Content */}
-              <div className="p-5 flex-1 flex flex-col justify-between text-left">
-                <div>
-                  <div className="flex items-center justify-between text-xs text-[#7A6F62] mb-2">
-                    <span className="font-semibold text-[#670E10] flex items-center">
-                      <span className="w-2 h-2 rounded-full bg-[#B08D57] mr-1.5"></span>
-                      {mem.hostName}
-                    </span>
-                    <span className="flex items-center font-mono text-[11px] text-[#8F7245]">
-                      <Calendar className="w-3.5 h-3.5 mr-1" />
-                      {mem.date}
-                    </span>
-                  </div>
-
-                  <p className="text-xs sm:text-sm text-[#554C41] font-light leading-relaxed italic line-clamp-3 mb-4">
-                    &ldquo;{mem.story}&rdquo;
-                  </p>
-                </div>
-
-                {/* Card Footer: Likes & Details */}
-                <div className="pt-3 border-t border-[#F2ECE1] flex items-center justify-between">
-                  <span className="text-[11px] text-[#8F7245] uppercase tracking-wider font-semibold">
-                    Rajmahal Chronicle
-                  </span>
-
-                  <button
-                    onClick={(e) => handleLike(mem.id, e)}
-                    className="flex items-center space-x-1.5 text-xs text-[#6E6356] hover:text-rose-500 transition-colors"
-                  >
-                    <Heart
-                      className={`w-4 h-4 ${
-                        mem.userLiked ? 'text-rose-500 fill-rose-500' : 'text-[#8F7245]'
-                      }`}
-                    />
-                    <span className="font-mono text-xs font-semibold">{mem.likes}</span>
-                  </button>
-                </div>
+              {/* Top-Right Expand Button */}
+              <div
+                className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-black/55 backdrop-blur-md border border-[#B08D57]/60 flex items-center justify-center text-white/90 shadow-md group-hover:scale-110 group-hover:bg-black/75 group-hover:border-[#B08D57] transition-all duration-300 pointer-events-none"
+                aria-hidden="true"
+              >
+                <Maximize2 className="w-4 h-4 text-[#FAF8F3]" />
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* ── MODAL: MEMORY LIGHTBOX ZOOM ── */}
+      {/* ── MODAL: IMAGE-ONLY LIGHTBOX GALLERY ── */}
       {zoomMemory && (
         <div
-          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200"
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-200"
           onClick={() => setZoomMemory(null)}
         >
+          {/* Close Button */}
+          <button
+            onClick={() => setZoomMemory(null)}
+            className="absolute top-4 sm:top-6 right-4 sm:right-6 z-30 p-2.5 sm:p-3 rounded-full bg-black/60 text-white/90 hover:text-white hover:bg-black/90 border border-white/20 hover:border-[#B08D57] transition-all cursor-pointer shadow-lg hover:scale-105 active:scale-95"
+            aria-label="Close image preview"
+          >
+            <X className="w-5 h-5 sm:w-6 sm:h-6" />
+          </button>
+
+          {/* Main Pure Image Frame */}
           <div
-            className="relative w-full max-w-3xl rounded-3xl overflow-hidden bg-[#FAF8F3] border border-[#B08D57]/40 shadow-2xl flex flex-col md:flex-row"
+            className="relative w-full max-w-5xl h-[70vh] sm:h-[80vh] md:h-[85vh] rounded-2xl sm:rounded-3xl overflow-hidden border border-[#B08D57]/40 shadow-2xl bg-black/50 flex items-center justify-center"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Left/Top: High-res Photo */}
-            <div className="relative h-72 md:h-auto md:w-3/5 bg-black">
-              <Image
-                src={zoomMemory.photoUrl}
-                alt={zoomMemory.eventName}
-                fill
-                className="object-cover"
-              />
-            </div>
-
-            {/* Right/Bottom: Story & Event Details */}
-            <div className="p-6 md:w-2/5 flex flex-col justify-between text-left">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="px-2.5 py-1 rounded-full bg-[#670E10] text-[#FAF8F3] text-[11px] font-bold">
-                    {zoomMemory.eventName}
-                  </span>
-                  <button
-                    onClick={() => setZoomMemory(null)}
-                    className="w-8 h-8 rounded-full bg-[#EBE5D6] flex items-center justify-center text-[#241F1A] hover:bg-[#D4CBBB]"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <h3 className="font-heritage text-xl font-bold text-[#670E10] mb-1">
-                  {zoomMemory.hostName}
-                </h3>
-                <span className="text-xs text-[#8F7245] font-mono block mb-4">
-                  Celebrated: {zoomMemory.date}
-                </span>
-
-                <p className="text-xs sm:text-sm text-[#554C41] font-light leading-relaxed italic mb-6">
-                  &ldquo;{zoomMemory.story}&rdquo;
-                </p>
-              </div>
-
-              <div className="pt-4 border-t border-[#D4CBBB]/60 flex items-center justify-between">
-                <span className="text-xs text-[#6E6356] font-medium">Rajmahal Archives</span>
-                <button
-                  onClick={(e) => handleLike(zoomMemory.id, e)}
-                  className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-[#FAF8F3] border border-[#B08D57]/40 hover:bg-[#670E10]/10 text-xs font-semibold"
-                >
-                  <Heart
-                    className={`w-4 h-4 ${
-                      zoomMemory.userLiked ? 'text-rose-500 fill-rose-500' : 'text-[#8F7245]'
-                    }`}
-                  />
-                  <span>{zoomMemory.likes} Likes</span>
-                </button>
-              </div>
-            </div>
+            <Image
+              src={zoomMemory.photoUrl}
+              alt={zoomMemory.eventName}
+              fill
+              className="object-contain"
+              sizes="(max-width: 1280px) 95vw, 1200px"
+              priority
+            />
           </div>
         </div>
       )}

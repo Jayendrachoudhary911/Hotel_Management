@@ -54,11 +54,15 @@
   }
 }
 
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: var(--nav-height, 86px);
+}
+
 body {
   background-color: var(--background);
   color: var(--foreground);
   font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -160,8 +164,13 @@ body {
 }
 
 /* ── Hide Scrollbars (Clean viewport without side scroller) ── */
-html, body {
-  overflow-x: hidden;
+html {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+body {
+  overflow-x: clip;
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
 }
@@ -229,4 +238,223 @@ html, body {
   background: linear-gradient(90deg, var(--gold-dark), var(--gold-light), var(--gold-dark));
   background-size: 200% auto;
   animation: shimmer 3s ease-in-out infinite;
+}
+
+/* ── Infinite Reviews Marquee (Right-to-Left and Left-to-Right) ── */
+@keyframes marqueeReviews {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes marqueeReviewsReverse {
+  0% {
+    transform: translate3d(-50%, 0, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate-marquee-infinite {
+  display: flex;
+  width: max-content;
+  animation: marqueeReviews 42s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee-infinite:hover {
+  animation-play-state: paused;
+}
+
+.animate-marquee-infinite-reverse {
+  display: flex;
+  width: max-content;
+  animation: marqueeReviewsReverse 46s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee-infinite-reverse:hover {
+  animation-play-state: paused;
+}
+
+.animate-marquee-infinite-fast {
+  display: flex;
+  width: max-content;
+  animation: marqueeReviews 38s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee-infinite-fast:hover {
+  animation-play-state: paused;
+}
+
+/* ── Mask Gradients for Infinite Scroll ── */
+.mask-gradient-x {
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(0, 0, 0, 1) 10%,
+    rgba(0, 0, 0, 1) 90%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(0, 0, 0, 1) 10%,
+    rgba(0, 0, 0, 1) 90%,
+    transparent 100%
+  );
+}
+
+/* ── Mobile Dialog & Pop-out Animations ── */
+@keyframes slideUpModal {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up-modal {
+  animation: slideUpModal 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideDownModal {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+}
+
+.animate-slide-down-modal {
+  animation: slideDownModal 0.22s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes fadeInBackdrop {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in-backdrop {
+  animation: fadeInBackdrop 0.25s ease-out forwards;
+}
+
+@keyframes fadeOutBackdrop {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.animate-fade-out-backdrop {
+  animation: fadeOutBackdrop 0.22s ease-in forwards;
+}
+
+/* ── Desktop Dialog Expanding & Collapsing Animations ── */
+@keyframes dialogExpand {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes dialogCollapse {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.93) translateY(-10px);
+  }
+}
+
+.animate-dialog-expand {
+  animation: dialogExpand 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-dialog-collapse {
+  animation: dialogCollapse 0.22s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+/* ── Tooltip Dialog Floating Popover Animations ── */
+@keyframes tooltipDialogExpand {
+  0% {
+    opacity: 0;
+    transform: scale(0.96) translateY(-8px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes tooltipDialogCollapse {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.97) translateY(-8px);
+  }
+}
+
+.animate-tooltip-expand {
+  animation: tooltipDialogExpand 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-tooltip-collapse {
+  animation: tooltipDialogCollapse 0.18s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes tooltipDialogExpandTop {
+  0% {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes tooltipDialogCollapseTop {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.97) translateY(8px);
+  }
+}
+
+.animate-tooltip-expand-top {
+  animation: tooltipDialogExpandTop 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-tooltip-collapse-top {
+  animation: tooltipDialogCollapseTop 0.18s cubic-bezier(0.4, 0, 1, 1) forwards;
 }

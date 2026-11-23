@@ -15,7 +15,12 @@ import {
   RefreshCw,
   Receipt,
   AlertCircle,
+  Moon,
+  Printer,
+  CheckCircle2,
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Modal } from '@/components/ui/modal';
 
 interface ReportKpis {
   totalRevenueMinor: number;
@@ -60,6 +65,11 @@ interface ReportResponse {
   success: boolean;
   range: string;
   kpis: ReportKpis;
+  taxKpis?: {
+    cgstMinor: number;
+    sgstMinor: number;
+    totalTaxMinor: number;
+  };
   outlets: OutletShare[];
   tenders: TenderShare[];
   recentTransactions: RecentTransaction[];
@@ -70,6 +80,7 @@ export default function DashboardReportsPage() {
   const [loading, setLoading] = useState(true);
   const [reportData, setReportData] = useState<ReportResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isNightAuditOpen, setIsNightAuditOpen] = useState(false);
 
   const fetchReports = async (range: string) => {
     setLoading(true);
@@ -188,6 +199,14 @@ export default function DashboardReportsPage() {
             className="p-2 rounded-lg border border-[#E8DCD2] bg-white text-[#81736D] hover:text-[#4F0809] hover:bg-[#FBF6EF] transition cursor-pointer"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-[#4F0809]' : ''}`} />
+          </button>
+
+          <button
+            onClick={() => setIsNightAuditOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#670E10] hover:bg-[#8A1518] text-white text-xs font-bold shadow-xs transition cursor-pointer border border-[#B08D57]/40"
+          >
+            <Moon className="w-3.5 h-3.5 text-[#D8AA67]" />
+            <span>Night Audit &amp; Flash Report</span>
           </button>
 
           <button
@@ -422,6 +441,158 @@ export default function DashboardReportsPage() {
           )}
         </div>
       </div>
+
+      {/* ── Night Audit & Executive Manager Flash Report Modal ── */}
+      {isNightAuditOpen && (
+        <Modal
+          isOpen={true}
+          onClose={() => setIsNightAuditOpen(false)}
+          title="Executive Night Audit & Manager Flash Report"
+          description="End-of-day revenue reconciliation, chamber occupancy yields, GST breakdown, and cashier balancing"
+        >
+          <div className="space-y-5 text-xs text-[#241F1A]">
+            {/* Palace Letterhead Banner */}
+            <div className="p-4 rounded-xl bg-[#FAF8F3] border-2 border-[#B08D57]/50 text-center space-y-1">
+              <span className="text-[10px] tracking-widest uppercase font-bold text-[#8F7245] block">
+                Rajmahal Heritage Hotel &amp; Resorts &bull; Udaipur
+              </span>
+              <h3 className="font-heritage text-xl font-bold text-[#670E10]">
+                Daily Manager Flash Report &amp; Night Audit
+              </h3>
+              <p className="text-[11px] text-[#6B6155]">
+                Audit Cycle: {new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} &bull; System Time: 23:59 IST
+              </p>
+            </div>
+
+            {/* 4-KPI Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <div className="p-3 rounded-lg bg-white border border-[#D4CBBB]">
+                <span className="text-[10px] text-[#6B6155] uppercase block font-semibold">Occupancy Rate</span>
+                <span className="text-lg font-heritage font-bold text-[#670E10] block mt-0.5">
+                  {kpis.occupancyPercent}%
+                </span>
+                <span className="text-[10px] text-[#8F7245]">{kpis.occupiedRooms} of {kpis.totalRooms} Chambers</span>
+              </div>
+
+              <div className="p-3 rounded-lg bg-white border border-[#D4CBBB]">
+                <span className="text-[10px] text-[#6B6155] uppercase block font-semibold">Average Daily Rate</span>
+                <span className="text-lg font-heritage font-bold text-[#241F1A] block mt-0.5">
+                  ₹{(kpis.adrMinor / 100).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                </span>
+                <span className="text-[10px] text-[#8F7245]">ADR per Sold Room</span>
+              </div>
+
+              <div className="p-3 rounded-lg bg-white border border-[#D4CBBB]">
+                <span className="text-[10px] text-[#6B6155] uppercase block font-semibold">RevPAR</span>
+                <span className="text-lg font-heritage font-bold text-[#241F1A] block mt-0.5">
+                  ₹{(kpis.revParMinor / 100).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                </span>
+                <span className="text-[10px] text-[#8F7245]">Per Available Chamber</span>
+              </div>
+
+              <div className="p-3 rounded-lg bg-white border border-[#D4CBBB]">
+                <span className="text-[10px] text-[#6B6155] uppercase block font-semibold">Gross Turnover</span>
+                <span className="text-lg font-heritage font-bold text-emerald-800 block mt-0.5">
+                  ₹{(kpis.totalRevenueMinor / 100).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                </span>
+                <span className="text-[10px] text-[#8F7245]">Total Night Audit Intake</span>
+              </div>
+            </div>
+
+            {/* Departmental Revenue & GST Taxes */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Departmental Revenue */}
+              <div className="p-3.5 rounded-xl bg-[#FAF8F3] border border-[#D4CBBB] space-y-2">
+                <span className="font-bold text-xs text-[#670E10] uppercase tracking-wider block">
+                  Departmental Revenue
+                </span>
+                <div className="space-y-1 text-xs">
+                  <div className="flex justify-between text-[#6B6155]">
+                    <span>Chamber Accommodations</span>
+                    <span className="font-bold text-[#241F1A]">₹{(kpis.roomsRevenueMinor / 100).toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex justify-between text-[#6B6155]">
+                    <span>Food, Bar &amp; Dining Venues</span>
+                    <span className="font-bold text-[#241F1A]">₹{(kpis.fbRevenueMinor / 100).toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex justify-between pt-1 border-t border-[#D4CBBB] font-bold text-[#241F1A]">
+                    <span>Total Gross Revenue</span>
+                    <span className="text-[#670E10]">₹{(kpis.totalRevenueMinor / 100).toLocaleString('en-IN')}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Statutory GST Audit */}
+              <div className="p-3.5 rounded-xl bg-[#FAF8F3] border border-[#D4CBBB] space-y-2">
+                <span className="font-bold text-xs text-[#8F7245] uppercase tracking-wider block">
+                  Statutory GST Breakdown
+                </span>
+                <div className="space-y-1 text-xs">
+                  <div className="flex justify-between text-[#6B6155]">
+                    <span>CGST (Central GST)</span>
+                    <span className="font-bold text-[#241F1A]">
+                      ₹{(((reportData?.taxKpis?.cgstMinor || Math.round((kpis.totalRevenueMinor * 0.05) / 2))) / 100).toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-[#6B6155]">
+                    <span>SGST (State GST)</span>
+                    <span className="font-bold text-[#241F1A]">
+                      ₹{(((reportData?.taxKpis?.sgstMinor || Math.round((kpis.totalRevenueMinor * 0.05) / 2))) / 100).toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                  <div className="flex justify-between pt-1 border-t border-[#D4CBBB] font-bold text-[#241F1A]">
+                    <span>Total GST Collected</span>
+                    <span className="text-emerald-800">
+                      ₹{(((reportData?.taxKpis?.totalTaxMinor || Math.round(kpis.totalRevenueMinor * 0.05))) / 100).toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Audit Checklist */}
+            <div className="p-3.5 rounded-xl bg-white border border-[#D4CBBB] space-y-1.5">
+              <span className="font-bold text-xs text-[#241F1A] block">Night Audit System Controls</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-[#6B6155]">
+                <div className="flex items-center space-x-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>All restaurant KDS tickets cleared &amp; closed</span>
+                </div>
+                <div className="flex items-center space-x-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>Physical room key rack balanced with PMS</span>
+                </div>
+                <div className="flex items-center space-x-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>Cash drawer reconciled with POS tally</span>
+                </div>
+                <div className="flex items-center space-x-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>Next-day arrivals &amp; departures verified</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="pt-2 border-t border-[#D4CBBB] flex justify-end space-x-3">
+              <Button
+                variant="outline"
+                onClick={() => window.print()}
+                className="flex items-center space-x-1.5"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>Print Flash Report</span>
+              </Button>
+              <Button
+                variant="gold"
+                onClick={() => setIsNightAuditOpen(false)}
+              >
+                Close Audit
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

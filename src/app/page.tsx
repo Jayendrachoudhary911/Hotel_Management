@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { BookingBar } from '@/components/home/booking-bar';
+import { HeroSection } from '@/components/home/hero-section';
 import { roomsService } from '@/lib/services/rooms-service';
 import { formatMoney } from '@/lib/utils/money';
 import { ArrowRight, BedDouble, Users } from 'lucide-react';
@@ -9,6 +9,7 @@ import { InstaLookbook } from '@/components/home/insta-lookbook';
 import { EventMemories } from '@/components/home/event-memories';
 import { Testimonials } from '@/components/home/testimonials';
 import { Promotions } from '@/components/home/promotions';
+import { RestaurantReservationCTA } from '@/components/restaurant/restaurant-reservation-cta';
 
 export const metadata = {
   title: 'Rajmahal Heritage Hotel | A Royal Stay Rooted in Rajasthan',
@@ -21,7 +22,7 @@ type HeritageIconName = 'arch' | 'dining' | 'cafe' | 'pavilion' | 'wedding' | 'm
 function HeritageQuickIcon({ name }: { name: HeritageIconName }) {
   const common = {
     className:
-      'w-14 h-14 sm:w-16 sm:h-16 shrink-0 transition-transform duration-300 group-hover:scale-110 text-[#d8aa67]',
+      'w-9 h-9 min-[400px]:w-10 min-[400px]:h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 shrink-0 transition-transform duration-300 group-hover:scale-110 text-[#d8aa67]',
     viewBox: '0 0 72 72',
     fill: 'none',
     stroke: 'currentColor',
@@ -123,92 +124,53 @@ async function HomeContent() {
 
   return (
     <div className="flex flex-col w-full text-[#151c1a]" style={{ backgroundColor: 'var(--cream, #fbf5e9)' }}>
-      {/* ── 1. HERO SECTION (FIGMA SPEC) ── */}
-      <section className="relative z-20 min-h-[620px] lg:min-h-[680px] flex flex-col justify-between -mt-[82px] sm:-mt-[88px]">
-        {/* Background Palace Image */}
-        <div className="absolute inset-0 z-0 overflow-hidden">
-          <Image
-            src="/images/palace-interior.jpg"
-            alt="Rajmahal Heritage Hotel Grand Palace Interior"
-            fill
-            priority
-            className="object-cover object-center scale-105"
-            style={{ filter: 'saturate(1.08) sepia(0.08)' }}
-          />
-          {/* Hero Warmth overlay */}
-          <div className="hero-warmth pointer-events-none" />
-          {/* Hero Shade overlay */}
-          <div className="hero-shade pointer-events-none" />
-        </div>
-
-        {/* Hero Content Left Aligned */}
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 pt-36 sm:pt-44 md:pt-48 pb-16 sm:pb-20 w-full">
-          <div className="max-w-xl text-left">
-            <span
-              className="text-[#eee1cc] text-xs sm:text-sm font-semibold tracking-[0.25em] uppercase block mb-3 drop-shadow"
-              style={{ letterSpacing: '0.22em' }}
-            >
-              A Royal Stay
-            </span>
-            <h1
-              className="text-4xl sm:text-6xl lg:text-7xl font-semibold tracking-tight text-[#fff8eb] mb-5 leading-[0.92] drop-shadow-2xl"
-              style={{
-                fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
-              }}
-            >
-              Rooted in
-              <br />
-              Rajasthan
-            </h1>
-            <p className="text-sm sm:text-base text-[#fff8eb]/90 mb-4 sm:mb-6 font-normal leading-relaxed max-w-md drop-shadow">
-              Heritage rooms, authentic cuisine and unforgettable experiences in the heart of Udaipur.
-            </p>
-          </div>
-        </div>
-
-        {/* Overlapping Floating Booking Widget (High z-index to sit cleanly above sections) */}
-        <div className="relative z-30 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full -mb-10 sm:-mb-12">
-          <BookingBar />
-        </div>
-      </section>
+      {/* ── 1. HERO SECTION (SCROLL-AWARE FULL-SCREEN & SHRINKING FRAME) ── */}
+      <HeroSection />
 
       {/* ── 2. QUICK LINKS WITH HERITAGE ORNAMENTS ── */}
-      <section className="relative z-10 pt-20 sm:pt-24 pb-16 overflow-hidden border-b border-[#dfcdb1]/60" style={{ backgroundColor: 'var(--cream, #fbf5e9)' }}>
+      <section
+        className="relative z-10 pt-10 sm:pt-14 md:pt-16 pb-16 overflow-hidden"
+        style={{ backgroundColor: 'var(--cream, #fbf5e9)' }}
+      >
         {/* Left and Right Floral Artworks */}
         <img
-          className="floral-artwork left opacity-25"
+          className="floral-artwork left opacity-15 sm:opacity-25"
           src="/images/ornaments/floral-left.png"
           alt=""
           aria-hidden="true"
         />
         <img
-          className="floral-artwork right opacity-25"
+          className="floral-artwork right opacity-15 sm:opacity-25"
           src="/images/ornaments/floral-right.png"
           alt=""
           aria-hidden="true"
         />
 
-        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6 sm:gap-4 text-center">
-            {quickLinks.map((item, idx) => (
-              <Link
-                key={idx}
-                href={item.href}
-                className="group flex flex-col items-center justify-start p-3 rounded-xl hover:bg-[#fffaf1] transition-all cursor-pointer relative"
-              >
-                <div className="mb-3">
-                  <HeritageQuickIcon name={item.icon} />
-                </div>
-                <span
-                  className="text-base sm:text-lg font-semibold text-[#4f0809] tracking-normal group-hover:text-[#d8aa67] transition-colors"
-                  style={{
-                    fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
-                  }}
+        <div className="relative z-10 max-w-6xl mx-auto px-2 sm:px-6 lg:px-8">
+          {/* Unified Common Background Container (Single Border) */}
+          <div className="rounded-2xl bg-[#FDF8EE] border border-[#C99A52]/60 py-1 sm:py-4 overflow-hidden">
+            {/* 5-Column Grid with Vertical Dividers Between All Cards */}
+            <div className="grid grid-cols-5 divide-x divide-[#C99A52]/35 text-center">
+              {quickLinks.map((item, idx) => (
+                <Link
+                  key={idx}
+                  href={item.href}
+                  className="group flex flex-col items-center justify-start py-2 px-1 min-[400px]:px-2 sm:py-3 sm:px-4 hover:bg-[#4F0809]/[0.03] transition-colors cursor-pointer"
                 >
-                  {item.label}
-                </span>
-              </Link>
-            ))}
+                  <div className="mb-1.5 sm:mb-3 transition-transform duration-200 group-hover:-translate-y-0.5">
+                    <HeritageQuickIcon name={item.icon} />
+                  </div>
+                  <span
+                    className="text-[10px] min-[360px]:text-[11px] min-[400px]:text-xs sm:text-base md:text-lg font-semibold text-[#4f0809] tracking-normal leading-[1.15] sm:leading-snug group-hover:text-[#9C7A45] transition-colors"
+                    style={{
+                      fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
+                    }}
+                  >
+                    {item.label}
+                  </span>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -228,56 +190,70 @@ async function HomeContent() {
       </section>
 
       {/* ── 3. EXPERIENCE THE ROYAL HERITAGE OF RAJASTHAN ── */}
-      <section className="relative py-20 lg:py-24 overflow-hidden" style={{ backgroundColor: 'var(--heritage-ivory, #fff7e8)' }}>
+<section
+        className="relative py-16 sm:py-20 lg:py-24 overflow-hidden"
+        style={{ backgroundColor: 'var(--heritage-ivory, #fff7e8)' }}
+      >
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            {/* Left: Framed Bedroom with Frame Softener */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-10 lg:gap-12 items-center">
+            {/* Left: Jharokha-Framed Heritage Bedroom */}
             <div className="lg:col-span-5 flex justify-center">
-              <div className="relative w-full max-w-[480px] rounded-lg overflow-hidden shadow-2xl border border-[#d8aa67]/40">
-                <img
-                  src="/images/heritage-reference/framed-bedroom.png"
-                  alt="Warmly lit Rajputana bedroom overlooking lake"
-                  className="w-full h-auto object-cover"
-                />
-                <img
-                  src="/images/heritage-reference/frame-softener.png"
-                  alt=""
-                  aria-hidden="true"
-                  className="absolute inset-0 w-full h-full object-cover pointer-events-none opacity-40"
-                />
+              <div className="group relative w-full max-w-[440px] sm:max-w-[480px] p-2.5 sm:p-3 rounded-t-[36px] rounded-b-2xl bg-[#FDF8EE] border border-[#C99A52]/70">
+                <div className="relative w-full overflow-hidden rounded-t-[28px] rounded-b-xl bg-[#EFE6D5]">
+                  <img
+                    src="/images/heritage-reference/framed-bedroom.png"
+                    alt="Warmly lit Rajputana bedroom overlooking lake"
+                    className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                  />
+                  <img
+                    src="/images/heritage-reference/frame-softener.png"
+                    alt=""
+                    aria-hidden="true"
+                    className="absolute inset-0 w-full h-full object-cover pointer-events-none opacity-40"
+                  />
+                </div>
               </div>
             </div>
 
-            {/* Right: Heritage Story Copy */}
-            <div className="lg:col-span-7 lg:pl-6 text-left">
-              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[#d8aa67] flex items-center gap-3 mb-3">
-                Authentic Rajputana Grandeur
-                <span className="w-10 h-[1px] bg-[#d8aa67]/70" />
+            {/* Right: Heritage Story Copy (Centered on Mobile, Left-Aligned on Desktop) */}
+            <div className="lg:col-span-7 lg:pl-6 flex flex-col items-center lg:items-start text-center lg:text-left">
+              {/* Royal Eyebrow */}
+              <span className="text-[11px] sm:text-xs font-bold uppercase tracking-[0.2em] text-[#9C7A45] inline-flex items-center justify-center lg:justify-start gap-2.5 sm:gap-3 mb-3">
+                <span className="w-6 sm:w-8 h-[1px] bg-[#C99A52] lg:hidden" />
+                <span>Authentic Rajputana Grandeur</span>
+                <span className="w-6 sm:w-10 h-[1px] bg-[#C99A52]" />
               </span>
+
+              {/* Heading */}
               <h2
-                className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-[0.95] text-[#781c1c]"
+                className="text-3xl sm:text-5xl lg:text-6xl font-bold mb-4 sm:mb-5 leading-[0.98] text-[#4F0809]"
                 style={{
                   fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
                 }}
               >
-                Experience the Royal <br />
+                Experience the Royal <br className="hidden sm:inline" />
                 Heritage of Rajasthan
               </h2>
-              <p className="text-sm sm:text-base text-[#4f0809] mb-8 leading-relaxed font-normal max-w-xl">
+
+              {/* Ornamental Diamond-Tipped Gold Rule */}
+              <div className="flex items-center justify-center lg:justify-start gap-2 mb-5 sm:mb-6 w-40 sm:w-52">
+                <span className="h-[1px] flex-1 bg-[#C99A52]/60" />
+                <span className="w-2 h-2 rotate-45 border border-[#C99A52] bg-[#D8AA67]/40" />
+                <span className="h-[1px] flex-1 bg-[#C99A52]/60 lg:hidden" />
+              </div>
+
+              {/* Story Description */}
+              <p className="text-sm sm:text-base text-[#4F0809]/85 mb-7 sm:mb-8 leading-relaxed font-normal max-w-xl mx-auto lg:mx-0">
                 A blend of traditional Rajasthani architecture and modern luxury, designed for a truly memorable stay. From handcrafted interiors to breathtaking views, every moment at Rajmahal reflects the rich heritage and timeless charm of Udaipur.
               </p>
+
+              {/* Shadow-Free Royal Pill CTA */}
               <Link
                 href="/rooms"
-                className="inline-flex items-center space-x-3 px-8 py-3.5 rounded-[6px] text-sm font-semibold tracking-wide transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 cursor-pointer group"
-                style={{
-                  backgroundColor: 'var(--antique-gold, #d8aa67)',
-                  color: 'var(--forest-ink, #380506)',
-                  fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
-                  fontSize: '16px',
-                }}
+                className="inline-flex items-center justify-center space-x-2.5 px-7 sm:px-8 py-3 sm:py-3.5 rounded-full bg-[#4F0809] hover:bg-[#680b0c] border border-[#D8AA67] text-[#FFF8EB] text-xs sm:text-sm font-bold uppercase tracking-[0.14em] transition-colors duration-200 cursor-pointer group"
               >
                 <span>Discover Our Heritage</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-4 h-4 text-[#D8AA67] group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
           </div>
@@ -301,7 +277,7 @@ async function HomeContent() {
       </section>
 
       {/* ── 4. OUR HERITAGE ROOMS (DYNAMIC DATA FROM DATABASE) ── */}
-      <section className="relative py-20 overflow-hidden" style={{ backgroundColor: 'var(--cream, #fbf5e9)' }}>
+<section className="relative py-20 overflow-hidden" style={{ backgroundColor: 'var(--cream, #fbf5e9)' }}>
         {/* Left and Right Palace Trees Art */}
         <img
           className="room-side-art left opacity-15"
@@ -316,13 +292,13 @@ async function HomeContent() {
           aria-hidden="true"
         />
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-14">
+        <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-14">
             <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[#d8aa67] block mb-2">
               Royal Comforts, Timeless Stories
             </span>
             <h2
-              className="text-4xl sm:text-5xl font-bold mb-3 text-[#781c1c]"
+              className="text-3xl sm:text-5xl font-bold mb-3 text-[#781c1c]"
               style={{
                 fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
               }}
@@ -334,30 +310,42 @@ async function HomeContent() {
             </p>
           </div>
 
-          {/* Dynamic Rooms Grid with Figma Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
+{/* Dynamic Rooms Grid: Compact 2x on Mobile, 4x on Desktop */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-5">
             {roomTypes.map((room) => {
               const roomImage = room.photos?.[0] || '/images/rooms/lakeview-palace-suite.png';
               return (
                 <Link
                   key={room.id}
                   href={`/rooms/${room.id}`}
-                  className="group flex flex-col justify-between rounded-[10px] overflow-hidden bg-[#fffaf1] border border-[#c99554]/60 shadow-[0_8px_20px_rgba(67,42,19,0.07)] hover:border-[#d8aa67] hover:-translate-y-2 hover:shadow-[0_24px_45px_rgba(67,42,19,0.18)] transition-all duration-300 ease-out cursor-pointer"
+                  className="group flex flex-col justify-between rounded-t-2xl sm:rounded-t-3xl rounded-b-xl overflow-hidden bg-[#FDF8EE] border border-[#C99A52]/70 hover:border-[#4F0809] hover:-translate-y-1 transition-all duration-300 ease-out cursor-pointer"
                 >
-                  <div className="relative h-60 w-full overflow-hidden">
-                    <Image
-                      src={roomImage}
-                      alt={room.name}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  {/* Compact Image Header */}
+                  <div className="p-1.5 sm:p-2.5 pb-0">
+                    <div className="relative h-24 min-[400px]:h-28 sm:h-48 lg:h-44 xl:h-48 w-full overflow-hidden rounded-t-xl sm:rounded-t-2xl rounded-b-md bg-[#EFE6D5]">
+                      <Image
+                        src={roomImage}
+                        alt={room.name}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#2B0507]/50 via-transparent to-transparent" />
+
+                      {/* Floating Royal Crest Pill */}
+                      <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2">
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 sm:px-2 rounded-full bg-[#4F0809]/95 text-[7px] sm:text-[9px] font-semibold uppercase tracking-[0.14em] text-[#F7E5C3]">
+                          <span className="w-1 h-1 rounded-full bg-[#D8AA67]" />
+                          Rajputana
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="p-5 flex-1 flex flex-col justify-between">
+                  {/* Compact Card Body */}
+                  <div className="p-2.5 sm:p-4 flex-1 flex flex-col justify-between">
                     <div>
                       <h3
-                        className="text-2xl font-bold mb-2 text-[#781c1c] group-hover:text-[#d8aa67] transition-colors duration-200"
+                        className="text-sm sm:text-xl font-bold mb-1 text-[#4F0809] group-hover:text-[#9C7A45] transition-colors duration-200 line-clamp-1"
                         style={{
                           fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
                         }}
@@ -365,50 +353,56 @@ async function HomeContent() {
                         {room.name}
                       </h3>
 
-                      {/* Amenities Row */}
-                      <div className="flex items-center space-x-4 text-xs text-[#857866] mb-3">
-                        <span className="flex items-center">
-                          <BedDouble className="w-4 h-4 text-[#d8aa67] mr-1.5" />
-                          <span>King Bed</span>
+                      {/* Ornamental Gold Divider */}
+                      <div className="flex items-center gap-1 mb-1.5 sm:mb-2">
+                        <span className="h-[1px] w-4 sm:w-6 bg-[#C99A52]" />
+                        <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rotate-45 border border-[#C99A52] bg-[#D8AA67]/40" />
+                        <span className="h-[1px] flex-1 bg-[#C99A52]/30" />
+                      </div>
+
+                      {/* Single-Line Amenities Row on Mobile */}
+                      <div className="flex items-center gap-1.5 sm:gap-2 text-[9px] sm:text-xs text-[#6B533B] mb-1.5 sm:mb-2 font-medium whitespace-nowrap">
+                        <span className="inline-flex items-center">
+                          <BedDouble className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 text-[#9C7A45] mr-0.5 sm:mr-1 shrink-0" />
+                          <span>King</span>
                         </span>
-                        <span>•</span>
-                        <span className="flex items-center">
-                          <Users className="w-4 h-4 text-[#d8aa67] mr-1.5" />
+                        <span className="text-[#C99A52] text-[8px]">&#9830;</span>
+                        <span className="inline-flex items-center">
+                          <Users className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 text-[#9C7A45] mr-0.5 sm:mr-1 shrink-0" />
                           <span>{room.capacity} Guests</span>
                         </span>
                       </div>
 
-                      <p className="text-xs sm:text-sm text-[#4f0809] line-clamp-2 mb-4 leading-relaxed font-light">
-                        {room.description || 'Experience authentic royal heritage comforts with handcrafted furnishings and scenic views.'}
+                      {/* Hidden on tiny mobile screens to save vertical height, visible from sm+ */}
+                      <p className="hidden sm:line-clamp-2 text-xs text-[#4F0809]/85 mb-3 leading-relaxed font-light">
+                        {room.description ||
+                          'Experience authentic royal heritage comforts with handcrafted furnishings and scenic views.'}
                       </p>
                     </div>
 
-                    <div className="pt-3 border-t border-[#dfcdb1]/60 flex items-center justify-between">
-                      <div className="flex flex-col text-left">
-                        <span className="text-xs text-[#857866]">Starting from</span>
+                    {/* Footer: Tariff & Compact Reserve CTA */}
+                    <div className="pt-2 border-t border-[#C99A52]/40 flex items-center justify-between gap-1.5">
+                      <div className="flex flex-col text-left min-w-0">
+                        <span className="hidden sm:block text-[9px] uppercase tracking-[0.16em] text-[#856B4D] font-semibold">
+                          Royal Tariff
+                        </span>
                         <span
-                          className="text-xl font-bold text-[#781c1c]"
+                          className="text-sm sm:text-lg font-bold text-[#4F0809] leading-none truncate"
                           style={{
                             fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
                           }}
                         >
-                          {formatMoney(room.base_rate_minor)}{' '}
-                          <span className="text-xs font-normal text-[#5a4334]">/ night</span>
+                          {formatMoney(room.base_rate_minor)}
+                          <span className="text-[9px] sm:text-[10px] font-normal text-[#6B533B] block sm:inline">
+                            {' '}/ night
+                          </span>
                         </span>
                       </div>
 
-                      <div className="flex items-center">
-                        <span
-                          className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-[6px] text-xs font-semibold transition-all duration-200 shadow group-hover:shadow-md group-hover:bg-[#680b0c] group-hover:-translate-y-0.5 active:translate-y-0"
-                          style={{
-                            backgroundColor: 'var(--forest-deep, #4f0809)',
-                            color: 'var(--ivory, #fff8eb)',
-                          }}
-                        >
-                          <span>Book Now</span>
-                          <ArrowRight className="w-3.5 h-3.5 ml-0.5 stroke-[2] group-hover:translate-x-1 transition-transform" />
-                        </span>
-                      </div>
+                      <span className="shrink-0 inline-flex items-center justify-center space-x-1 px-2.5 py-1.5 sm:px-3 rounded-full bg-[#4F0809] text-[#FFF8EB] text-[9px] sm:text-[11px] font-bold uppercase tracking-[0.1em] transition-colors duration-200 group-hover:bg-[#680b0c]">
+                        <span>Reserve</span>
+                        <ArrowRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#D8AA67] stroke-[2.2] group-hover:translate-x-0.5 transition-transform" />
+                      </span>
                     </div>
                   </div>
                 </Link>
@@ -419,7 +413,7 @@ async function HomeContent() {
       </section>
 
       {/* ── 5. DINING SECTION (FIGMA SPEC) ── */}
-      <section className="relative py-20 overflow-hidden" style={{ backgroundColor: 'var(--heritage-ivory, #fff7e8)' }}>
+<section className="relative sm:py-20 overflow-hidden" style={{ backgroundColor: 'var(--heritage-ivory, #fff7e8)' }}>
         <img
           className="dining-side-art left opacity-20"
           src="/images/dining/edge-left.png"
@@ -433,115 +427,164 @@ async function HomeContent() {
           aria-hidden="true"
         />
 
-        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Feature 1: Rajasthani Restaurant */}
-            <article
-              className="group flex flex-col rounded-[12px] overflow-hidden bg-[#fffaf1] border border-[#c99554]/60 shadow-[0_8px_22px_rgba(67,42,19,0.08)] hover:border-[#d8aa67] hover:-translate-y-2 hover:shadow-[0_24px_50px_rgba(67,42,19,0.18)] transition-all duration-300 ease-out"
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Section Header */}
+          <div className="text-center max-w-xl mx-auto mb-8 sm:mb-12">
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] text-[#9C7A45] block mb-1.5 sm:mb-2">
+              Culinary Heritage of Mewar
+            </span>
+            <h2
+              className="text-3xl sm:text-5xl font-bold mb-2.5 text-[#4F0809] leading-tight"
+              style={{
+                fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
+              }}
             >
-              <div className="relative h-64 sm:h-72 w-full p-3.5 pb-0">
-                <div className="w-full h-full overflow-hidden rounded-[10px]">
+              Royal Dining &amp; Lounge
+            </h2>
+
+            {/* Ornamental Gold Divider */}
+            <div className="flex items-center justify-center gap-2 w-36 sm:w-44 mx-auto mb-3">
+              <span className="h-[1px] flex-1 bg-[#C99A52]/60" />
+              <span className="w-1.5 h-1.5 rotate-45 border border-[#C99A52] bg-[#D8AA67]/40" />
+              <span className="h-[1px] flex-1 bg-[#C99A52]/60" />
+            </div>
+
+            <p className="text-xs sm:text-sm text-[#4F0809]/80 leading-relaxed font-normal">
+              Savor time-honored Rajputana delicacies and artisanal brews overlooking Lake Pichola.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-5 lg:gap-7">
+            {/* Feature 1: Rajasthani Restaurant */}
+            <article className="group flex flex-col lg:flex-row rounded-t-2xl sm:rounded-t-3xl rounded-b-xl lg:rounded-2xl overflow-hidden bg-[#FDF8EE] border border-[#C99A52]/70 hover:border-[#4F0809] hover:-translate-y-1 transition-all duration-300 ease-out">
+              {/* Image Section: Compact Landscape on Mobile, Left Split on Desktop */}
+              <div className="p-1.5 sm:p-2.5 pb-0 lg:pb-2.5 lg:pr-0 w-full lg:w-[44%] shrink-0">
+                <div className="relative h-24 min-[400px]:h-28 sm:h-48 lg:h-full lg:min-h-[260px] w-full overflow-hidden rounded-t-xl sm:rounded-t-2xl rounded-b-md lg:rounded-xl bg-[#EFE6D5]">
                   <img
                     src="/images/dining/rajasthani-restaurant.png"
                     alt="Rajasthani restaurant dining room overlooking the lake"
-                    className="w-full h-full object-cover rounded-[10px] group-hover:scale-105 transition-transform duration-700 ease-out"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#2B0507]/50 via-transparent to-transparent" />
+
+                  {/* Floating Royal Crest Pill */}
+                  <div className="absolute top-1.5 left-1.5 sm:top-2.5 sm:left-2.5">
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-[#4F0809]/95 text-[7px] sm:text-[9px] font-semibold uppercase tracking-[0.14em] text-[#F7E5C3]">
+                      <span className="w-1 h-1 rounded-full bg-[#D8AA67]" />
+                      Royal Dining
+                    </span>
+                  </div>
                 </div>
               </div>
-              <div className="p-6 flex-1 flex flex-col justify-between">
+
+              {/* Content Section */}
+              <div className="p-2.5 sm:p-5 lg:p-6 flex-1 flex flex-col justify-between">
                 <div>
-                  <span className="text-xs font-semibold tracking-[0.14em] uppercase text-[#d8aa67] block mb-1">
+                  <span className="text-[8px] sm:text-[11px] font-bold tracking-[0.16em] uppercase text-[#9C7A45] block mb-0.5 sm:mb-1">
                     Authentic Flavors
                   </span>
                   <h3
-                    className="text-3xl font-bold mb-3 text-[#781c1c] group-hover:text-[#d8aa67] transition-colors duration-200"
+                    className="text-sm sm:text-2xl lg:text-[26px] font-bold mb-1 sm:mb-1.5 text-[#4F0809] group-hover:text-[#9C7A45] transition-colors duration-200 leading-tight line-clamp-1 sm:line-clamp-none"
                     style={{
                       fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
                     }}
                   >
                     Rajasthani Restaurant
                   </h3>
-                  <p className="text-sm text-[#4f0809] leading-relaxed mb-6">
+
+                  {/* Ornamental Gold Divider */}
+                  <div className="flex items-center gap-1 sm:gap-1.5 mb-1.5 sm:mb-3">
+                    <span className="h-[1px] w-4 sm:w-8 bg-[#C99A52]" />
+                    <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rotate-45 border border-[#C99A52] bg-[#D8AA67]/40" />
+                    <span className="h-[1px] flex-1 bg-[#C99A52]/30" />
+                  </div>
+
+                  <p className="text-[10px] sm:text-xs lg:text-sm text-[#4F0809]/85 leading-snug sm:leading-relaxed mb-2.5 sm:mb-5 font-light line-clamp-2 sm:line-clamp-3 lg:line-clamp-none">
                     Experience the true taste of Rajasthan with traditional recipes, fresh local ingredients and a heritage dining atmosphere.
                   </p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 mt-4">
+                {/* Action Buttons */}
+                <div className="pt-2 sm:pt-3.5 border-t border-[#C99A52]/40 grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2.5">
                   <Link
                     href="/restaurant"
-                    className="flex items-center justify-center space-x-2 h-11 rounded-[6px] text-xs sm:text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:brightness-105 active:translate-y-0"
-                    style={{
-                      backgroundColor: 'var(--antique-gold, #d8aa67)',
-                      color: 'var(--forest-ink, #380506)',
-                    }}
+                    className="flex items-center justify-center space-x-1 h-7 sm:h-10 px-2 sm:px-2.5 rounded-full bg-[#D8AA67] text-[#2B0507] text-[9px] sm:text-xs font-bold uppercase tracking-[0.08em] sm:tracking-[0.1em] transition-colors duration-200 hover:bg-[#E1B46F]"
                   >
                     <span>View Menu</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <ArrowRight className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 shrink-0" />
                   </Link>
-                  <Link
-                    href="/book"
-                    className="flex items-center justify-center h-11 rounded-[6px] text-xs sm:text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md hover:bg-[#680b0c] hover:-translate-y-0.5 active:translate-y-0"
-                    style={{
-                      backgroundColor: 'var(--forest-deep, #4f0809)',
-                      color: 'var(--ivory, #fff8eb)',
-                    }}
-                  >
-                    <span>Reserve a Table</span>
-                  </Link>
+                  <div className="[&>*]:w-full [&>*]:h-7 sm:[&>*]:h-10 [&>*]:rounded-full [&>*]:shadow-none [&>*]:text-[9px] sm:[&>*]:text-xs [&>*]:uppercase [&>*]:tracking-[0.08em] sm:[&>*]:tracking-[0.1em]">
+                    <RestaurantReservationCTA
+                      venue="restaurant"
+                      variant="card"
+                      label="Reserve Table"
+                    />
+                  </div>
                 </div>
               </div>
             </article>
 
             {/* Feature 2: Café & Lounge */}
-            <article
-              className="group flex flex-col rounded-[12px] overflow-hidden bg-[#fffaf1] border border-[#c99554]/60 shadow-[0_8px_22px_rgba(67,42,19,0.08)] hover:border-[#d8aa67] hover:-translate-y-2 hover:shadow-[0_24px_50px_rgba(67,42,19,0.18)] transition-all duration-300 ease-out"
-            >
-              <div className="relative h-64 sm:h-72 w-full p-3.5 pb-0">
-                <div className="w-full h-full overflow-hidden rounded-[10px]">
+            <article className="group flex flex-col lg:flex-row rounded-t-2xl sm:rounded-t-3xl rounded-b-xl lg:rounded-2xl overflow-hidden bg-[#FDF8EE] border border-[#C99A52]/70 hover:border-[#4F0809] hover:-translate-y-1 transition-all duration-300 ease-out">
+              {/* Image Section: Compact Landscape on Mobile, Left Split on Desktop */}
+              <div className="p-1.5 sm:p-2.5 pb-0 lg:pb-2.5 lg:pr-0 w-full lg:w-[44%] shrink-0">
+                <div className="relative h-24 min-[400px]:h-28 sm:h-48 lg:h-full lg:min-h-[260px] w-full overflow-hidden rounded-t-xl sm:rounded-t-2xl rounded-b-md lg:rounded-xl bg-[#EFE6D5]">
                   <img
                     src="/images/dining/cafe-lounge.png"
                     alt="Heritage café and lounge with lake views"
-                    className="w-full h-full object-cover rounded-[10px] group-hover:scale-105 transition-transform duration-700 ease-out"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#2B0507]/50 via-transparent to-transparent" />
+
+                  {/* Floating Royal Crest Pill */}
+                  <div className="absolute top-1.5 left-1.5 sm:top-2.5 sm:left-2.5">
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-[#4F0809]/95 text-[7px] sm:text-[9px] font-semibold uppercase tracking-[0.14em] text-[#F7E5C3]">
+                      <span className="w-1 h-1 rounded-full bg-[#D8AA67]" />
+                      Palace Lounge
+                    </span>
+                  </div>
                 </div>
               </div>
-              <div className="p-6 flex-1 flex flex-col justify-between">
+
+              {/* Content Section */}
+              <div className="p-2.5 sm:p-5 lg:p-6 flex-1 flex flex-col justify-between">
                 <div>
-                  <span className="text-xs font-semibold tracking-[0.14em] uppercase text-[#d8aa67] block mb-1">
-                    Relax, Sip & Unwind
+                  <span className="text-[8px] sm:text-[11px] font-bold tracking-[0.16em] uppercase text-[#9C7A45] block mb-0.5 sm:mb-1">
+                    Relax, Sip &amp; Unwind
                   </span>
                   <h3
-                    className="text-3xl font-bold mb-3 text-[#781c1c] group-hover:text-[#d8aa67] transition-colors duration-200"
+                    className="text-sm sm:text-2xl lg:text-[26px] font-bold mb-1 sm:mb-1.5 text-[#4F0809] group-hover:text-[#9C7A45] transition-colors duration-200 leading-tight line-clamp-1 sm:line-clamp-none"
                     style={{
                       fontFamily: "var(--font-display, 'Cormorant Garamond', Georgia, serif)",
                     }}
                   >
-                    Café & Lounge
+                    Café &amp; Lounge
                   </h3>
-                  <p className="text-sm text-[#4f0809] leading-relaxed mb-6">
+
+                  {/* Ornamental Gold Divider */}
+                  <div className="flex items-center gap-1 sm:gap-1.5 mb-1.5 sm:mb-3">
+                    <span className="h-[1px] w-4 sm:w-8 bg-[#C99A52]" />
+                    <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rotate-45 border border-[#C99A52] bg-[#D8AA67]/40" />
+                    <span className="h-[1px] flex-1 bg-[#C99A52]/30" />
+                  </div>
+
+                  <p className="text-[10px] sm:text-xs lg:text-sm text-[#4F0809]/85 leading-snug sm:leading-relaxed mb-2.5 sm:mb-5 font-light line-clamp-2 sm:line-clamp-3 lg:line-clamp-none">
                     A cozy space to enjoy freshly brewed coffee, Rajasthani snacks and a relaxed ambience with beautiful views.
                   </p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 mt-4">
+                {/* Action Buttons */}
+                <div className="pt-2 sm:pt-3.5 border-t border-[#C99A52]/40 grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2.5">
                   <Link
                     href="/restaurant#cafe"
-                    className="flex items-center justify-center space-x-2 h-11 rounded-[6px] text-xs sm:text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:brightness-105 active:translate-y-0"
-                    style={{
-                      backgroundColor: 'var(--antique-gold, #d8aa67)',
-                      color: 'var(--forest-ink, #380506)',
-                    }}
+                    className="flex items-center justify-center space-x-1 h-7 sm:h-10 px-2 sm:px-2.5 rounded-full bg-[#D8AA67] text-[#2B0507] text-[9px] sm:text-xs font-bold uppercase tracking-[0.08em] sm:tracking-[0.1em] transition-colors duration-200 hover:bg-[#E1B46F]"
                   >
-                    <span>View Café Menu</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <span>Café Menu</span>
+                    <ArrowRight className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 shrink-0" />
                   </Link>
                   <Link
                     href="/restaurant"
-                    className="flex items-center justify-center h-11 rounded-[6px] text-xs sm:text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md hover:bg-[#680b0c] hover:-translate-y-0.5 active:translate-y-0"
-                    style={{
-                      backgroundColor: 'var(--forest-deep, #4f0809)',
-                      color: 'var(--ivory, #fff8eb)',
-                    }}
+                    className="flex items-center justify-center h-7 sm:h-10 px-2 sm:px-2.5 rounded-full bg-[#4F0809] text-[#FFF8EB] text-[9px] sm:text-xs font-bold uppercase tracking-[0.08em] sm:tracking-[0.1em] transition-colors duration-200 hover:bg-[#680b0c]"
                   >
                     <span>Order Now</span>
                   </Link>
