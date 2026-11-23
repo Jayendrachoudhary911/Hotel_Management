@@ -833,6 +833,14 @@ export default function MenuPage() {
               <div className="w-8 h-8 border-2 border-[#4F0809] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
               <p className="text-sm text-[#4F0809] font-medium">Loading palace menu...</p>
             </div>
+          ) : categoriesForVenue.length === 0 ? (
+            <div className="py-16 text-center bg-white rounded-2xl border border-[#D8AA67]/30 p-8 max-w-lg mx-auto">
+              <Utensils className="w-10 h-10 text-[#B08D57] mx-auto mb-3 opacity-60" />
+              <h3 className="text-lg font-bold text-[#4F0809]">No dishes available</h3>
+              <p className="text-xs text-stone-500 mt-1">
+                The menu for this venue is currently empty. You can add categories and dishes from the Staff Menu Builder.
+              </p>
+            </div>
           ) : filteredCategories.length === 0 ? (
             <div className="py-16 text-center bg-white rounded-2xl border border-[#D8AA67]/30 p-8">
               <AlertCircle className="w-10 h-10 text-[#B08D57] mx-auto mb-3" />
