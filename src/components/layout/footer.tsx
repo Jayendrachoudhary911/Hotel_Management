@@ -21,7 +21,7 @@ export const Footer: React.FC = () => {
 
   return (
 <footer
-      className="relative min-h-[100dvh] sm:pt-15 flex flex-col justify-between rounded-t-3xl sm:rounded-t-[0px] bg-[#3B0507] text-[#FDF8EE] mt-auto overflow-hidden selection:bg-[#FDF8EE] selection:text-[#3B0507]"
+      className="relative min-h-[100dvh] sm:pt-15 flex flex-col justify-between rounded-t-0xl sm:rounded-t-[0px] bg-[#3B0507] text-[#FDF8EE] mt-auto overflow-hidden selection:bg-[#FDF8EE] selection:text-[#3B0507]"
     >
       {/* Background Subtle Floral Ornaments */}
       <div className="absolute top-0 left-0 w-40 sm:w-64 opacity-10 pointer-events-none select-none z-0">
