@@ -234,8 +234,9 @@ export default function RoomsHousekeepingPage() {
         </div>
 
         <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto">
-          {(['all', 'available', 'occupied', 'cleaning', 'dirty', 'maintenance'] as const).map(
-            (st) => (
+          {(
+            ['all', 'available', 'unavailable', 'occupied', 'cleaning', 'dirty', 'maintenance'] as const
+          ).map((st) => (
               <button
                 key={st}
                 onClick={() => setFilterState(st)}
@@ -281,6 +282,7 @@ export default function RoomsHousekeepingPage() {
         ) : (
           filteredRooms.map((room) => {
             const isOcc = room.housekeeping_state === 'occupied';
+            const isUnavailable = room.housekeeping_state === 'unavailable';
             const isAvail = room.housekeeping_state === 'available';
             const isClean = room.housekeeping_state === 'cleaning';
             const isDirty = room.housekeeping_state === 'dirty';
@@ -291,6 +293,8 @@ export default function RoomsHousekeepingPage() {
                 className={`p-3 rounded-xl border shadow-xs transition hover:shadow-md flex flex-col justify-between ${
                   isOcc
                     ? 'bg-white border-[#4F0809]/40'
+                    : isUnavailable
+                    ? 'bg-rose-50/50 border-rose-300'
                     : isAvail
                     ? 'bg-white border-[#2E7D32]/40'
                     : isClean
@@ -311,6 +315,8 @@ export default function RoomsHousekeepingPage() {
                         className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${
                           isOcc
                             ? 'bg-[#4F0809] text-white'
+                            : isUnavailable
+                            ? 'bg-rose-100 text-rose-800'
                             : isAvail
                             ? 'bg-[#2E7D32]/15 text-[#2E7D32]'
                             : isClean
@@ -344,6 +350,7 @@ export default function RoomsHousekeepingPage() {
                     className="w-full text-[10px] py-1 px-1.5 rounded border border-[#E8DCD2] bg-[#FBF6EF] text-[#302421] focus:ring-1 focus:ring-[#4F0809] focus:outline-none"
                   >
                     <option value="available">Available</option>
+                    <option value="unavailable">Unavailable</option>
                     <option value="occupied">Occupied</option>
                     <option value="cleaning">Cleaning</option>
                     <option value="dirty">Dirty</option>

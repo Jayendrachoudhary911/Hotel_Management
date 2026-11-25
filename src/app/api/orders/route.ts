@@ -7,7 +7,25 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const outletId = searchParams.get('outletId') || undefined;
-    const orders = await ordersService.getOrders(outletId);
+    const uid = searchParams.get('uid') || searchParams.get('userId') || undefined;
+    const idsParam = searchParams.get('ids');
+    const ids = idsParam ? idsParam.split(',').map((s) => s.trim()).filter(Boolean) : undefined;
+
+    let orders = await ordersService.getOrders(outletId, uid);
+
+    if (uid) {
+      orders = orders.filter((o) => (o as any).uid === uid || (o as any).user_id === uid);
+    }
+
+    if (ids && ids.length > 0) {
+      const allOrders = await ordersService.getOrders(outletId);
+      const matchedLocal = allOrders.filter((o) => ids.includes(o.id) || ids.includes(o.order_number));
+      const orderMap = new Map();
+      orders.forEach((o) => orderMap.set(o.id, o));
+      matchedLocal.forEach((o) => orderMap.set(o.id, o));
+      orders = Array.from(orderMap.values());
+    }
+
     return NextResponse.json({ success: true, orders });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
@@ -29,10 +47,12 @@ export async function POST(request: Request) {
       delivery_address,
       delivery_notes,
       delivery_fee_minor,
+      packaging_fee_minor,
       subtotal_minor,
       tax_minor,
       service_charge_minor,
       discount_minor,
+      round_off_minor,
       total_minor,
       order_lines,
     } = body;
@@ -70,11 +90,20 @@ export async function POST(request: Request) {
       delivery_address: delivery_address || null,
       delivery_notes: effectiveNotes,
       delivery_fee_minor: delivery_fee_minor || 0,
+      packaging_fee_minor: packaging_fee_minor || 0,
       subtotal_minor: subtotal_minor || 0,
       tax_minor: tax_minor || 0,
       service_charge_minor: service_charge_minor || 0,
       discount_minor: discount_minor || 0,
+      round_off_minor: round_off_minor || 0,
       total_minor: total_minor || 0,
+      invoice_number: body.invoice_number || null,
+      payment_method: body.payment_method || 'pay_on_delivery',
+      payment_status: body.payment_status || 'pending',
+      payment_id: body.payment_id || null,
+      uid: body.uid || body.user_id || null,
+      user_id: body.uid || body.user_id || null,
+      room_number: body.room_number || null,
       order_lines: effectiveLines,
     });
 

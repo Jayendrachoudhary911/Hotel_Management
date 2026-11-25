@@ -132,10 +132,10 @@ export default function RoomBookingsPage() {
           list.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
           setReservations(list);
         } else {
-          setReservations(dataRepository.getReservations());
+          setReservations([]);
         }
       },
-      () => setReservations(dataRepository.getReservations())
+      () => setReservations([])
     );
 
     const unsubRooms = onSnapshot(
@@ -183,8 +183,9 @@ export default function RoomBookingsPage() {
   const handleUpdateStatus = async (id: string, newStatus: Reservation['status']) => {
     try {
       await reservationsService.updateReservationStatus(id, newStatus);
-    } catch {
-      dataRepository.updateReservationStatus(id, newStatus);
+    } catch (err) {
+      console.error('Reservation status update failed:', err);
+      return;
     }
     if (selectedBooking && selectedBooking.id === id) {
       setSelectedBooking({ ...selectedBooking, status: newStatus });
@@ -345,19 +346,11 @@ export default function RoomBookingsPage() {
         notes: formNotes.trim(),
         aadhaarDetails: aadhaarDetailsPayload,
       });
-    } catch {
-      dataRepository.createReservation({
-        guestName: formGuestName.trim(),
-        phone: formPhone.trim(),
-        email: formEmail.trim(),
-        roomTypeId: formRoomTypeId,
-        roomId: formRoomId || undefined,
-        checkIn: formCheckIn,
-        checkOut: formCheckOut,
-        partySize: partyCount,
-        notes: formNotes.trim(),
-        aadhaarDetails: aadhaarDetailsPayload,
-      });
+    } catch (err) {
+      setFormError(
+        err instanceof Error ? err.message : 'Unable to save booking to Firestore.'
+      );
+      return;
     }
 
     setIsNewModalOpen(false);

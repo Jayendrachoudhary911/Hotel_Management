@@ -26,6 +26,9 @@ import {
   CheckCircle2,
   Upload,
 } from 'lucide-react';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { buildCategoriesFromItems } from '@/lib/services/menu-service';
 import type { MenuCategory, MenuItem } from '@/lib/types';
 
 export default function MenuBuilderPage() {
@@ -93,8 +96,51 @@ export default function MenuBuilderPage() {
     }
   };
 
+  // Real-time Firestore synchronization for menu items and categories
   useEffect(() => {
-    loadMenu();
+    setLoading(true);
+    let itemsList: MenuItem[] = [];
+    let catsList: Array<Partial<MenuCategory> & { id: string }> = [];
+
+    const updateState = () => {
+      const built = buildCategoriesFromItems(itemsList, catsList);
+      setCategories(built);
+      setLoading(false);
+    };
+
+    const unsubItems = onSnapshot(
+      collection(db, 'menu_items'),
+      (snap) => {
+        itemsList = snap.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+        })) as MenuItem[];
+        updateState();
+      },
+      (err) => {
+        console.warn('Real-time menu_items error, falling back to API:', err);
+        loadMenu();
+      }
+    );
+
+    const unsubCats = onSnapshot(
+      collection(db, 'menu_categories'),
+      (snap) => {
+        catsList = snap.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+        })) as Array<Partial<MenuCategory> & { id: string }>;
+        updateState();
+      },
+      (err) => {
+        console.warn('Real-time menu_categories error:', err);
+      }
+    );
+
+    return () => {
+      unsubItems();
+      unsubCats();
+    };
   }, []);
 
   // Flatten all items across all categories

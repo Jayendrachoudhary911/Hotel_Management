@@ -44,7 +44,9 @@ import {
   BedDouble,
   Hotel,
 } from 'lucide-react';
-import type { MenuItem, Reservation } from '@/lib/types';
+import type { MenuItem, Reservation, BillingSettings } from '@/lib/types';
+import { DEFAULT_BILLING_SETTINGS } from '@/lib/types';
+import { billingService } from '@/lib/services/billing-service';
 
 interface POSTable {
   id: string;
@@ -158,6 +160,16 @@ export default function POSBillingPage() {
   // Cash gateway
   const [pgCashReceived, setPgCashReceived] = useState('');
 
+  // Real-time Billing & Tax Settings from Firestore settings/billing
+  const [billingSettings, setBillingSettings] = useState<BillingSettings>(DEFAULT_BILLING_SETTINGS);
+
+  useEffect(() => {
+    const unsub = billingService.subscribeBillingSettings((settings) => {
+      setBillingSettings(settings);
+    });
+    return () => unsub();
+  }, []);
+
   // Completed Receipt Modal
   const [completedOrder, setCompletedOrder] = useState<{
     orderId: string;
@@ -165,6 +177,14 @@ export default function POSBillingPage() {
     subtotal: number;
     discount: number;
     tax: number;
+    cgst?: number;
+    sgst?: number;
+    serviceCharge?: number;
+    deliveryFee?: number;
+    packagingFee?: number;
+    roundOff?: number;
+    gstPercent?: number;
+    serviceChargePercent?: number;
     total: number;
     paymentMethod: string;
     table: string;
@@ -229,6 +249,7 @@ export default function POSBillingPage() {
                   category: c.name,
                   price: item.price_minor / 100,
                   is_veg: item.dietary_labels?.includes('Vegetarian') ?? true,
+                  is_available: item.is_available !== false,
                   image_url: item.image_url || '/images/food/dal-baati.jpg',
                 });
               });
@@ -273,11 +294,28 @@ export default function POSBillingPage() {
     });
   }, [menuItems, selectedCategory, menuSearch]);
 
-  // Cart Calculations
+  // Cart Calculations using statutory BillingSettings for respective order types
   const totalItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const tax = Math.round(subtotal * 0.05 * 100) / 100; // 5% GST
-  const finalTotal = Math.max(0, subtotal - discountAmount + tax);
+  const subtotalAfterDiscountMinor = Math.max(0, Math.round((subtotal - discountAmount) * 100));
+
+  const mappedOrderType: 'dine_in' | 'delivery' | 'pickup' | 'room' =
+    orderType === 'takeaway' ? 'pickup' : orderType === 'room_service' ? 'room' : orderType;
+
+  const billCalc = useMemo(() => {
+    return billingService.calculateOrderBill(
+      subtotalAfterDiscountMinor,
+      mappedOrderType,
+      billingSettings
+    );
+  }, [subtotalAfterDiscountMinor, mappedOrderType, billingSettings]);
+
+  const tax = billCalc.taxMinor / 100;
+  const serviceCharge = billCalc.serviceChargeMinor / 100;
+  const deliveryFee = billCalc.deliveryFeeMinor / 100;
+  const packagingFee = billCalc.packagingFeeMinor / 100;
+  const roundOff = billCalc.roundOffMinor / 100;
+  const finalTotal = billCalc.totalMinor / 100;
 
   // Update tender amount when finalTotal changes
   useEffect(() => {
@@ -446,6 +484,14 @@ export default function POSBillingPage() {
           subtotal,
           discount: discountAmount,
           tax,
+          cgst: billCalc.cgstMinor / 100,
+          sgst: billCalc.sgstMinor / 100,
+          serviceCharge,
+          deliveryFee,
+          packagingFee,
+          roundOff,
+          gstPercent: billCalc.gstPercent,
+          serviceChargePercent: billCalc.serviceChargePercent,
           total: finalTotal,
           paymentMethod: methodDisplay,
           table: selectedTable ? selectedTable.number : 'Counter',
@@ -972,8 +1018,21 @@ export default function POSBillingPage() {
               <span className="font-semibold text-[#302421]">₹{subtotal.toFixed(2)}</span>
             </div>
 
-            <div className="flex items-center justify-between">
-              <span className="flex items-center gap-1">
+            {discountAmount > 0 ? (
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-1">
+                  <span>Discount</span>
+                  <button
+                    onClick={() => setIsDiscountModalOpen(true)}
+                    className="text-[10px] text-[#B78A48] hover:underline font-semibold"
+                  >
+                    (Change)
+                  </button>
+                </span>
+                <span className="font-semibold text-emerald-600">-₹{discountAmount.toFixed(2)}</span>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
                 <span>Discount</span>
                 <button
                   onClick={() => setIsDiscountModalOpen(true)}
@@ -981,14 +1040,49 @@ export default function POSBillingPage() {
                 >
                   + Add Discount
                 </button>
-              </span>
-              <span className="font-semibold text-emerald-600">-₹{discountAmount.toFixed(2)}</span>
-            </div>
+              </div>
+            )}
 
             <div className="flex items-center justify-between">
-              <span>Tax (5% GST) ⓘ</span>
+              <span>Tax ({billCalc.gstPercent}% GST) ⓘ</span>
               <span className="font-semibold text-[#302421]">₹{tax.toFixed(2)}</span>
             </div>
+
+            {orderType === 'dine_in' && serviceCharge > 0 && (
+              <div className="flex items-center justify-between">
+                <span>Palace Service ({billCalc.serviceChargePercent}%)</span>
+                <span className="font-semibold text-[#302421]">₹{serviceCharge.toFixed(2)}</span>
+              </div>
+            )}
+
+            {orderType === 'delivery' && (
+              <div className="flex items-center justify-between">
+                <span>Delivery Fee</span>
+                {billCalc.isFreeDelivery ? (
+                  <span className="font-bold text-emerald-600 text-[10px] uppercase">
+                    FREE <span className="line-through font-normal text-[#81736D]">₹50.00</span>
+                  </span>
+                ) : (
+                  <span className="font-semibold text-[#302421]">₹{deliveryFee.toFixed(2)}</span>
+                )}
+              </div>
+            )}
+
+            {(orderType === 'delivery' || orderType === 'takeaway') && packagingFee > 0 && (
+              <div className="flex items-center justify-between">
+                <span title={billingSettings.packaging_note}>Packaging Charges</span>
+                <span className="font-semibold text-[#302421]">₹{packagingFee.toFixed(2)}</span>
+              </div>
+            )}
+
+            {roundOff !== 0 && (
+              <div className="flex items-center justify-between text-[11px]">
+                <span>Round Off</span>
+                <span className="font-semibold text-[#302421]">
+                  {roundOff > 0 ? `+₹${roundOff.toFixed(2)}` : `-₹${Math.abs(roundOff).toFixed(2)}`}
+                </span>
+              </div>
+            )}
 
             <div className="pt-1.5 border-t border-[#E8DCD2] flex items-center justify-between text-sm">
               <span className="font-bold text-[#302421]">Total Amount</span>
@@ -1199,13 +1293,13 @@ export default function POSBillingPage() {
                 className="text-lg font-bold text-[#4F0809]"
                 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
               >
-                RAJMAHAL HERITAGE GRAND
+                {billingSettings.business_name.toUpperCase()}
               </h2>
               <p className="text-[10px] text-[#81736D]">
-                Palace Road, Jaipur, Rajasthan · GSTIN: 08AAACR1234F1Z5
+                Palace Road, Udaipur, Rajasthan · GSTIN: {billingSettings.gstin}
               </p>
               <p className="text-xs font-bold text-[#302421]">
-                Tax Invoice: {completedOrder.orderId}
+                Tax Invoice: {billingSettings.invoice_prefix}{completedOrder.orderId.replace(/^#?ORD-?/, '')}
               </p>
             </div>
 
@@ -1271,13 +1365,37 @@ export default function POSBillingPage() {
                 </div>
               )}
               <div className="flex justify-between">
-                <span>CGST (2.5%)</span>
-                <span>₹{(completedOrder.tax / 2).toFixed(2)}</span>
+                <span>CGST ({(completedOrder.gstPercent ?? 5) / 2}%)</span>
+                <span>₹{(completedOrder.cgst ?? completedOrder.tax / 2).toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
-                <span>SGST (2.5%)</span>
-                <span>₹{(completedOrder.tax / 2).toFixed(2)}</span>
+                <span>SGST ({(completedOrder.gstPercent ?? 5) / 2}%)</span>
+                <span>₹{(completedOrder.sgst ?? completedOrder.tax / 2).toFixed(2)}</span>
               </div>
+              {(completedOrder.serviceCharge ?? 0) > 0 && (
+                <div className="flex justify-between">
+                  <span>Palace Service ({completedOrder.serviceChargePercent ?? 2.5}%)</span>
+                  <span>₹{(completedOrder.serviceCharge ?? 0).toFixed(2)}</span>
+                </div>
+              )}
+              {(completedOrder.deliveryFee ?? 0) > 0 && (
+                <div className="flex justify-between">
+                  <span>Delivery Charges</span>
+                  <span>₹{(completedOrder.deliveryFee ?? 0).toFixed(2)}</span>
+                </div>
+              )}
+              {(completedOrder.packagingFee ?? 0) > 0 && (
+                <div className="flex justify-between">
+                  <span>Packaging Charges</span>
+                  <span>₹{(completedOrder.packagingFee ?? 0).toFixed(2)}</span>
+                </div>
+              )}
+              {(completedOrder.roundOff ?? 0) !== 0 && (
+                <div className="flex justify-between text-[11px]">
+                  <span>Round Off</span>
+                  <span>{(completedOrder.roundOff ?? 0) > 0 ? `+₹${completedOrder.roundOff?.toFixed(2)}` : `-₹${Math.abs(completedOrder.roundOff ?? 0).toFixed(2)}`}</span>
+                </div>
+              )}
               <div className="flex justify-between font-bold text-sm text-[#4F0809] pt-1 border-t border-[#E8DCD2]">
                 <span>Grand Total</span>
                 <span>₹{completedOrder.total.toFixed(2)}</span>
@@ -1287,6 +1405,11 @@ export default function POSBillingPage() {
                   <span>Transaction ID</span>
                   <span className="font-mono font-semibold text-[#4F0809]">{completedOrder.transactionId}</span>
                 </div>
+              )}
+              {billingSettings.invoice_footer_note && (
+                <p className="text-center text-[10px] italic text-[#81736D] pt-2 border-t border-dashed border-[#E8DCD2]">
+                  {billingSettings.invoice_footer_note}
+                </p>
               )}
             </div>
 
