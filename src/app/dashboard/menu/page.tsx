@@ -625,6 +625,13 @@ export default function MenuBuilderPage() {
             </div>
 
             {/* Individual Categories */}
+            {categories.length === 0 && (
+              <div className="py-6 px-3 text-center text-[#81736D] text-xs">
+                <BookOpen className="w-5 h-5 mx-auto mb-1 text-[#D8AA67] opacity-60" />
+                <p className="font-semibold text-[#4F0809]">No Categories Yet</p>
+                <p className="text-[11px] text-[#81736D] mt-0.5">Click &quot;+ Add Category&quot; above to create one.</p>
+              </div>
+            )}
             {categories.map((cat) => {
               const itemCount = (cat.items || []).length;
               const isSelected = selectedCategoryId === cat.id;
